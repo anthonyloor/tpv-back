@@ -22,6 +22,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'App\Entity'
                 alias: App
+        dql:
+            string_functions:
+                IFNULL: App\Doctrine\Functions\IfNull
+                GROUP_CONCAT: App\Doctrine\Functions\GroupConcat
+                ROUND: App\Doctrine\Functions\Round        
 
 when@test:
     doctrine:
