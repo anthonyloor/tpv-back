@@ -35,22 +35,23 @@ class ProductController extends AbstractController
         
         $qb = $this->entityManagerInterface->createQueryBuilder();
         $qb->select('
-            stock.idStockAvailable AS ID_STOCK,
-            product.idProduct AS ID_PRODUCTO,
-            combinacion.idProductAttribute AS ID_COMBINACION,
-            tienda.idShop AS ID_TIENDA,
-            tienda.name AS TIENDA,
-            product.reference AS REFERENCIA,
-            GROUP_CONCAT(DISTINCT nombre_combinacion.name ORDER BY nombre_combinacion.idAttribute SEPARATOR \', \') AS COMBINACION_TALLA_COLOR,
-            stock.quantity AS CANTIDAD,
-            nombre_producto.name AS NOMBRE,
-            combinacion.ean13 AS EAN13,
-            CASE
+        stock.idStockAvailable AS ID_STOCK,
+        product.idProduct AS ID_PRODUCTO,
+        combinacion.idProductAttribute AS ID_COMBINACION,
+        tienda.idShop AS ID_TIENDA,
+        tienda.name AS TIENDA,
+        product.reference AS REFERENCIA,
+        GROUP_CONCAT(DISTINCT nombre_combinacion.name ORDER BY nombre_combinacion.idAttribute SEPARATOR \', \') AS COMBINACION_TALLA_COLOR,
+        stock.quantity AS CANTIDAD,
+        nombre_producto.name AS NOMBRE,
+        combinacion.ean13 AS EAN13,
+        CASE
                 WHEN oferta.reduction IS NOT NULL AND oferta.idGroup != 5 AND oferta.reductionType = \'amount\' THEN ROUND(( ( product.price - oferta.reduction ) * 1.21 ), 2 )
                 WHEN oferta.reduction IS NOT NULL AND oferta.idGroup != 5 AND oferta.reductionType = \'percentage\' THEN ROUND( ( ( product.price -( product.price * oferta.reduction / 100 ) ) * 1.21 ), 2 )
                 ELSE ROUND( (product.price * 1.21) +(combinacion.price * 1.21), 2 )
             END AS PRECIO_CON_IVA
         ')
+    
         ->from(PsStockAvailable::class, 'stock')
         ->innerJoin('stock.idProduct', 'product')  
         ->innerJoin(PsProductLang::class, 'nombre_producto', 'WITH', 'product.idProduct = nombre_producto.idProduct')
@@ -67,9 +68,14 @@ class ProductController extends AbstractController
         ->andWhere('product.reference LIKE :searchTerm OR combinacion.ean13 LIKE :searchTerm')
         ->setParameter('searchTerm', '%' . $b . '%');
             
-        $result = $qb->getQuery()->getResult();
+        $resultado = $qb->getQuery()->getResult();
 
-        return new JsonResponse($result);
+        // Convertir PRECIO_CON_IVA a decimal
+        foreach ($resultado as &$row) {
+            $row['PRECIO_CON_IVA'] = (float) $row['PRECIO_CON_IVA'];
+        }
+        
+        return new JsonResponse($resultado);
 
     }
 }
