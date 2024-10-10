@@ -11,19 +11,19 @@ class PsStockAvailable
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $idStockAvailable = null;
+    private ?int $id_stock_available = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name:'id_product',referencedColumnName:'id_product',nullable: false)]
-    private ?PsProduct $idProduct = null;
+    private ?PsProduct $id_product = null;
 
     #[ORM\ManyToOne(targetEntity: PsProductAttribute::class, inversedBy: 'stockAvailable')]
     #[ORM\JoinColumn(name: 'id_product_attribute', referencedColumnName: 'id_product_attribute', nullable: false)]
-    private ?PsProductAttribute $idProductAttribute = null;
+    private ?PsProductAttribute $id_product_attribute = null;
 
     #[ORM\ManyToOne(targetEntity:PsShop::class,inversedBy:'stockAvailable')]
     #[ORM\JoinColumn(name:'id_shop',referencedColumnName:'id_shop',nullable: false)]
-    private ?PsShop $idShop = null;
+    private ?PsShop $id_shop = null;
 
 
     #[ORM\Column]
@@ -52,7 +52,7 @@ class PsStockAvailable
 
     public function getIdStockAvailable(): ?int
     {
-        return $this->idStockAvailable;
+        return $this->id_stock_available;
     }
 
     public function getQuantity(): ?int
@@ -129,12 +129,12 @@ class PsStockAvailable
 
     public function getIdProduct(): ?PsProduct
     {
-        return $this->idProduct;
+        return $this->id_product;
     }
 
-    public function setIdProduct(?PsProduct $idProduct): static
+    public function setIdProduct(?PsProduct $id_product): static
     {
-        $this->idProduct = $idProduct;
+        $this->id_product = $id_product;
 
         return $this;
     }
@@ -153,24 +153,24 @@ class PsStockAvailable
 
     public function getIdShop(): ?PsShop
     {
-        return $this->idShop;
+        return $this->id_shop;
     }
 
-    public function setIdShop(?PsShop $idShop): static
+    public function setIdShop(?PsShop $id_shop): static
     {
-        $this->idShop = $idShop;
+        $this->id_shop = $id_shop;
 
         return $this;
     }
 
     public function getIdProductAttribute(): ?PsProductAttribute
     {
-        return $this->idProductAttribute;
+        return $this->id_product_attribute;
     }
 
-    public function setIdProductAttribute(?PsProductAttribute $idProductAttribute): static
+    public function setIdProductAttribute(?PsProductAttribute $id_product_attribute): static
     {
-        $this->idProductAttribute = $idProductAttribute;
+        $this->id_product_attribute = $id_product_attribute;
 
         return $this;
     }

@@ -16,7 +16,7 @@ class PsProductLang
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name:'id_product',nullable: false)]
-    private ?PsProduct $idProduct = null;
+    private ?PsProduct $id_product = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name:'id_shop',nullable: false)]
@@ -62,12 +62,12 @@ class PsProductLang
 
     public function getIdProduct(): ?PsProduct
     {
-        return $this->idProduct;
+        return $this->id_product;
     }
 
-    public function setIdProduct(?PsProduct $idProduct): static
+    public function setIdProduct(?PsProduct $id_product): static
     {
-        $this->idProduct = $idProduct;
+        $this->id_product = $id_product;
 
         return $this;
     }

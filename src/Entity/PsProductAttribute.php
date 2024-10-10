@@ -12,7 +12,7 @@ class PsProductAttribute
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $idProductAttribute = null;
+    private ?int $id_product_attribute = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name:'id_product',nullable: false)]
@@ -68,7 +68,7 @@ class PsProductAttribute
 
     public function getIdProductAttribute(): ?int
     {
-        return $this->idProductAttribute;
+        return $this->id_product_attribute;
     }
 
     public function getIdProduct(): ?PsProduct

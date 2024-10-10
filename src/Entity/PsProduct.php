@@ -15,7 +15,7 @@ class PsProduct
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $idProduct = null;
+    private ?int $id_product = null;
 
     #[ORM\Column]
     private ?int $idSupplier = null;
@@ -121,12 +121,12 @@ class PsProduct
 
     public function getIdProduct(): ?int
     {
-        return $this->idProduct;
+        return $this->id_product;
     }
 
-    public function setIdProduct(int $idProduct): static
+    public function setIdProduct(int $id_product): static
     {
-        $this->idProduct = $idProduct;
+        $this->id_product = $id_product;
 
         return $this;
     }

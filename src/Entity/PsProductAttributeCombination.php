@@ -15,7 +15,7 @@ class PsProductAttributeCombination
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name:'id_product_attribute',nullable: false)]
-    private ?PsProductAttribute $idProductAttribute = null;
+    private ?PsProductAttribute $id_product_attribute = null;
 
     public function getIdAttribute(): ?int
     {
@@ -24,12 +24,12 @@ class PsProductAttributeCombination
 
     public function getIdProductAttribute(): ?PsProductAttribute
     {
-        return $this->idProductAttribute;
+        return $this->id_product_attribute;
     }
 
-    public function setIdProductAttribute(?PsProductAttribute $idProductAttribute): static
+    public function setIdProductAttribute(?PsProductAttribute $id_product_attribute): static
     {
-        $this->idProductAttribute = $idProductAttribute;
+        $this->id_product_attribute = $id_product_attribute;
 
         return $this;
     }
