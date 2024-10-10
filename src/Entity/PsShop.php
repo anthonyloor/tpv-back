@@ -11,7 +11,7 @@ class PsShop
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $idShop = null;
+    private ?int $id_shop = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name:'id_shop_group',nullable: false)]
@@ -31,7 +31,7 @@ class PsShop
 
     public function getIdShop(): ?int
     {
-        return $this->idShop;
+        return $this->id_shop;
     }
 
     public function getIdShopGroup(): ?PsShopGroup
