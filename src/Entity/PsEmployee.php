@@ -2,11 +2,12 @@
 
 namespace App\Entity;
 
-use App\Repository\PsAttributeRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
-#[ORM\Entity(repositoryClass: PsAttributeRepository::class)]
-class PsEmployee
+#[ORM\Entity()]
+class PsEmployee implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -23,7 +24,7 @@ class PsEmployee
     private ?string $lastname = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $passwd  = null;
+    private ?string $passwd = null;
 
     #[ORM\Column]
     private ?bool $active = null;
@@ -95,5 +96,25 @@ class PsEmployee
         $this->active = $active;
 
         return $this;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Aquí puedes limpiar cualquier dato temporal, si es necesario
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_USER']; // Devuelve los roles asignados
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->id_employee; // Asegúrate de que esto es único
+    }
+
+    public function getPassword(): string
+    {
+        return $this->passwd; // Siempre retorna la contraseña (hash)
     }
 }
