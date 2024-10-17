@@ -1,11 +1,11 @@
 nelmio_cors:
   defaults:
     allow_credentials: true
-    allow_origin: ['https://tpv.fajasmaylu.com']  # Cambia esto por el dominio de tu frontend
+    allow_origin: ['https://tpv.fajasmaylu.com', 'http://localhost:3000']  # Permite producción y localhost
     allow_headers: ['Content-Type', 'Authorization']
     allow_methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE']
-    expose_headers: ['Link']
+    expose_headers: ['Link', 'Authorization']  # Exponer la cabecera Authorization si la necesitas en las respuestas
     max_age: 3600
   paths:
     '^/':  # Aplica CORS a todas las rutas
-      allow_origin: ['https://tpv.fajasmaylu.com']
+      allow_origin: ['https://tpv.fajasmaylu.com', 'http://localhost:3000']  # Permite producción y localhost

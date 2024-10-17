@@ -8,10 +8,10 @@ security:
                 property: id_employee  # Asegúrate de que este sea el nombre del campo en tu entidad
     firewalls:
         login:
-            pattern: ^/api/login
+            pattern: ^/login
             stateless: true
             json_login:
-                check_path: /api/login_check
+                check_path: /login_check
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
         api:
@@ -19,5 +19,7 @@ security:
             stateless: true
             jwt: ~
     access_control:
-        - { path: ^/api/login, roles: PUBLIC_ACCESS }
-        - { path: ^/,       roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/shops, roles: PUBLIC_ACCESS }
+        - { path: ^/employees, roles: PUBLIC_ACCESS }
+        - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
