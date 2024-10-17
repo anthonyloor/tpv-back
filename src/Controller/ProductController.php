@@ -68,7 +68,6 @@ class ProductController extends AbstractController
             ->orderBy('product.id_product', 'DESC')
             ->addOrderBy('combinacion.id_product_attribute')
             ->addOrderBy('tienda.id_shop', 'DESC')
-            ->andWhere('tienda.id_shop = 9')
             ->andWhere('combinacion.reference LIKE :searchTerm OR combinacion.ean13 LIKE :searchTerm')
             ->setParameter('searchTerm', '%' . $b . '%');
 
