@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 class LpLicense
 {
     #[ORM\Id]
-    #[ORM\Column]
+    #[ORM\Column(length: 36)]
     private ?string $license = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]

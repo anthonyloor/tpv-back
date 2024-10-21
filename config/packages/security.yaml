@@ -20,4 +20,8 @@ security:
             jwt: ~
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
-        - { path: ^/,       roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/shops, roles: PUBLIC_ACCESS }
+        - { path: ^/employees, roles: PUBLIC_ACCESS }
+        - { path: ^/license_check, roles: PUBLIC_ACCESS }
+        - { path: ^/product_search, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/, roles: IS_AUTHENTICATED_FULLY }

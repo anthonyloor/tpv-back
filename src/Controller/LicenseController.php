@@ -28,24 +28,25 @@ class LicenseController
             return new JsonResponse(['status' => 'error', 'message' => 'License parameter is required'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $qb = $this->entityManagerInterface->createQueryBuilder();
-        $qb->select('l.license', 'l.expire_date', 'l.active')
-           ->from(LpLicense::class, 'l')
-           ->where('l.active = 1')
-           ->andWhere('l.license = :license')
-           ->setParameter('license', $license_param);
+        $license = $this->entityManagerInterface->getRepository(LpLicense::class)
+        ->findOneBy(['license' => $license_param]);
 
-        $result = $qb->getQuery()->getOneOrNullResult();
-
-        if (!$result) {
-            return new JsonResponse(['status' => 'error', 'message' => 'License not found or inactive'], JsonResponse::HTTP_NOT_FOUND);
+        if (!$license) {
+            return new JsonResponse(['status' => 'error', 'message' => 'License not found'], JsonResponse::HTTP_NOT_FOUND);
         }
 
         $currentDate = new DateTime();
-        if ($result['expire_date'] < $currentDate) {
+        if ($license->getExpireDate()< $currentDate) {
             return new JsonResponse(['status' => 'error', 'message' => 'License expired'], JsonResponse::HTTP_FORBIDDEN);
         }
 
+        if (!$license->isActive()) {
+            $license->setActive(true);
+            $this->entityManagerInterface->persist($license);
+            $this->entityManagerInterface->flush();
+            return new JsonResponse(['status' => 'OK','message' => 'License actived']);
+
+        }
         return new JsonResponse(['status' => 'OK']);
     }
 }
