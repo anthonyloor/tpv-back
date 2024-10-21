@@ -29,7 +29,7 @@ class LicenseController
         }
 
         $license = $this->entityManagerInterface->getRepository(LpLicense::class)
-        ->findOneBy(['license' => $license_param]);
+        ->findOneByLicense($license_param);
 
         if (!$license) {
             return new JsonResponse(['status' => 'error', 'message' => 'License not found'], JsonResponse::HTTP_NOT_FOUND);
@@ -40,13 +40,15 @@ class LicenseController
             return new JsonResponse(['status' => 'error', 'message' => 'License expired'], JsonResponse::HTTP_FORBIDDEN);
         }
 
-        if (!$license->isActive()) {
+        if ($license->isActive()) {
+            return new JsonResponse(['status' => 'error', 'message' => 'License already in use'], JsonResponse::HTTP_NOT_FOUND);
+        }
+        else {
             $license->setActive(true);
             $this->entityManagerInterface->persist($license);
             $this->entityManagerInterface->flush();
             return new JsonResponse(['status' => 'OK','message' => 'License actived']);
-
         }
-        return new JsonResponse(['status' => 'OK']);
+
     }
 }
