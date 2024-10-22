@@ -19,7 +19,7 @@ class LicenseController
         $this->entityManagerInterface = $entityManagerInterface;
     }
 
-    #[Route('/license_check', name: 'license_check', methods: ['GET'])]
+    #[Route('/license_check', name: 'license_check', methods: ['POST'])]
     public function licenseCheck(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
