@@ -10,7 +10,7 @@ class LpLicenseRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, LpLicenseRepository::class);
+        parent::__construct($registry, LpLicense::class);
     }
 
     public function findOneByLicense(string $license): ?LpLicense
