@@ -4,8 +4,9 @@ namespace App\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\LpLicenseRepository;
 
-#[ORM\Entity()]
+#[ORM\Entity(repositoryClass:LpLicenseRepository::class)]
 class LpLicense
 {
     #[ORM\Id]
@@ -23,6 +24,10 @@ class LpLicense
 
     #[ORM\Column(length: 255)]
     private ?string $name = null;
+
+    
+    #[ORM\Column]
+    private ?int $id_shop = null;
 
     // Getters and Setters
 
@@ -80,4 +85,16 @@ class LpLicense
         $this->name = $name;
         return $this;
     }
+
+    public function getIdShop(): ?int
+    {
+        return $this->id_shop;
+    }
+
+    public function setIdShop(?int $id_shop): ?self
+    {
+        $this->id_shop = $id_shop;
+        return $this;
+    }
+
 }

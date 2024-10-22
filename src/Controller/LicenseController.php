@@ -22,11 +22,14 @@ class LicenseController
     #[Route('/license_check', name: 'license_check', methods: ['GET'])]
     public function licenseCheck(Request $request): Response
     {
-        $license_param = $request->query->get('license');
+        $data = json_decode($request->getContent(), true);
 
-        if (!$license_param) {
-            return new JsonResponse(['status' => 'error', 'message' => 'License parameter is required'], JsonResponse::HTTP_BAD_REQUEST);
+        if (!isset($data['id_shop'], $data['license'])) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
+
+        $license_param = $data['license'];
+        $id_shop = $data['id_shop'];
 
         $license = $this->entityManagerInterface->getRepository(LpLicense::class)
         ->findOneByLicense($license_param);
@@ -41,10 +44,11 @@ class LicenseController
         }
 
         if ($license->isActive()) {
-            return new JsonResponse(['status' => 'error', 'message' => 'License already in use'], JsonResponse::HTTP_NOT_FOUND);
+            return new JsonResponse(['status' => 'OK', 'message' => 'License already in use']);
         }
         else {
             $license->setActive(true);
+            $license->setIdShop($id_shop);
             $this->entityManagerInterface->persist($license);
             $this->entityManagerInterface->flush();
             return new JsonResponse(['status' => 'OK','message' => 'License actived']);
