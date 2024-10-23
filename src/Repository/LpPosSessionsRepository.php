@@ -17,6 +17,7 @@ class LpPosSessionsRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('p')
             ->andWhere('p.license = :license') // Esto asume que tienes un campo "license" en LpPosSessions
+            ->andWhere('p.active = 1')
             ->setParameter('license', $license)
             ->getQuery()
             ->getOneOrNullResult();

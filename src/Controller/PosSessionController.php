@@ -21,17 +21,16 @@ class PosSessionController
     #[Route('/open_pos_session', name: 'open_pos_session')]
     public function openPosSession(Request $request): Response
     {
-        $license_param = $request->query->get('license');
+        $data = json_decode($request->getContent(), true);
+        // Verifica que los datos sean válidos
+        if (!isset($data['id_shop'], $data['id_employee'], $data['init_balance'], $data['license'])) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+        $license_param = $data['license'];
         $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
             ->findOneActiveByLicense($license_param);
-        if (!$pos_session) {
-            // Decodifica el JSON recibido en el cuerpo de la solicitud
-            $data = json_decode($request->getContent(), true);
 
-            // Verifica que los datos sean válidos
-            if (!isset($data['id_shop'], $data['id_employee'], $data['init_balance'])) {
-                return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
-            }
+        if (!$pos_session) {
 
             // Crea una nueva instancia de LpPosSessions
             $newPosSession = new LpPosSessions();
@@ -59,7 +58,7 @@ class PosSessionController
             // Persistir la nueva sesión en la base de datos
             $this->entityManagerInterface->persist($newPosSession);
             $this->entityManagerInterface->flush();
-            return new JsonResponse(['status' => 'OK','message' => 'Point Of Sale Session created']);
+            return new JsonResponse(['status' => 'OK', 'message' => 'Point Of Sale Session created']);
         } else {
             return new JsonResponse(['status' => 'KO', 'message' => 'Point Of Sale Session for today alredy created']);
         }

@@ -61,14 +61,13 @@ class ProductController extends AbstractController
             ->innerJoin(PsProductAttribute::class, 'combinacion', 'WITH', 'stock.id_product_attribute = combinacion.id_product_attribute')
             ->innerJoin(PsProductAttributeCombination::class, 'combi', 'WITH', 'combinacion.id_product_attribute = combi.id_product_attribute')
             ->innerJoin(PsAttributeLang::class, 'nombre_combinacion', 'WITH', 'combi.idAttribute = nombre_combinacion.idAttribute')
-            ->innerJoin(PsShop::class, 'tienda', 'WITH', 'stock.id_shop = tienda.id_shop')
-            ->innerJoin(PsProductAttributeImage::class, 'product_image', 'WITH', 'combinacion.id_product_attribute = product_image.id_product_attribute')
-            ->innerJoin(PsImage::class, 'image', 'WITH', 'product_image.id_image = image.id_image')
+            ->leftJoin(PsShop::class, 'tienda', 'WITH', 'stock.id_shop = tienda.id_shop')
+            ->leftJoin(PsProductAttributeImage::class, 'product_image', 'WITH', 'combinacion.id_product_attribute = product_image.id_product_attribute')
+            ->leftJoin(PsImage::class, 'image', 'WITH', 'product_image.id_image = image.id_image')
             ->groupBy('product.id_product, combinacion.id_product_attribute, tienda.id_shop')
             ->orderBy('product.id_product', 'DESC')
             ->addOrderBy('combinacion.id_product_attribute')
             ->addOrderBy('tienda.id_shop', 'DESC')
-            ->andWhere('tienda.id_shop = 9')
             ->andWhere('combinacion.reference LIKE :searchTerm OR combinacion.ean13 LIKE :searchTerm')
             ->setParameter('searchTerm', '%' . $b . '%');
 
