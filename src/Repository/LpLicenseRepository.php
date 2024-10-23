@@ -13,11 +13,13 @@ class LpLicenseRepository extends ServiceEntityRepository
         parent::__construct($registry, LpLicense::class);
     }
 
-    public function findOneByLicense(string $license): ?LpLicense
+    public function findOneByLicenseAndIdShop(string $license, int $id_shop): ?LpLicense
     {
         return $this->createQueryBuilder('l')
             ->andWhere('l.license = :license')
+            ->andWhere('l.id_shop = :shop')
             ->setParameter('license', $license)
+            ->setParameter('shop', $id_shop)
             ->getQuery()
             ->getOneOrNullResult();
     }

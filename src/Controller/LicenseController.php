@@ -32,7 +32,7 @@ class LicenseController
         $id_shop = $data['id_shop'];
 
         $license = $this->entityManagerInterface->getRepository(LpLicense::class)
-        ->findOneByLicense($license_param);
+        ->findOneByLicenseAndIdShop($license_param, $id_shop);
 
         if (!$license) {
             return new JsonResponse(['status' => 'error', 'message' => 'License not found'], JsonResponse::HTTP_NOT_FOUND);
