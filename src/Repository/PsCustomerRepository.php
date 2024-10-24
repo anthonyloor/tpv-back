@@ -2,7 +2,6 @@
 
 namespace App\Repository;
 
-use App\Entity\LpPosSessions;
 use App\Entity\PsCustomer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
