@@ -51,8 +51,8 @@ class CustomerController
     #[Route('/get_all_customers', name: 'get_all_customers')]
     public function getAllCustomers(): Response
     {
-        $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findAll();
-
+		$customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
+        
         if (empty($customers)) {
             return new Response('No customers found', Response::HTTP_NOT_FOUND);
         }
