@@ -12,7 +12,7 @@ class PsProductLang
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $idLang = null;
+    private ?int $id_lang = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name:'id_product',nullable: false)]
@@ -57,7 +57,7 @@ class PsProductLang
 
     public function getIdLang(): ?int
     {
-        return $this->idLang;
+        return $this->id_lang;
     }
 
     public function getIdProduct(): ?PsProduct
