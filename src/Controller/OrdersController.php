@@ -21,7 +21,7 @@ class OrdersController
         $this->entityManagerInterface = $entityManagerInterface;
     }
 
-    #[Route('/crete_order', name: 'crete_order', methods: ['POST'])]
+    #[Route('/create_order', name: 'create_order', methods: ['POST'])]
     public function createOrder(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
@@ -48,6 +48,7 @@ class OrdersController
         {
             $orderDetail = $this->generateOrderDetail($data, $orderDetailData, $newPsOrder);
             $this->entityManagerInterface->persist($orderDetail);
+            $this->updateProductStock($orderDetailData); // Llamamos a la función de actualización de stock
         }
         $this->entityManagerInterface->flush();
 
@@ -119,7 +120,7 @@ class OrdersController
         $orderDetail->setOriginalProductPrice(0);
 
         $productStock = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-        ->findOneBy(['id_product' => $orderDetailData['product_id']]);
+        ->findOneBy(['id_stock_available' => $orderDetailData['stock_available_id']]);
         if ($productStock) {
             $orderDetail->setProductQuantityInStock($productStock->getQuantity());
         } else {
@@ -150,8 +151,22 @@ class OrdersController
 
     private function generateSecureKey(int $customerId): string
     {
-        // Genera una clave segura utilizando una combinación del ID del cliente y una clave secreta
-        $secret = 'my_secret_key'; // Puedes cambiarla o tomarla de parámetros de configuración
+        $secret = 'my_secret_key';
         return hash('sha256', $customerId . $secret . uniqid((string) $customerId, true));
     }
+
+    private function updateProductStock($orderDetailData)
+    {
+        // Buscar el registro de stock para el producto
+        $productStock = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+            ->findOneBy(['id_stock_available' => $orderDetailData['stock_available_id']]);
+
+        // Si existe, reducir el stock disponible en función de la cantidad de pedido
+        if ($productStock) {
+            $newQuantity = max(0, $productStock->getQuantity() - $orderDetailData['product_quantity']);
+            $productStock->setQuantity($newQuantity);
+            $this->entityManagerInterface->persist($productStock); // Persistir los cambios
+        }
+    }
+
 }
