@@ -46,10 +46,6 @@ class PsStockAvailable
 
 
 
-    #[ORM\Column(length: 255)]
-    private ?string $no = null;
-
-
     public function getIdStockAvailable(): ?int
     {
         return $this->id_stock_available;
@@ -135,18 +131,6 @@ class PsStockAvailable
     public function setIdProduct(?PsProduct $id_product): static
     {
         $this->id_product = $id_product;
-
-        return $this;
-    }
-
-    public function getNo(): ?string
-    {
-        return $this->no;
-    }
-
-    public function setNo(string $no): static
-    {
-        $this->no = $no;
 
         return $this;
     }
