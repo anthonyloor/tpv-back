@@ -11,7 +11,7 @@ class PsCustomer
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name:'id_customer')]
-    private ?int $id = null;
+    private ?int $id_customer  = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $company = null;
@@ -36,7 +36,7 @@ class PsCustomer
 
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->id_customer;
     }
     
     public function getCompany(): ?string

@@ -12,23 +12,23 @@ class PsSpecificPrice
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $idSpecificPrice = null;
+    private ?int $id_specific_price = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name:'id_product',nullable: false)]
-    private ?PsProduct $idProduct = null;
+    private ?PsProduct $id_product = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?PsShop $idShop = null;
+    private ?PsShop $id_shop = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?PsShopGroup $idShopGroup = null;
+    private ?PsShopGroup $id_shop_group = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name:'id_product_attribute',nullable: false)]
-    private ?PsProductAttribute $idProductAttribute = null;
+    private ?PsProductAttribute $id_product_attribute = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 20, scale: 6)]
     private ?string $price = null;
@@ -44,60 +44,63 @@ class PsSpecificPrice
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name:'id_group',nullable: false)]
-    private ?PsGroup $idGroup = null;
+    private ?PsGroup $id_group = null;
 
     #[ORM\Column(length: 255)]
     private ?string $reductionType = null;
 
+    #[ORM\Column]
+    private ?int $id_customer = null;
+
     public function getIdSpecificPrice(): ?int
     {
-        return $this->idSpecificPrice;
+        return $this->id_specific_price;
     }
 
     public function getIdProduct(): ?PsProduct
     {
-        return $this->idProduct;
+        return $this->id_product;
     }
 
-    public function setIdProduct(?PsProduct $idProduct): static
+    public function setIdProduct(?PsProduct $id_product): static
     {
-        $this->idProduct = $idProduct;
+        $this->id_product = $id_product;
 
         return $this;
     }
 
     public function getIdShop(): ?PsShop
     {
-        return $this->idShop;
+        return $this->id_shop;
     }
 
-    public function setIdShop(?PsShop $idShop): static
+    public function setIdShop(?PsShop $id_shop): static
     {
-        $this->idShop = $idShop;
+        $this->id_shop = $id_shop;
 
         return $this;
     }
 
     public function getIdShopGroup(): ?PsShopGroup
     {
-        return $this->idShopGroup;
+        return $this->id_shop_group;
     }
 
-    public function setIdShopGroup(?PsShopGroup $idShopGroup): static
+    public function setIdShopGroup(?PsShopGroup $id_shop_group): static
     {
-        $this->idShopGroup = $idShopGroup;
+        $this->id_shop_group = $id_shop_group;
 
         return $this;
     }
 
     public function getIdProductAttribute(): ?PsProductAttribute
     {
-        return $this->idProductAttribute;
+        return $this->id_product_attribute;
     }
 
-    public function setIdProductAttribute(?PsProductAttribute $idProductAttribute): static
+    public function setIdProductAttribute(?PsProductAttribute $id_product_attribute): static
     {
-        $this->idProductAttribute = $idProductAttribute;
+        $this->id_product_attribute = $id_product_attribute;
 
         return $this;
     }
@@ -152,12 +155,12 @@ class PsSpecificPrice
 
     public function getIdGroup(): ?PsGroup
     {
-        return $this->idGroup;
+        return $this->id_group;
     }
 
-    public function setIdGroup(?PsGroup $idGroup): static
+    public function setIdGroup(?PsGroup $id_group): static
     {
-        $this->idGroup = $idGroup;
+        $this->id_group = $id_group;
 
         return $this;
     }
@@ -170,6 +173,18 @@ class PsSpecificPrice
     public function setReductionType(string $reductionType): static
     {
         $this->reductionType = $reductionType;
+
+        return $this;
+    }
+
+    public function getIdCustomer(): ?int
+    {
+        return $this->id_customer;
+    }
+
+    public function setIdCustomer(int $id_customer): static
+    {
+        $this->id_customer = $id_customer;
 
         return $this;
     }
