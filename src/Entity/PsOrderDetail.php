@@ -18,7 +18,7 @@ class PsOrderDetail
 
     #[ORM\ManyToOne(targetEntity: PsOrders::class)]
     #[ORM\JoinColumn(name: "id_order", referencedColumnName: "id_order", nullable: false)]
-    private ?PsOrders $order = null;
+    private ?PsOrders $idOrder = null;
 
     #[ORM\Column(nullable: true)]
     private ?int $id_order_invoice = null;
@@ -108,12 +108,12 @@ class PsOrderDetail
 
     public function getOrder(): ?PsOrders // Corrección aquí
     {
-        return $this->order;
+        return $this->idOrder;
     }
 
-    public function setOrder(PsOrders $order): static
+    public function setOrder(PsOrders $idOrder): static
     {
-        $this->order = $order;
+        $this->idOrder = $idOrder;
 
         return $this;
     }

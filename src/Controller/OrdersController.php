@@ -27,15 +27,15 @@ class OrdersController
         $data = json_decode($request->getContent(), true);
         if (
             !isset(
-            $data['id_shop'],
-            $data['id_customer'],
-            $data['id_address_delivery'],
-            $data['payment'],
-            $data['total_paid'],
-            $data['total_paid_tax_excl'],
-            $data['total_products'],
-            $data['order_details']
-        )
+                $data['id_shop'],
+                $data['id_customer'],
+                $data['id_address_delivery'],
+                $data['payment'],
+                $data['total_paid'],
+                $data['total_paid_tax_excl'],
+                $data['total_products'],
+                $data['order_details']
+            )
         ) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
@@ -44,15 +44,66 @@ class OrdersController
         $this->entityManagerInterface->persist($newPsOrder);
         $this->entityManagerInterface->flush();
 
-        foreach($data['order_details'] as $orderDetailData)
-        {
+        foreach ($data['order_details'] as $orderDetailData) {
             $orderDetail = $this->generateOrderDetail($data, $orderDetailData, $newPsOrder);
             $this->entityManagerInterface->persist($orderDetail);
             $this->updateProductStock($orderDetailData); // Llamamos a la función de actualización de stock
         }
         $this->entityManagerInterface->flush();
 
-        return new JsonResponse(['status' => 'OK', 'message' => 'Order created with id'.$newPsOrder->getIdOrder()]);
+        return new JsonResponse(['status' => 'OK', 'message' => 'Order created with id' . $newPsOrder->getIdOrder()]);
+    }
+    #[Route('/get_order', name: 'get_order', methods: ['GET'])]
+    public function getOrder(Request $request): Response
+    {
+        $id_order = $request->query->get('id_order');
+        if (!$id_order) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+        $order = $this->entityManagerInterface->getRepository(PsOrders::class)->find($id_order);
+        if (!$order) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Order not found'], JsonResponse::HTTP_OK);
+        }
+        // Construir la respuesta con la información de la orden
+        $orderData = [
+            'id_shop' => $order->getIdShop(),
+            'id_customer' => $order->getIdCustomer(),
+            'id_address_delivery' => $order->getIdAddressDelivery(),
+            'payment' => $order->getPayment(),
+            'total_paid' => $order->getTotalPaid(),
+            'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
+            'total_products' => $order->getTotalProducts(),
+            'order_details' => []
+        ];
+        // Obtener los detalles de la orden
+        $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+            ->findBy(['idOrder' => $id_order]);
+
+        // Procesar los detalles de la orden
+        foreach ($orderDetails as $detail) {
+
+            $stock_available_id = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+            ->findOneByProductAttributeShop($detail->getProductId(),$detail->getProductAttributeId(),$detail->getIdShop());
+
+            $orderData['order_details'][] = [
+                'product_id' => $detail->getProductId(),
+                'product_attribute_id' => $detail->getProductAttributeId(),
+                'stock_available_id' => $stock_available_id->getIdStockAvailable(),
+                'product_name' => $detail->getProductName(),
+                'product_quantity' => $detail->getProductQuantity(),
+                'product_price' => $detail->getProductPrice(),
+                'product_ean13' => $detail->getProductEan13(),
+                'product_reference' => $detail->getProductReference(),
+                'total_price_tax_incl' => $detail->getTotalPriceTaxIncl(),
+                'total_price_tax_excl' => $detail->getTotalPriceTaxExcl(),
+                'unit_price_tax_incl' => $detail->getUnitPriceTaxIncl(),
+                'unit_price_tax_excl' => $detail->getUnitPriceTaxExcl(),
+                'id_shop' => $detail->getIdShop()
+            ];
+        }
+
+        // Devolver la respuesta como JSON
+        return new JsonResponse($orderData, JsonResponse::HTTP_OK);
     }
 
     private function generateOrder($data): PsOrders
@@ -101,14 +152,14 @@ class OrdersController
         $orderDetail->setProductId($orderDetailData['product_id']);
         $orderDetail->setProductAttributeId($orderDetailData['product_attribute_id']);
         $orderDetail->setProductName($orderDetailData['product_name']);
-        $orderDetail->setProductQuantity( $orderDetailData['product_quantity']);
-        $orderDetail->setProductPrice( $orderDetailData['product_price']);
-        $orderDetail->setProductEan13( $orderDetailData['product_ean13']);
-        $orderDetail->setProductReference( $orderDetailData['product_reference']);
-        $orderDetail->setTotalPriceTaxIncl( $orderDetailData['total_price_tax_incl']);
-        $orderDetail->setTotalPriceTaxExcl( $orderDetailData['total_price_tax_excl']);
-        $orderDetail->setUnitPriceTaxExcl( $orderDetailData['unit_price_tax_excl']);
-        $orderDetail->setUnitPriceTaxIncl( $orderDetailData['unit_price_tax_incl']);
+        $orderDetail->setProductQuantity($orderDetailData['product_quantity']);
+        $orderDetail->setProductPrice($orderDetailData['product_price']);
+        $orderDetail->setProductEan13($orderDetailData['product_ean13']);
+        $orderDetail->setProductReference($orderDetailData['product_reference']);
+        $orderDetail->setTotalPriceTaxIncl($orderDetailData['total_price_tax_incl']);
+        $orderDetail->setTotalPriceTaxExcl($orderDetailData['total_price_tax_excl']);
+        $orderDetail->setUnitPriceTaxExcl($orderDetailData['unit_price_tax_excl']);
+        $orderDetail->setUnitPriceTaxIncl($orderDetailData['unit_price_tax_incl']);
         $orderDetail->setReductionPercent(0);
         $orderDetail->setReductionAmount(0);
         $orderDetail->setReductionAmountTaxExcl(0);
@@ -120,7 +171,7 @@ class OrdersController
         $orderDetail->setOriginalProductPrice(0);
 
         $productStock = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-        ->findOneBy(['id_stock_available' => $orderDetailData['stock_available_id']]);
+            ->findOneBy(['id_stock_available' => $orderDetailData['stock_available_id']]);
         if ($productStock) {
             $orderDetail->setProductQuantityInStock($productStock->getQuantity());
         } else {
@@ -143,7 +194,6 @@ class OrdersController
             // Verifica si la referencia ya existe en la base de datos
             $existingOrder = $this->entityManagerInterface->getRepository(PsOrders::class)
                 ->findOneBy(['reference' => $reference]);
-
         } while ($existingOrder !== null); // Repetir si ya existe
 
         return $reference;
@@ -163,10 +213,9 @@ class OrdersController
 
         // Si existe, reducir el stock disponible en función de la cantidad de pedido
         if ($productStock) {
-            $newQuantity = max(0, $productStock->getQuantity() - $orderDetailData['product_quantity']);
+            $newQuantity = $productStock->getQuantity() - $orderDetailData['product_quantity'];
             $productStock->setQuantity($newQuantity);
             $this->entityManagerInterface->persist($productStock); // Persistir los cambios
         }
     }
-
 }
