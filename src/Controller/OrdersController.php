@@ -56,11 +56,10 @@ class OrdersController
     #[Route('/get_order', name: 'get_order', methods: ['GET'])]
     public function getOrder(Request $request): Response
     {
-        $data = json_decode($request->getContent(), true);
-        if (!isset($data['id_order'])) {
+        $id_order = $request->query->get('id_order');
+        if (!$id_order) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
-        $id_order = $data['id_order'];
         $order = $this->entityManagerInterface->getRepository(PsOrders::class)->find($id_order);
         if (!$order) {
             return new JsonResponse(['status' => 'error', 'message' => 'Order not found'], JsonResponse::HTTP_OK);
