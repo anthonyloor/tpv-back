@@ -214,7 +214,7 @@ class OrdersController
 
         // Si existe, reducir el stock disponible en función de la cantidad de pedido
         if ($productStock) {
-            $newQuantity = max(0, $productStock->getQuantity() - $orderDetailData['product_quantity']);
+            $newQuantity = $productStock->getQuantity() - $orderDetailData['product_quantity'];
             $productStock->setQuantity($newQuantity);
             $this->entityManagerInterface->persist($productStock); // Persistir los cambios
         }
