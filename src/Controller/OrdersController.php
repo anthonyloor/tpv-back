@@ -54,13 +54,13 @@ class OrdersController
         return new JsonResponse(['status' => 'OK', 'message' => 'Order created with id' . $newPsOrder->getIdOrder()]);
     }
     #[Route('/get_order', name: 'get_order', methods: ['GET'])]
-    public function createOrder(Request $request): Response
+    public function getOrder(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
         if (!isset($data['id_order'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
-
+        $id_order = $data['id_order'];
         $order = $this->entityManagerInterface->getRepository(PsOrders::class)->find($id_order);
         if (!$order) {
             return new JsonResponse(['status' => 'error', 'message' => 'Order not found'], JsonResponse::HTTP_OK);
@@ -78,14 +78,18 @@ class OrdersController
         ];
         // Obtener los detalles de la orden
         $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-            ->findBy(['idOrder' => $idOrder]);
+            ->findBy(['idOrder' => $id_order]);
 
         // Procesar los detalles de la orden
         foreach ($orderDetails as $detail) {
+
+            $stock_available_id = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+            ->findOneByProductAttributeShop($detail->getProductId(),$detail->getProductAttributeId(),$detail->getIdShop());
+
             $orderData['order_details'][] = [
                 'product_id' => $detail->getProductId(),
                 'product_attribute_id' => $detail->getProductAttributeId(),
-                'stock_available_id' => $detail->getStockAvailableId(),
+                'stock_available_id' => $stock_available_id->getIdStockAvailable(),
                 'product_name' => $detail->getProductName(),
                 'product_quantity' => $detail->getProductQuantity(),
                 'product_price' => $detail->getProductPrice(),
