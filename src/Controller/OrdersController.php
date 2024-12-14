@@ -105,7 +105,70 @@ class OrdersController
         // Devolver la respuesta como JSON
         return new JsonResponse($orderData, JsonResponse::HTTP_OK);
     }
-
+    #[Route('/get_orders', name: 'get_orders', methods: ['GET'])]
+    public function getOrders(): Response
+    {
+        // Recuperar las últimas 100 órdenes
+        $orders = $this->entityManagerInterface->getRepository(PsOrders::class)
+            ->createQueryBuilder('o')
+            ->orderBy('o.date_add', 'DESC') // Ordenar por fecha de creación descendente
+            ->setMaxResults(100) // Limitar a 100 resultados
+            ->getQuery()
+            ->getResult();
+    
+        if (!$orders) {
+            return new JsonResponse(['status' => 'error', 'message' => 'No orders found'], JsonResponse::HTTP_OK);
+        }
+        //dump($orders);
+    
+        $responseData = [];
+    
+        // Procesar cada orden
+        foreach ($orders as $order) {
+            $orderData = [
+                'id_order' => $order->getIdOrder(),
+                'id_shop' => $order->getIdShop(),
+                'id_customer' => $order->getIdCustomer(),
+                'id_address_delivery' => $order->getIdAddressDelivery(),
+                'payment' => $order->getPayment(),
+                'total_paid' => $order->getTotalPaid(),
+                'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
+                'total_products' => $order->getTotalProducts(),
+                'order_details' => []
+            ];
+    
+            // Obtener los detalles de la orden
+            $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                ->findBy(['idOrder' => $order->getIdOrder()]);
+    
+            foreach ($orderDetails as $detail) {
+                $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+                    ->findOneByProductAttributeShop($detail->getProductId(), $detail->getProductAttributeId(), $detail->getIdShop());
+    
+                $orderData['order_details'][] = [
+                    'product_id' => $detail->getProductId(),
+                    'product_attribute_id' => $detail->getProductAttributeId(),
+                    'stock_available_id' => $stockAvailable ? $stockAvailable->getIdStockAvailable() : null,
+                    'product_name' => $detail->getProductName(),
+                    'product_quantity' => $detail->getProductQuantity(),
+                    'product_price' => $detail->getProductPrice(),
+                    'product_ean13' => $detail->getProductEan13(),
+                    'product_reference' => $detail->getProductReference(),
+                    'total_price_tax_incl' => $detail->getTotalPriceTaxIncl(),
+                    'total_price_tax_excl' => $detail->getTotalPriceTaxExcl(),
+                    'unit_price_tax_incl' => $detail->getUnitPriceTaxIncl(),
+                    'unit_price_tax_excl' => $detail->getUnitPriceTaxExcl(),
+                    'id_shop' => $detail->getIdShop()
+                ];
+            }
+    
+            $responseData[] = $orderData;
+        }
+    
+        // Devolver la respuesta con las órdenes como JSON
+        return new JsonResponse($responseData, JsonResponse::HTTP_OK);
+    }
+    
     private function generateOrder($data): PsOrders
     {
         $newPsOrder = new PsOrders();
