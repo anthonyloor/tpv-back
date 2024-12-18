@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Entity\LpPosSessions;
 use App\Entity\LpLicense;
+use App\Entity\LpPosOrders;
 
 class PosSessionController
 {
@@ -79,5 +80,44 @@ class PosSessionController
         }
 
     }
+
+    #[Route('/close_pos_session', name: 'close_pos_session')]
+    public function closePosSession(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        // Verifica que los datos sean válidos
+        if (!isset($data['license'],$data['date'])) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+        $license_param = $data['license'];
+        $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
+            ->findOneActiveByLicense($license_param);
+
+        if ($pos_session) {
+
+            $total_cash = 0;
+            $total_card = 0;
+            $total_bizum = 0;
+
+            $posOrders = $this->entityManagerInterface->getRepository(LpPosOrders::class)
+            ->getAllByLicenseAndDate($data['license'],$data['date']);
+            
+            foreach ($posOrders as $posOrder) {
+                $total_cash += $posOrder->getTotalCash();
+                $total_card += $posOrder->getTotalCard();
+                $total_bizum += $posOrder->getTotalBizum();
+            }
+            $pos_session->setActive(false); // Desactivamos la sesion
+            $pos_session->setTotalBizum($total_bizum);
+            $pos_session->setTotalCard($total_card);
+            $pos_session->setTotalCash($total_cash);
+            $this->entityManagerInterface->persist($pos_session);
+            $this->entityManagerInterface->flush();
+            return new JsonResponse(['status' => 'OK', 'message' => 'Point Of Sale Session updated']);
+        } else {
+            return new JsonResponse(['status' => 'KO', 'message' => 'Point Of Sale Session not found']);
+        }
+    }
+
 
 }
