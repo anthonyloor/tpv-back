@@ -133,7 +133,7 @@ class OrdersLogic
         }
     }
 
-    public function generatePosOrder($data,$psOrder):LpPosOrders
+    public function generatePosOrder($data, $psOrder): LpPosOrders
     {
         $license_param = $data['license'];
         $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
@@ -173,13 +173,13 @@ class OrdersLogic
         return $orderData;
     }
 
-    public function generateSaleReportOrderJSON($order,$posOrder)
+    public function generateSaleReportOrderJSON($order, $posOrder)
     {
         $orderData = $this->generateOrderJson($order);
-        
-        $orderData['total_cash'] = $posOrder->getTotalCash(); 
+
+        $orderData['total_cash'] = $posOrder->getTotalCash();
         $orderData['total_card'] = $posOrder->getTotalCard();
-        $orderData['total_bizum'] = $posOrder->getTotalBizum(); 
+        $orderData['total_bizum'] = $posOrder->getTotalBizum();
 
         return $orderData;
     }
@@ -187,12 +187,19 @@ class OrdersLogic
     public function generateOrderDetailJSON($detail)
     {
 
-        $stock_available_id = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-        ->findOneByProductAttributeShop($detail->getProductId(),$detail->getProductAttributeId(),$detail->getIdShop());
+        $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+            ->findOneByProductAttributeShop(
+                $detail->getProductId(),
+                $detail->getProductAttributeId(),
+                $detail->getIdShop()
+            );
+
+        $stock_available_id = $stockAvailable ? $stockAvailable->getIdStockAvailable() : null;
+
         $orderDetail = [
             'product_id' => $detail->getProductId(),
             'product_attribute_id' => $detail->getProductAttributeId(),
-            'stock_available_id' => $stock_available_id->getIdStockAvailable(),
+            'stock_available_id' => $stock_available_id,
             'product_name' => $detail->getProductName(),
             'product_quantity' => $detail->getProductQuantity(),
             'product_price' => $detail->getProductPrice(),
