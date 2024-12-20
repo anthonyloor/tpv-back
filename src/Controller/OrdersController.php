@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\Request;
 
 use App\Entity\PsOrders;
 use App\Entity\PsOrderDetail;
-use App\Entity\PsStockAvailable;
 use App\Logic\OrdersLogic;
 use App\Entity\LpPosSessions;
 
