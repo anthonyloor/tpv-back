@@ -26,8 +26,14 @@ class LpPosSessions
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $date_add = null;
 
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private ?\DateTimeInterface $date_close = null;
+
     #[ORM\Column(type: Types::DECIMAL, precision: 64, scale: 2)]
-    private ?string $init_balance = null;
+    private ?string $init_cash = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 64, scale: 2)]
+    private ?string $final_cash = null;
     
     #[ORM\Column(type: Types::DECIMAL, precision: 64, scale: 2)]
     private ?string $total_cash = null;
@@ -96,14 +102,36 @@ class LpPosSessions
         return $this;
     }
 
-    public function getInitBalance(): ?string
+    public function getDateClose(): ?\DateTimeInterface
     {
-        return $this->init_balance;
+        return $this->date_close;
     }
 
-    public function setInitBalance(?string $init_balance): self
+    public function setDateClose(?\DateTimeInterface $date_close): self
     {
-        $this->init_balance = $init_balance;
+        $this->date_close = $date_close;
+        return $this;
+    }
+
+    public function getInitCash(): ?string
+    {
+        return $this->init_cash;
+    }
+
+    public function setInitCash(?string $init_cash): self
+    {
+        $this->init_cash = $init_cash;
+        return $this;
+    }
+
+    public function getFinalCash(): ?string
+    {
+        return $this->final_cash;
+    }
+
+    public function setFinalCash(?string $final_cash): self
+    {
+        $this->final_cash = $final_cash;
         return $this;
     }
 

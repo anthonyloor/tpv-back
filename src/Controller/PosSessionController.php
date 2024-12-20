@@ -23,7 +23,6 @@ class PosSessionController
     public function openPosSession(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
-        // Verifica que los datos sean válidos
         if (!isset($data['id_shop'], $data['id_employee'], $data['init_balance'], $data['license'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
@@ -33,20 +32,14 @@ class PosSessionController
 
         if (!$pos_session) {
 
-            // Crea una nueva instancia de LpPosSessions
             $newPosSession = new LpPosSessions();
 
-            // Asigna los valores recibidos a la nueva sesión
             $newPosSession->setIdShop($data['id_shop']);
-            $newPosSession->setIdEmployeeOpen($data['id_employee']); // Asume que es el empleado que abre
+            $newPosSession->setIdEmployeeOpen($data['id_employee']); 
             $newPosSession->setDateAdd(new \DateTime()); // Fecha actual
-            $newPosSession->setInitBalance($data['init_balance']);
-            $newPosSession->setTotalCash(0); // Puedes ajustar esto según sea necesario
-            $newPosSession->setTotalCard(0); // Puedes ajustar esto según sea necesario
-            $newPosSession->setTotalBizum(0); // Puedes ajustar esto según sea necesario
-            $newPosSession->setActive(true); // La sesión es activa
+            $newPosSession->setInitCash($data['init_cash']);
+            $newPosSession->setActive(true); 
 
-            // Aquí debes establecer la relación con la licencia
             $license = $this->entityManagerInterface->getRepository(LpLicense::class)
                 ->find($license_param);
 
@@ -56,7 +49,6 @@ class PosSessionController
                 return new JsonResponse(['status' => 'error', 'message' => 'License not found'], JsonResponse::HTTP_NOT_FOUND);
             }
 
-            // Persistir la nueva sesión en la base de datos
             $this->entityManagerInterface->persist($newPosSession);
             $this->entityManagerInterface->flush();
             return new JsonResponse(['status' => 'OK', 'message' => 'Point Of Sale Session created']);
@@ -86,31 +78,17 @@ class PosSessionController
     {
         $data = json_decode($request->getContent(), true);
         // Verifica que los datos sean válidos
-        if (!isset($data['license'],$data['date'])) {
+        if (!isset($data['license'],$data['id_employee'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
         $license_param = $data['license'];
         $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
             ->findOneActiveByLicense($license_param);
 
-        if ($pos_session) {
-
-            $total_cash = 0;
-            $total_card = 0;
-            $total_bizum = 0;
-
-            $posOrders = $this->entityManagerInterface->getRepository(LpPosOrders::class)
-            ->getAllByLicenseAndDate($data['license'],$data['date']);
-            
-            foreach ($posOrders as $posOrder) {
-                $total_cash += $posOrder->getTotalCash();
-                $total_card += $posOrder->getTotalCard();
-                $total_bizum += $posOrder->getTotalBizum();
-            }
+        if ($pos_session) {            
             $pos_session->setActive(false); // Desactivamos la sesion
-            $pos_session->setTotalBizum($total_bizum);
-            $pos_session->setTotalCard($total_card);
-            $pos_session->setTotalCash($total_cash);
+            $pos_session->setIdEmployeeClose($data['id_employee']);
+            $pos_session->setDateClose(new \DateTime());
             $this->entityManagerInterface->persist($pos_session);
             $this->entityManagerInterface->flush();
             return new JsonResponse(['status' => 'OK', 'message' => 'Point Of Sale Session updated']);

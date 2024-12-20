@@ -13,14 +13,16 @@ class LpPosOrdersRepository extends ServiceEntityRepository
         parent::__construct($registry, LpPosOrders::class);
     }
 
-    public function getAllByLicenseAndDate(string $license, string $date): array
+    public function getAllByLicenseAndDate(string $license, string $date1, string $date2): array
     {
 
         $qb = $this->createQueryBuilder('o')
             ->where('o.license = :license')
-            ->andWhere('o.date_add = :date')
+            ->andWhere('o.date_add BETWEEN :date1 AND :date2')
             ->setParameter('license', $license)
-            ->setParameter('date', $date);
+            ->setParameter('date1', $date1)
+            ->setParameter('date2', $date2);
+
     
         return $qb->getQuery()->getResult();
     }

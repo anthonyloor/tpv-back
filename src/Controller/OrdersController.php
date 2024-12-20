@@ -13,6 +13,7 @@ use App\Entity\PsOrders;
 use App\Entity\PsOrderDetail;
 use App\Entity\PsStockAvailable;
 use App\Logic\OrdersLogic;
+use App\Entity\LpPosSessions;
 
 class OrdersController
 {
@@ -55,6 +56,19 @@ class OrdersController
 
         $newPosOrder = $this->ordersLogic->generatePosOrder($data, $newPsOrder);
         $this->entityManagerInterface->persist($newPosOrder);
+        $this->entityManagerInterface->flush();
+
+        $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
+        ->findOneActiveByLicense($data['license']);
+
+        $total_cash = $pos_session->getTotalCash() + $data['total_cash'];
+        $total_card = $pos_session->getTotalCard() + $data['total_card'];
+        $total_bizum = $pos_session->getTotalBizum() + $data['total_bizum'];
+
+        $pos_session->setTotalBizum($total_bizum);
+        $pos_session->setTotalCard($total_card);
+        $pos_session->setTotalCash($total_cash);
+        $this->entityManagerInterface->persist($pos_session);
         $this->entityManagerInterface->flush();
 
         foreach ($data['order_details'] as $orderDetailData) {
@@ -128,14 +142,14 @@ class OrdersController
     public function getSaleReportOrders(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
-        if (!isset($data['license'], $data['date'])) {
+        if (!isset($data['license'], $data['date1'], $data['date2'])) {
             return new JsonResponse(
                 ['status' => 'error', 'message' => 'Invalid data provided']
             );
         }
 
         $posOrders = $this->entityManagerInterface->getRepository(LpPosOrders::class)
-        ->getAllByLicenseAndDate($data['license'],$data['date']);
+        ->getAllByLicenseAndDate($data['license'],$data['date1'], $data['date2']);
         $responseData = [];
         foreach ($posOrders as $posOrder) {
             $order = $this->entityManagerInterface->getRepository(PsOrders::class)->find($posOrder->getIdOrder());
