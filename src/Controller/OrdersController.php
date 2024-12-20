@@ -137,7 +137,7 @@ class OrdersController
         return new JsonResponse($responseData, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/get_sale_report_orders', name: 'get_sale_report_orders', methods: ['GET'])]
+    #[Route('/get_sale_report_orders', name: 'get_sale_report_orders', methods: ['POST'])]
     public function getSaleReportOrders(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);

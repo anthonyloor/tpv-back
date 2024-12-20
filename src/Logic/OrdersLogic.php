@@ -44,10 +44,10 @@ class OrdersLogic
         $newPsOrder->setTotalPaidReal($data['total_paid']);
         $newPsOrder->setTotalProducts($data['total_products']);
         $newPsOrder->setInvoiceNumber(0);
-        $newPsOrder->setInvoiceDate(new \DateTime());
+        $newPsOrder->setInvoiceDate(new \DateTime('now', new \DateTimeZone(date_default_timezone_get())));
         $newPsOrder->setValid(1);
-        $newPsOrder->setDateAdd(new \DateTime());
-        $newPsOrder->setDateUpd(new \DateTime());
+        $newPsOrder->setDateAdd(new \DateTime('now', new \DateTimeZone(date_default_timezone_get())));
+        $newPsOrder->setDateUpd(new \DateTime('now', new \DateTimeZone(date_default_timezone_get())));
         $newPsOrder->setTotalDiscounts(0);
         $newPsOrder->setTotalDiscountsTaxExcl(0);
         $newPsOrder->setTotalDiscountsTaxIncl(0);
@@ -151,7 +151,7 @@ class OrdersLogic
         $newPosOrder->setTotalCard($data['total_card']);
         $newPosOrder->setTotalBizum($data['total_bizum']);
 
-        $newPosOrder->setDateAdd(new \DateTime());
+        $newPosOrder->setDateAdd(new \DateTime('now', new \DateTimeZone(date_default_timezone_get())));
 
         return $newPosOrder;
     }
@@ -177,6 +177,7 @@ class OrdersLogic
     {
         $orderData = $this->generateOrderJson($order);
 
+        $orderData['date_add'] = $posOrder->getDateAdd();
         $orderData['total_cash'] = $posOrder->getTotalCash();
         $orderData['total_card'] = $posOrder->getTotalCard();
         $orderData['total_bizum'] = $posOrder->getTotalBizum();
