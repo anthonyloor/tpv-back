@@ -177,7 +177,7 @@ class OrdersLogic
     {
         $orderData = $this->generateOrderJson($order);
 
-        $orderData['date_add'] = $posOrder->getDateAdd();
+        $orderData['date_add'] = $posOrder->getDateAdd()->format('Y-m-d H:i:s');
         $orderData['total_cash'] = $posOrder->getTotalCash();
         $orderData['total_card'] = $posOrder->getTotalCard();
         $orderData['total_bizum'] = $posOrder->getTotalBizum();
