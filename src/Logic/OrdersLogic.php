@@ -44,10 +44,10 @@ class OrdersLogic
         $newPsOrder->setTotalPaidReal($data['total_paid']);
         $newPsOrder->setTotalProducts($data['total_products']);
         $newPsOrder->setInvoiceNumber(0);
-        $newPsOrder->setInvoiceDate(new \DateTime('now', new \DateTimeZone(date_default_timezone_get())));
+        $newPsOrder->setInvoiceDate(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $newPsOrder->setValid(1);
-        $newPsOrder->setDateAdd(new \DateTime('now', new \DateTimeZone(date_default_timezone_get())));
-        $newPsOrder->setDateUpd(new \DateTime('now', new \DateTimeZone(date_default_timezone_get())));
+        $newPsOrder->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $newPsOrder->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $newPsOrder->setTotalDiscounts(0);
         $newPsOrder->setTotalDiscountsTaxExcl(0);
         $newPsOrder->setTotalDiscountsTaxIncl(0);
@@ -151,7 +151,7 @@ class OrdersLogic
         $newPosOrder->setTotalCard($data['total_card']);
         $newPosOrder->setTotalBizum($data['total_bizum']);
 
-        $newPosOrder->setDateAdd(new \DateTime('now', new \DateTimeZone(date_default_timezone_get())));
+        $newPosOrder->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
 
         return $newPosOrder;
     }

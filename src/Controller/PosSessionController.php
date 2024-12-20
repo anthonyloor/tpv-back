@@ -34,7 +34,7 @@ class PosSessionController
 
             $newPosSession->setIdShop($data['id_shop']);
             $newPosSession->setIdEmployeeOpen($data['id_employee']); 
-            $newPosSession->setDateAdd(new \DateTime('now', new \DateTimeZone(date_default_timezone_get()))); // Fecha actual en hora local
+            $newPosSession->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin'))); // Fecha actual en hora local
             $newPosSession->setInitCash($data['init_cash']);
             $newPosSession->setActive(true); 
 
@@ -83,7 +83,7 @@ class PosSessionController
         if ($pos_session) {            
             $pos_session->setActive(false); // Desactivamos la sesion
             $pos_session->setIdEmployeeClose($data['id_employee']);
-            $pos_session->setDateClose(new \DateTime('now', new \DateTimeZone(date_default_timezone_get())));
+            $pos_session->setDateClose(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
             $this->entityManagerInterface->persist($pos_session);
             $this->entityManagerInterface->flush();
             return new JsonResponse(['status' => 'OK', 'message' => 'Point Of Sale Session updated']);
