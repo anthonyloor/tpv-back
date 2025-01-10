@@ -6,6 +6,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 use App\Entity\PsCartRuleLang;
 use App\Entity\PsCartRule;
+use App\Entity\PsOrderCartRule;
 
 class CartRuleLogic
 {
@@ -133,5 +134,20 @@ class CartRuleLogic
         return $reference;
     }
 
+    
+    public function generateOrderCartRule($newPsOrder, $cart_rule, $discount)
+    {
+        $orderCartRule = new PsOrderCartRule();
+        $orderCartRule->setIdOrder($newPsOrder->getIdOrder());
+        $orderCartRule->setIdCartRule($cart_rule->getIdCartRule());
+        $orderCartRule->setName($cart_rule->getDescription());
+        $orderCartRule->setValue($discount['amount']);
+        $orderCartRule->setValueTaxExcl($cart_rule->getReductionAmount() / (1 + $cart_rule->getReductionTax() / 100));
+        $orderCartRule->setFreeShipping(0);
 
+        $this->entityManagerInterface->persist($orderCartRule);
+        $this->entityManagerInterface->flush();
+
+        return $orderCartRule;
+    }
 }

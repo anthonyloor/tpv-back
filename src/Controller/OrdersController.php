@@ -36,20 +36,22 @@ class OrdersController
         $data = json_decode($request->getContent(), true);
         if (
             !isset(
-                $data['id_shop'],
-                $data['id_customer'],
-                $data['id_address_delivery'],
-                $data['payment'],
-                $data['total_cash'],
-                $data['total_card'],
-                $data['total_bizum'],
-                $data['total_paid'],
-                $data['total_paid_tax_excl'],
-                $data['total_products'],
-                $data['order_details'],
-                $data['license'],
-                $data['id_employee']
-            )
+            $data['id_shop'],
+            $data['id_customer'],
+            $data['id_address_delivery'],
+            $data['payment'],
+            $data['total_cash'],
+            $data['total_card'],
+            $data['total_bizum'],
+            $data['total_paid'],
+            $data['total_paid_tax_excl'],
+            $data['total_products'],
+            $data['order_details'],
+            $data['license'],
+            $data['id_employee'],
+            $data['total_discounts'],
+            $data['total_discounts_tax_excl']
+        )
         ) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
@@ -63,7 +65,7 @@ class OrdersController
         $this->entityManagerInterface->flush();
 
         $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
-        ->findOneActiveByLicense($data['license']);
+            ->findOneActiveByLicense($data['license']);
 
         $total_cash = $pos_session->getTotalCash() + $data['total_cash'];
         $total_card = $pos_session->getTotalCard() + $data['total_card'];
@@ -82,40 +84,52 @@ class OrdersController
         }
         $this->entityManagerInterface->flush();
 
-        if(isset($data['cart_rule'])){
-            $cart_rule = $this->entityManagerInterface->getRepository(PsCartRule::class)->findOneBy(['code' => $data['cart_rule'], 'active' => true]);
-            if (!$cart_rule) {
-                return new JsonResponse(['status' => 'error', 'message' => 'Invalid or inactive voucher'], JsonResponse::HTTP_BAD_REQUEST);
+        if (isset($data['discounts'])) {
+            $newCartRule = null;
+            foreach ($data['discounts'] as $discount) {
+                $cart_rule = $this->entityManagerInterface->getRepository(PsCartRule::class)->findOneBy(['code' => $discount['code'], 'active' => true]);
+                if (!$cart_rule) {
+                    return new JsonResponse(['status' => 'error', 'message' => 'Invalid or inactive voucher'], JsonResponse::HTTP_BAD_REQUEST);
+                }
+                $cart_rule->setQuantity($cart_rule->getQuantity() - 1);
+                $cart_rule->setActive(false);
+                $this->entityManagerInterface->persist($cart_rule);
+                $this->entityManagerInterface->flush();
+
+
+                $orderCartRule = $this->cartRuleLogic->generateOrderCartRule($newPsOrder, $cart_rule, $discount);
+                $this->entityManagerInterface->persist($orderCartRule);
+
+                $this->entityManagerInterface->flush();
+
+                $remainingAmount = $cart_rule->getReductionAmount() - $discount['amount'];
+
+                if ($remainingAmount > 0) {
+                    $newCartRuleData = [
+                        'code' => $this->cartRuleLogic->generateUniqueCartRuleCode(),
+                        'description' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder() . ' con vale descuento ' . $discount['code'],
+                        'name' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder(),
+                        'quantity' => 1,
+                        'reduction_amount' => $remainingAmount,
+                        'reduction_percent' => 0,
+                        'active' => true,
+                        'date_from' => (new \DateTime())->format('Y-m-d H:i:s'),
+                        'date_to' => (new \DateTime('+1 year'))->format('Y-m-d H:i:s'),
+                        'id_customer' => $data['id_customer'],
+                    ];
+                    $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($newCartRuleData);
+                }
             }
-            $cart_rule->setQuantity($cart_rule->getQuantity() - 1);
-            $cart_rule->setActive(false);
-            $this->entityManagerInterface->persist($cart_rule);
-            $this->entityManagerInterface->flush();
+            $response = [
+                'status' => 'OK',
+                'message' => 'Order created with id ' . $newPsOrder->getIdOrder()
+            ];
 
-            $remainingAmount = $cart_rule->getReductionAmount() - $data['total_paid'];
-
-            if($remainingAmount > 0)
-            {
-                $newCartRuleData = [
-                    'code' => $this->cartRuleLogic->generateUniqueCartRuleCode(),
-                    'description' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder() . ' con código ' . $data['cart_rule'],
-                    'name' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder(),
-                    'quantity' => 1,
-                    'reduction_amount' => $remainingAmount,
-                    'reduction_percent' => 0,
-                    'active' => true,
-                    'date_from' => (new \DateTime())->format('Y-m-d H:i:s'),
-                    'date_to' => (new \DateTime('+1 year'))->format('Y-m-d H:i:s'),
-                    'id_customer' => $data['id_customer'],
-                ];
-
-                $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($newCartRuleData);
-                return new JsonResponse([
-                    'status' => 'OK',
-                    'message' => 'Order created with id ' . $newPsOrder->getIdOrder(),
-                    'new_cart_rule_code' => $newCartRule->getCode()
-                ]);
+            if ($newCartRule) {
+                $response['new_cart_rule_code'] = $newCartRule->getCode();
             }
+
+            return new JsonResponse($response);
         }
         return new JsonResponse(data: ['status' => 'OK', 'message' => 'Order created with id ' . $newPsOrder->getIdOrder()]);
     }
@@ -155,25 +169,25 @@ class OrdersController
             ->setMaxResults(100) // Limitar a 100 resultados
             ->getQuery()
             ->getResult();
-    
+
         if (!$orders) {
             return new JsonResponse(['status' => 'error', 'message' => 'No orders found'], JsonResponse::HTTP_OK);
         }
-    
+
         $responseData = [];
-    
+
         foreach ($orders as $order) {
             $orderData = $this->ordersLogic->generateOrderJSON($order);
             // Obtener los detalles de la orden
             $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
                 ->findBy(['idOrder' => $order->getIdOrder()]);
-    
-            foreach ($orderDetails as $detail) {    
+
+            foreach ($orderDetails as $detail) {
                 $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail);
             }
             $responseData[] = $orderData;
         }
-    
+
         // Devolver la respuesta con las órdenes como JSON
         return new JsonResponse($responseData, JsonResponse::HTTP_OK);
     }
@@ -189,15 +203,15 @@ class OrdersController
         }
 
         $posOrders = $this->entityManagerInterface->getRepository(LpPosOrders::class)
-        ->getAllByLicenseAndDate($data['license'],$data['date1'], $data['date2']);
+            ->getAllByLicenseAndDate($data['license'], $data['date1'], $data['date2']);
         $responseData = [];
         foreach ($posOrders as $posOrder) {
             $order = $this->entityManagerInterface->getRepository(PsOrders::class)->find($posOrder->getIdOrder());
-            $orderData = $this->ordersLogic->generateSaleReportOrderJSON($order,$posOrder);
+            $orderData = $this->ordersLogic->generateSaleReportOrderJSON($order, $posOrder);
             $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-            ->findBy(['idOrder' => $order->getIdOrder()]);
+                ->findBy(['idOrder' => $order->getIdOrder()]);
 
-            foreach ($orderDetails as $detail) {    
+            foreach ($orderDetails as $detail) {
                 $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail);
             }
             $responseData[] = $orderData;

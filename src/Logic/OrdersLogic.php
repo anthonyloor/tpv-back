@@ -48,9 +48,9 @@ class OrdersLogic
         $newPsOrder->setValid(1);
         $newPsOrder->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $newPsOrder->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
-        $newPsOrder->setTotalDiscounts(0);
-        $newPsOrder->setTotalDiscountsTaxExcl(0);
-        $newPsOrder->setTotalDiscountsTaxIncl(0);
+        $newPsOrder->setTotalDiscounts($data['total_discounts']);
+        $newPsOrder->setTotalDiscountsTaxExcl($data['total_discounts_tax_excl']);
+        $newPsOrder->setTotalDiscountsTaxIncl($data['total_discounts']);
         //Preguntar por estos dos
         $newPsOrder->setRoundMode(2);
         $newPsOrder->setRoundType(2);
