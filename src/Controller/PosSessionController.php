@@ -33,10 +33,10 @@ class PosSessionController
             $newPosSession = new LpPosSessions();
 
             $newPosSession->setIdShop($data['id_shop']);
-            $newPosSession->setIdEmployeeOpen($data['id_employee']); 
+            $newPosSession->setIdEmployeeOpen($data['id_employee']);
             $newPosSession->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin'))); // Fecha actual en hora local
             $newPosSession->setInitCash($data['init_cash']);
-            $newPosSession->setActive(true); 
+            $newPosSession->setActive(true);
 
             $license = $this->entityManagerInterface->getRepository(LpLicense::class)
                 ->find($data['license']);
@@ -58,16 +58,18 @@ class PosSessionController
     #[Route('/check_pos_session', name: 'check_pos_session')]
     public function checkPosSession(Request $request): Response
     {
-
         $license_param = $request->query->get('license');
         $pos_session = $this->getActiveSessionByLicense($license_param);
 
         if (!$pos_session) {
             return new JsonResponse(['status' => 'KO']);
         } else {
-            return new JsonResponse(['status' => 'OK']);
+            $opening_date = $pos_session->getDateAdd();
+            return new JsonResponse([
+                'status' => 'OK',
+                'opening_date' => $opening_date ? $opening_date->format('Y-m-d H:i:s') : null,
+            ]);
         }
-
     }
 
     #[Route('/close_pos_session', name: 'close_pos_session')]
@@ -75,12 +77,12 @@ class PosSessionController
     {
         $data = json_decode($request->getContent(), true);
         // Verifica que los datos sean válidos
-        if (!isset($data['license'],$data['id_employee'])) {
+        if (!isset($data['license'], $data['id_employee'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
         $pos_session = $this->getActiveSessionByLicense($data['license']);
 
-        if ($pos_session) {            
+        if ($pos_session) {
             $pos_session->setActive(false); // Desactivamos la sesion
             $pos_session->setIdEmployeeClose($data['id_employee']);
             $pos_session->setDateClose(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
