@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\LpPosOrders;
+use App\Logic\CartRuleLogic;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
@@ -13,16 +14,20 @@ use App\Entity\PsOrders;
 use App\Entity\PsOrderDetail;
 use App\Logic\OrdersLogic;
 use App\Entity\LpPosSessions;
+use App\Entity\PsCartRule;
 
 class OrdersController
 {
     private $entityManagerInterface;
     private OrdersLogic $ordersLogic;
+    private CartRuleLogic $cartRuleLogic;
 
-    public function __construct(EntityManagerInterface $entityManagerInterface, OrdersLogic $ordersLogic)
+    public function __construct(EntityManagerInterface $entityManagerInterface, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic)
     {
         $this->entityManagerInterface = $entityManagerInterface;
         $this->ordersLogic = $ordersLogic;
+        $this->cartRuleLogic = $cartRuleLogic;
+
     }
 
     #[Route('/create_order', name: 'create_order', methods: ['POST'])]
@@ -77,8 +82,44 @@ class OrdersController
         }
         $this->entityManagerInterface->flush();
 
-        return new JsonResponse(data: ['status' => 'OK', 'message' => 'Order created with id' . $newPsOrder->getIdOrder()]);
+        if(isset($data['cart_rule'])){
+            $cart_rule = $this->entityManagerInterface->getRepository(PsCartRule::class)->findOneBy(['code' => $data['cart_rule'], 'active' => true]);
+            if (!$cart_rule) {
+                return new JsonResponse(['status' => 'error', 'message' => 'Invalid or inactive voucher'], JsonResponse::HTTP_BAD_REQUEST);
+            }
+            $cart_rule->setQuantity($cart_rule->getQuantity() - 1);
+            $cart_rule->setActive(false);
+            $this->entityManagerInterface->persist($cart_rule);
+            $this->entityManagerInterface->flush();
+
+            $remainingAmount = $cart_rule->getReductionAmount() - $data['total_paid'];
+
+            if($remainingAmount > 0)
+            {
+                $newCartRuleData = [
+                    'code' => $this->cartRuleLogic->generateUniqueCartRuleCode(),
+                    'description' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder() . ' con código ' . $data['cart_rule'],
+                    'name' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder(),
+                    'quantity' => 1,
+                    'reduction_amount' => $remainingAmount,
+                    'reduction_percent' => 0,
+                    'active' => true,
+                    'date_from' => (new \DateTime())->format('Y-m-d H:i:s'),
+                    'date_to' => (new \DateTime('+1 year'))->format('Y-m-d H:i:s'),
+                    'id_customer' => $data['id_customer'],
+                ];
+
+                $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($newCartRuleData);
+                return new JsonResponse([
+                    'status' => 'OK',
+                    'message' => 'Order created with id ' . $newPsOrder->getIdOrder(),
+                    'new_cart_rule_code' => $newCartRule->getCode()
+                ]);
+            }
+        }
+        return new JsonResponse(data: ['status' => 'OK', 'message' => 'Order created with id ' . $newPsOrder->getIdOrder()]);
     }
+
     #[Route('/get_order', name: 'get_order', methods: ['GET'])]
     public function getOrder(Request $request): Response
     {
