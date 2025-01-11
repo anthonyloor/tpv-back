@@ -2,9 +2,10 @@
 
 namespace App\Entity;
 
+use App\Repository\PsOrderCartRuleRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: PsOrdersRepository::class)]
+#[ORM\Entity(repositoryClass: PsOrderCartRuleRepository::class)]
 class PsOrderCartRule
 {
 

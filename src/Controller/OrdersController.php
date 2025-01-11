@@ -15,6 +15,8 @@ use App\Entity\PsOrderDetail;
 use App\Logic\OrdersLogic;
 use App\Entity\LpPosSessions;
 use App\Entity\PsCartRule;
+use App\Entity\PsCartRuleLang;
+use App\Entity\PsOrderCartRule;
 
 class OrdersController
 {
@@ -147,6 +149,24 @@ class OrdersController
         }
         // Construir la respuesta con la información de la orden
         $orderData = $this->ordersLogic->generateOrderJSON($order);
+
+        // Obtener los cart rules de la orden
+        $orderCartRules = $this->entityManagerInterface->getRepository(PsOrderCartRule::class)
+            ->findBy(['id_order' => $id_order]);
+
+        // Procesar los cart rules de la orden
+        foreach ($orderCartRules as $orderCartRule) {
+            $cartRule = $this->entityManagerInterface->getRepository(PsCartRule::class)
+                ->find($orderCartRule->getIdCartRule());
+            if ($cartRule) {
+                $cartRuleLang = $this->entityManagerInterface->getRepository(PsCartRuleLang::class)
+                    ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
+                $orderData['order_cart_rules'][] = [
+                    'code' => $cartRule->getCode(),
+                    'name' => $cartRuleLang ? $cartRuleLang->getName() : $orderCartRule->getName()
+                ];
+            }
+        }
         // Obtener los detalles de la orden
         $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
             ->findBy(['idOrder' => $id_order]);
