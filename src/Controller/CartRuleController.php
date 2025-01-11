@@ -38,6 +38,22 @@ class CartRuleController
         return new JsonResponse($cartRuleData, JsonResponse::HTTP_OK);
     }
 
+    #[Route('/get_cart_rules', name: 'get_cart_rules', methods: ['GET'])]
+    public function getCartRules(): Response
+    {
+        $cartRules = $this->entityManagerInterface->getRepository(PsCartRule::class)->findBy(
+            ['active' => true],
+            ['id_cart_rule' => 'DESC'],
+            50
+        );
+
+        $cartRulesData = array_map(function ($cartRule) {
+            return $this->cartRuleLogic->generateCartRuleJSON($cartRule);
+        }, $cartRules);
+
+        return new JsonResponse($cartRulesData, JsonResponse::HTTP_OK);
+    }
+
     #[Route('/create_cart_rule', name: 'create_cart_rule', methods: ['POST'])]
     public function createCartRule(Request $request): Response
     {
