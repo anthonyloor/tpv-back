@@ -70,7 +70,7 @@ class ProductController extends AbstractController
       ->innerJoin(PsShop::class, 'shop', 'WITH', 'sav.id_shop = shop.id_shop')  // Usamos 'sav.id_shop'
       ->leftJoin(PsCategoryLang::class, 'cl', 'WITH', 'sa.id_category_default = cl.id_category AND cl.id_lang = 1 AND cl.id_shop = 1')
       ->leftJoin(PsCategory::class, 'c', 'WITH', 'c.id_category = cl.id_category')
-      ->where('p.reference = :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2')
+      ->where('p.reference like :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2')
       ->setParameter('searchTerm', $b)
       ->setParameter('searchTerm2', $b)
       ->groupBy('sav.id_product, sav.id_product_attribute, sav.id_shop')
