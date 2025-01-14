@@ -16,6 +16,10 @@ class PsProductShop
     #[ORM\Column]
     private ?int $id_shop = null;
 
+    #[ORM\Id]
+    #[ORM\Column]
+    private ?int $id_category_default  = null;
+
     #[ORM\Column]
     private ?int $id_tax_rules_group = null;
 
@@ -45,6 +49,13 @@ class PsProductShop
 
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $date_upd = null;
+
+    #[ORM\Column(type: 'datetime')]
+
+    public function getIdCategoryDefault(): ?int
+    {
+        return $this->id_category_default;
+    }
 
     public function getIdProduct(): ?int
     {

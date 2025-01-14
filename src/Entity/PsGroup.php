@@ -12,7 +12,7 @@ class PsGroup
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private ?int $id_group = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 17, scale: 2)]
     private ?string $reduction = null;
@@ -29,9 +29,9 @@ class PsGroup
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $dateUpd = null;
 
-    public function getId(): ?int
+    public function getIdGroup(): ?int
     {
-        return $this->id;
+        return $this->id_group;
     }
 
     public function getReduction(): ?string

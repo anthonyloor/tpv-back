@@ -11,7 +11,7 @@ class PsAttributeLang
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $idlang = null;
+    private ?int $id_lang = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name:'id_attribute',nullable: false)]
@@ -22,7 +22,7 @@ class PsAttributeLang
 
     public function getIdLang(): ?int
     {
-        return $this->idlang;
+        return $this->id_lang;
     }
 
     public function getIdAttribute(): ?PsAttribute

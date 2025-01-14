@@ -9,14 +9,22 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use App\Entity\PsGroup;
+use App\Entity\PsGroupLang;
+use App\Logic\CustomerLogic;
+
 
 class CustomerController
 {
     private $entityManagerInterface;
-    public function __construct(EntityManagerInterface $entityManagerInterface)
+    private $customerLogic;
+    public function __construct(EntityManagerInterface $entityManagerInterface, CustomerLogic $customerLogic)
     {
         $this->entityManagerInterface = $entityManagerInterface;
+        $this->customerLogic = $customerLogic;
     }
+
 
     #[Route('/get_customers_filtered', name: 'get_customers_filtered')]
     public function getCustomers(): Response
@@ -112,5 +120,61 @@ class CustomerController
 
         $responseContent = json_encode($addressesArray);
         return new Response($responseContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
+    }
+
+    #[Route('/get_groups', name: 'get_groups')]
+    public function getGroups(): Response
+    {
+        $groups = $this->entityManagerInterface->getRepository(PsGroup::class)->findAll();
+
+        if (empty($groups)) {
+            return new Response('No groups found', Response::HTTP_NOT_FOUND);
+        }
+
+
+        $groupsArray = [];
+        foreach ($groups as $group) {
+            $groupLang = $this->entityManagerInterface->getRepository(PsGroupLang::class)->findOneBy(['id_group' => $group->getIdGroup()]);
+            $groupsArray[] = [
+                'id_group' => $group->getIdGroup(),
+                'name' => $groupLang->getName(), 
+            ];
+        }
+
+        $responseContent = json_encode($groupsArray);
+        return new Response($responseContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
+    }
+
+    #[Route('/create_customer', name: 'create_customer', methods: ['POST'])]
+    public function createCustomer(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['firstname']) || empty($data['lastname'])) {
+            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
+        }
+        
+        $customer = $this->customerLogic->createCustomer($data);
+        $this->entityManagerInterface->persist($customer);
+        $this->entityManagerInterface->flush();
+
+        return new JsonResponse(['message' => 'Customer created successfully', 'id_customer' => $customer->getId()], Response::HTTP_CREATED);
+    }
+
+    #[Route('/create_address', name: 'create_address', methods: ['POST'])]
+    public function createAddress(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['id_customer']) || empty($data['id_country']) || empty($data['id_state']) || empty($data['alias']) || empty($data['lastname']) || empty($data['firstname']) || empty($data['address1']) || empty($data['postcode']) || empty($data['city'])) {
+            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
+        }
+        
+
+        $address = $this->customerLogic->createAddres($data);
+        $this->entityManagerInterface->persist($address);
+        $this->entityManagerInterface->flush();
+
+        return new JsonResponse(['message' => 'Address created successfully', 'id_address' => $address->getId()], Response::HTTP_CREATED);
     }
 }
