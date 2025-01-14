@@ -163,7 +163,8 @@ class OrdersController
                     ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
                 $orderData['order_cart_rules'][] = [
                     'code' => $cartRule->getCode(),
-                    'name' => $cartRuleLang ? $cartRuleLang->getName() : $orderCartRule->getName()
+                    'name' => $cartRuleLang ? $cartRuleLang->getName() : $orderCartRule->getName(),
+                    'value' => $orderCartRule->getValue()
                 ];
             }
         }
