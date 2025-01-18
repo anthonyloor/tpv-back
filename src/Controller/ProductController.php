@@ -39,44 +39,39 @@ class ProductController extends AbstractController
 
     $qb = $this->entityManagerInterface->createQueryBuilder();
 
-    $qb->select('
+    $qb->select("
     p.id_product AS id_product,
     pa.id_product_attribute AS id_product_attribute,
     sav.id_stock_available AS id_stock_available,
     shop.id_shop AS id_shop,
     pl.name AS product_name,
-    GROUP_CONCAT(
-        DISTINCT al.name
-    ORDER BY
-        al.idAttribute SEPARATOR \' - \'  -- Accedemos a idAttribute en lugar de id_attribute
-    ) AS combination_name,
+    GROUP_CONCAT(DISTINCT al.name ORDER BY al.idAttribute SEPARATOR ' - ') AS combination_name,
     p.reference AS reference_combination,
     cl.name AS name_category,
     pa.ean13 AS ean13_combination,
-    p.ean13 AS ean13_combination_0,
-    sa.price AS price,  -- Solo seleccionamos el precio sin multiplicar
+    NULLIF(p.ean13, :empty) AS ean13_combination_0,
+    sa.price AS price,
     sav.quantity AS quantity,
     shop.name AS shop_name,
-    pl.linkRewrite  AS link_rewrite,
+    pl.linkRewrite AS link_rewrite,
     sa.active AS active
-')
-      ->from(PsStockAvailable::class, 'sav')
-      ->innerJoin('sav.id_product', 'p')  // Usamos 'sav.id_product'
-      ->leftJoin('sav.id_product_attribute', 'pa')  // Usamos 'sav.id_product_attribute'
-      ->leftJoin(PsProductAttributeCombination::class, 'pac', 'WITH', 'sav.id_product_attribute = pac.id_product_attribute')
-      ->innerJoin(PsProductLang::class, 'pl', 'WITH', 'sav.id_product = pl.id_product AND pl.id_lang = 1')
-      ->leftJoin(PsAttributeLang::class, 'al', 'WITH', 'pac.idAttribute = al.idAttribute AND al.id_lang = 1')  // Corregimos el acceso a 'idAttribute'
-      ->innerJoin(PsProductShop::class, 'sa', 'WITH', 'sav.id_product = sa.id_product')
-      ->innerJoin(PsShop::class, 'shop', 'WITH', 'sav.id_shop = shop.id_shop')  // Usamos 'sav.id_shop'
-      ->leftJoin(PsCategoryLang::class, 'cl', 'WITH', 'sa.id_category_default = cl.id_category AND cl.id_lang = 1 AND cl.id_shop = 1')
-      ->leftJoin(PsCategory::class, 'c', 'WITH', 'c.id_category = cl.id_category')
-      ->where('p.reference = :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2')
-      ->setParameter('searchTerm', $b)
-      ->setParameter('searchTerm2', $b)
-      ->groupBy('sav.id_product, sav.id_product_attribute, sav.id_shop')
-      ->orderBy('p.id_product', 'DESC');
-
-
+	")
+	->from(PsStockAvailable::class, 'sav')
+	->innerJoin('sav.id_product', 'p')
+	->leftJoin('sav.id_product_attribute', 'pa')
+	->leftJoin(PsProductAttributeCombination::class, 'pac', 'WITH', 'sav.id_product_attribute = pac.id_product_attribute')
+	->innerJoin(PsProductLang::class, 'pl', 'WITH', 'sav.id_product = pl.id_product AND pl.id_lang = 1')
+	->leftJoin(PsAttributeLang::class, 'al', 'WITH', 'pac.idAttribute = al.idAttribute AND al.id_lang = 1')
+	->innerJoin(PsProductShop::class, 'sa', 'WITH', 'sav.id_product = sa.id_product')
+	->innerJoin(PsShop::class, 'shop', 'WITH', 'sav.id_shop = shop.id_shop')
+	->leftJoin(PsCategoryLang::class, 'cl', 'WITH', 'sa.id_category_default = cl.id_category AND cl.id_lang = 1 AND cl.id_shop = 1')
+	->leftJoin(PsCategory::class, 'c', 'WITH', 'c.id_category = cl.id_category')
+	->where('p.reference LIKE :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2')
+	->setParameter('empty', '')
+	->setParameter('searchTerm', $b)
+	->setParameter('searchTerm2', $b)
+	->groupBy('sav.id_product, sav.id_product_attribute, sav.id_shop')
+	->orderBy('p.id_product', 'DESC');
     $resultado = $qb->getQuery()->getResult();
 
     foreach ($resultado as &$row) {
