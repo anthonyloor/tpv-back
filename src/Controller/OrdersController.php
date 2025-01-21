@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\LpPosOrders;
+use App\Logic\CartRuleLogic;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
@@ -10,15 +12,24 @@ use Symfony\Component\HttpFoundation\Request;
 
 use App\Entity\PsOrders;
 use App\Entity\PsOrderDetail;
-use App\Entity\PsStockAvailable;
+use App\Logic\OrdersLogic;
+use App\Entity\LpPosSessions;
+use App\Entity\PsCartRule;
+use App\Entity\PsCartRuleLang;
+use App\Entity\PsOrderCartRule;
 
 class OrdersController
 {
     private $entityManagerInterface;
+    private OrdersLogic $ordersLogic;
+    private CartRuleLogic $cartRuleLogic;
 
-    public function __construct(EntityManagerInterface $entityManagerInterface)
+    public function __construct(EntityManagerInterface $entityManagerInterface, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic)
     {
         $this->entityManagerInterface = $entityManagerInterface;
+        $this->ordersLogic = $ordersLogic;
+        $this->cartRuleLogic = $cartRuleLogic;
+
     }
 
     #[Route('/create_order', name: 'create_order', methods: ['POST'])]
@@ -27,32 +38,104 @@ class OrdersController
         $data = json_decode($request->getContent(), true);
         if (
             !isset(
-                $data['id_shop'],
-                $data['id_customer'],
-                $data['id_address_delivery'],
-                $data['payment'],
-                $data['total_paid'],
-                $data['total_paid_tax_excl'],
-                $data['total_products'],
-                $data['order_details']
-            )
+            $data['id_shop'],
+            $data['id_customer'],
+            $data['id_address_delivery'],
+            $data['payment'],
+            $data['total_cash'],
+            $data['total_card'],
+            $data['total_bizum'],
+            $data['total_paid'],
+            $data['total_paid_tax_excl'],
+            $data['total_products'],
+            $data['order_details'],
+            $data['license'],
+            $data['id_employee'],
+            $data['total_discounts'],
+            $data['total_discounts_tax_excl']
+        )
         ) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $newPsOrder = $this->generateOrder($data);
+        $newPsOrder = $this->ordersLogic->generateOrder($data);
         $this->entityManagerInterface->persist($newPsOrder);
         $this->entityManagerInterface->flush();
 
+        $newPosOrder = $this->ordersLogic->generatePosOrder($data, $newPsOrder);
+        $this->entityManagerInterface->persist($newPosOrder);
+        $this->entityManagerInterface->flush();
+
+        $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
+            ->findOneActiveByLicense($data['license']);
+
+        $total_cash = $pos_session->getTotalCash() + $data['total_cash'];
+        $total_card = $pos_session->getTotalCard() + $data['total_card'];
+        $total_bizum = $pos_session->getTotalBizum() + $data['total_bizum'];
+
+        $pos_session->setTotalBizum($total_bizum);
+        $pos_session->setTotalCard($total_card);
+        $pos_session->setTotalCash($total_cash);
+        $this->entityManagerInterface->persist($pos_session);
+        $this->entityManagerInterface->flush();
+
         foreach ($data['order_details'] as $orderDetailData) {
-            $orderDetail = $this->generateOrderDetail($data, $orderDetailData, $newPsOrder);
+            $orderDetail = $this->ordersLogic->generateOrderDetail($data, $orderDetailData, $newPsOrder);
             $this->entityManagerInterface->persist($orderDetail);
-            $this->updateProductStock($orderDetailData); // Llamamos a la función de actualización de stock
+            $this->ordersLogic->updateProductStock($orderDetailData); // Llamamos a la función de actualización de stock
         }
         $this->entityManagerInterface->flush();
 
-        return new JsonResponse(['status' => 'OK', 'message' => 'Order created with id' . $newPsOrder->getIdOrder()]);
+        if (isset($data['discounts'])) {
+            $newCartRule = null;
+            foreach ($data['discounts'] as $discount) {
+                $cart_rule = $this->entityManagerInterface->getRepository(PsCartRule::class)->findOneBy(['code' => $discount['code'], 'active' => true]);
+                if (!$cart_rule) {
+                    return new JsonResponse(['status' => 'error', 'message' => 'Invalid or inactive voucher'], JsonResponse::HTTP_BAD_REQUEST);
+                }
+                $cart_rule->setQuantity($cart_rule->getQuantity() - 1);
+                $cart_rule->setActive(false);
+                $this->entityManagerInterface->persist($cart_rule);
+                $this->entityManagerInterface->flush();
+
+
+                $orderCartRule = $this->cartRuleLogic->generateOrderCartRule($newPsOrder, $cart_rule, $discount);
+                $this->entityManagerInterface->persist($orderCartRule);
+
+                $this->entityManagerInterface->flush();
+
+                $remainingAmount = $cart_rule->getReductionAmount() - $discount['amount'];
+
+                if ($remainingAmount > 0) {
+                    $newCartRuleData = [
+                        'code' => $this->cartRuleLogic->generateUniqueCartRuleCode(),
+                        'description' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder() . ' con vale descuento ' . $discount['code'],
+                        'name' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder(),
+                        'quantity' => 1,
+                        'reduction_amount' => $remainingAmount,
+                        'reduction_percent' => 0,
+                        'active' => true,
+                        'date_from' => (new \DateTime())->format('Y-m-d H:i:s'),
+                        'date_to' => (new \DateTime('+1 year'))->format('Y-m-d H:i:s'),
+                        'id_customer' => $data['id_customer'],
+                    ];
+                    $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($newCartRuleData);
+                }
+            }
+            $response = [
+                'status' => 'OK',
+                'message' => 'Order created with id ' . $newPsOrder->getIdOrder()
+            ];
+
+            if ($newCartRule) {
+                $response['new_cart_rule_code'] = $newCartRule->getCode();
+            }
+
+            return new JsonResponse($response);
+        }
+        return new JsonResponse(data: ['status' => 'OK', 'message' => 'Order created with id ' . $newPsOrder->getIdOrder()]);
     }
+
     #[Route('/get_order', name: 'get_order', methods: ['GET'])]
     public function getOrder(Request $request): Response
     {
@@ -65,41 +148,33 @@ class OrdersController
             return new JsonResponse(['status' => 'error', 'message' => 'Order not found'], JsonResponse::HTTP_OK);
         }
         // Construir la respuesta con la información de la orden
-        $orderData = [
-            'id_shop' => $order->getIdShop(),
-            'id_customer' => $order->getIdCustomer(),
-            'id_address_delivery' => $order->getIdAddressDelivery(),
-            'payment' => $order->getPayment(),
-            'total_paid' => $order->getTotalPaid(),
-            'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
-            'total_products' => $order->getTotalProducts(),
-            'order_details' => []
-        ];
+        $orderData = $this->ordersLogic->generateOrderJSON($order);
+
+        // Obtener los cart rules de la orden
+        $orderCartRules = $this->entityManagerInterface->getRepository(PsOrderCartRule::class)
+            ->findBy(['id_order' => $id_order]);
+
+        // Procesar los cart rules de la orden
+        foreach ($orderCartRules as $orderCartRule) {
+            $cartRule = $this->entityManagerInterface->getRepository(PsCartRule::class)
+                ->find($orderCartRule->getIdCartRule());
+            if ($cartRule) {
+                $cartRuleLang = $this->entityManagerInterface->getRepository(PsCartRuleLang::class)
+                    ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
+                $orderData['order_cart_rules'][] = [
+                    'code' => $cartRule->getCode(),
+                    'name' => $cartRuleLang ? $cartRuleLang->getName() : $orderCartRule->getName(),
+                    'value' => $orderCartRule->getValue()
+                ];
+            }
+        }
         // Obtener los detalles de la orden
         $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
             ->findBy(['idOrder' => $id_order]);
 
         // Procesar los detalles de la orden
         foreach ($orderDetails as $detail) {
-
-            $stock_available_id = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-            ->findOneByProductAttributeShop($detail->getProductId(),$detail->getProductAttributeId(),$detail->getIdShop());
-
-            $orderData['order_details'][] = [
-                'product_id' => $detail->getProductId(),
-                'product_attribute_id' => $detail->getProductAttributeId(),
-                'stock_available_id' => $stock_available_id->getIdStockAvailable(),
-                'product_name' => $detail->getProductName(),
-                'product_quantity' => $detail->getProductQuantity(),
-                'product_price' => $detail->getProductPrice(),
-                'product_ean13' => $detail->getProductEan13(),
-                'product_reference' => $detail->getProductReference(),
-                'total_price_tax_incl' => $detail->getTotalPriceTaxIncl(),
-                'total_price_tax_excl' => $detail->getTotalPriceTaxExcl(),
-                'unit_price_tax_incl' => $detail->getUnitPriceTaxIncl(),
-                'unit_price_tax_excl' => $detail->getUnitPriceTaxExcl(),
-                'id_shop' => $detail->getIdShop()
-            ];
+            $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail);
         }
 
         // Devolver la respuesta como JSON
@@ -115,170 +190,55 @@ class OrdersController
             ->setMaxResults(100) // Limitar a 100 resultados
             ->getQuery()
             ->getResult();
-    
+
         if (!$orders) {
             return new JsonResponse(['status' => 'error', 'message' => 'No orders found'], JsonResponse::HTTP_OK);
         }
-        //dump($orders);
-    
+
         $responseData = [];
-    
-        // Procesar cada orden
+
         foreach ($orders as $order) {
-            $orderData = [
-                'id_order' => $order->getIdOrder(),
-                'id_shop' => $order->getIdShop(),
-                'id_customer' => $order->getIdCustomer(),
-                'id_address_delivery' => $order->getIdAddressDelivery(),
-                'payment' => $order->getPayment(),
-                'total_paid' => $order->getTotalPaid(),
-                'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
-                'total_products' => $order->getTotalProducts(),
-                'order_details' => []
-            ];
-    
+            $orderData = $this->ordersLogic->generateOrderJSON($order);
             // Obtener los detalles de la orden
             $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
                 ->findBy(['idOrder' => $order->getIdOrder()]);
-    
+
             foreach ($orderDetails as $detail) {
-                $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-                    ->findOneByProductAttributeShop($detail->getProductId(), $detail->getProductAttributeId(), $detail->getIdShop());
-    
-                $orderData['order_details'][] = [
-                    'product_id' => $detail->getProductId(),
-                    'product_attribute_id' => $detail->getProductAttributeId(),
-                    'stock_available_id' => $stockAvailable ? $stockAvailable->getIdStockAvailable() : null,
-                    'product_name' => $detail->getProductName(),
-                    'product_quantity' => $detail->getProductQuantity(),
-                    'product_price' => $detail->getProductPrice(),
-                    'product_ean13' => $detail->getProductEan13(),
-                    'product_reference' => $detail->getProductReference(),
-                    'total_price_tax_incl' => $detail->getTotalPriceTaxIncl(),
-                    'total_price_tax_excl' => $detail->getTotalPriceTaxExcl(),
-                    'unit_price_tax_incl' => $detail->getUnitPriceTaxIncl(),
-                    'unit_price_tax_excl' => $detail->getUnitPriceTaxExcl(),
-                    'id_shop' => $detail->getIdShop()
-                ];
+                $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail);
             }
-    
             $responseData[] = $orderData;
         }
-    
+
         // Devolver la respuesta con las órdenes como JSON
         return new JsonResponse($responseData, JsonResponse::HTTP_OK);
     }
-    
-    private function generateOrder($data): PsOrders
+
+    #[Route('/get_sale_report_orders', name: 'get_sale_report_orders', methods: ['POST'])]
+    public function getSaleReportOrders(Request $request): Response
     {
-        $newPsOrder = new PsOrders();
-
-        $newPsOrder->setReference($this->generateUniqueOrderReference());
-        $newPsOrder->setIdShopGroup(1);
-        $newPsOrder->setIdShop($data['id_shop']);
-        $newPsOrder->setIdCarrier(0);
-        $newPsOrder->setIdLang(1);
-        $newPsOrder->setIdCustomer($data['id_customer']);
-        $newPsOrder->setIdCart(0);
-        $newPsOrder->setIdCurrency(1);
-        $newPsOrder->setIdAddressDelivery($data['id_address_delivery']);
-        $newPsOrder->setIdAddressInvoice($data['id_address_delivery']);
-        $newPsOrder->setCurrentState(19);
-        $newPsOrder->setSecureKey($this->generateSecureKey($data['id_customer']));
-        $newPsOrder->setPayment($data['payment']);
-        $newPsOrder->setModule("LP-TPV");
-        $newPsOrder->setTotalPaid($data['total_paid']);
-        $newPsOrder->setTotalPaidTaxIncl($data['total_paid']);
-        $newPsOrder->setTotalPaidTaxExcl($data['total_paid_tax_excl']);
-        $newPsOrder->setTotalPaidReal($data['total_paid']);
-        $newPsOrder->setTotalProducts($data['total_products']);
-        $newPsOrder->setInvoiceNumber(0);
-        $newPsOrder->setInvoiceDate(new \DateTime());
-        $newPsOrder->setValid(1);
-        $newPsOrder->setDateAdd(new \DateTime());
-        $newPsOrder->setDateUpd(new \DateTime());
-        $newPsOrder->setTotalDiscounts(0);
-        $newPsOrder->setTotalDiscountsTaxExcl(0);
-        $newPsOrder->setTotalDiscountsTaxIncl(0);
-        //Preguntar por estos dos
-        $newPsOrder->setRoundMode(2);
-        $newPsOrder->setRoundType(2);
-
-        return $newPsOrder;
-    }
-
-    private function generateOrderDetail($data, $orderDetailData, $newPsOrder): PsOrderDetail
-    {
-        $orderDetail = new PsOrderDetail();
-        $orderDetail->setOrder($newPsOrder);
-        $orderDetail->setIdShop($data['id_shop']);
-        $orderDetail->setProductId($orderDetailData['product_id']);
-        $orderDetail->setProductAttributeId($orderDetailData['product_attribute_id']);
-        $orderDetail->setProductName($orderDetailData['product_name']);
-        $orderDetail->setProductQuantity($orderDetailData['product_quantity']);
-        $orderDetail->setProductPrice($orderDetailData['product_price']);
-        $orderDetail->setProductEan13($orderDetailData['product_ean13']);
-        $orderDetail->setProductReference($orderDetailData['product_reference']);
-        $orderDetail->setTotalPriceTaxIncl($orderDetailData['total_price_tax_incl']);
-        $orderDetail->setTotalPriceTaxExcl($orderDetailData['total_price_tax_excl']);
-        $orderDetail->setUnitPriceTaxExcl($orderDetailData['unit_price_tax_excl']);
-        $orderDetail->setUnitPriceTaxIncl($orderDetailData['unit_price_tax_incl']);
-        $orderDetail->setReductionPercent(0);
-        $orderDetail->setReductionAmount(0);
-        $orderDetail->setReductionAmountTaxExcl(0);
-        $orderDetail->setReductionAmountTaxIncl(0);
-        $orderDetail->setGroupReduction(0);
-        $orderDetail->setProductQuantityDiscount(0);
-        $orderDetail->setTaxName("IVA");
-        $orderDetail->setTaxRate(21);
-        $orderDetail->setOriginalProductPrice(0);
-
-        $productStock = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-            ->findOneBy(['id_stock_available' => $orderDetailData['stock_available_id']]);
-        if ($productStock) {
-            $orderDetail->setProductQuantityInStock($productStock->getQuantity());
-        } else {
-            $orderDetail->setProductQuantityInStock(0); // Si no se encuentra, asigna 0
+        $data = json_decode($request->getContent(), true);
+        if (!isset($data['license'], $data['date1'], $data['date2'])) {
+            return new JsonResponse(
+                ['status' => 'error', 'message' => 'Invalid data provided']
+            );
         }
 
-        return $orderDetail;
-    }
-    private function generateUniqueOrderReference(): string
-    {
-        $length = 9;
-        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        do {
-            // Genera una referencia aleatoria de 9 caracteres
-            $reference = '';
-            for ($i = 0; $i < $length; $i++) {
-                $reference .= $characters[rand(0, strlen($characters) - 1)];
+        $posOrders = $this->entityManagerInterface->getRepository(LpPosOrders::class)
+            ->getAllByLicenseAndDate($data['license'], $data['date1'], $data['date2']);
+        $responseData = [];
+        foreach ($posOrders as $posOrder) {
+            $order = $this->entityManagerInterface->getRepository(PsOrders::class)->find($posOrder->getIdOrder());
+            $orderData = $this->ordersLogic->generateSaleReportOrderJSON($order, $posOrder);
+            $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                ->findBy(['idOrder' => $order->getIdOrder()]);
+
+            foreach ($orderDetails as $detail) {
+                $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail);
             }
-
-            // Verifica si la referencia ya existe en la base de datos
-            $existingOrder = $this->entityManagerInterface->getRepository(PsOrders::class)
-                ->findOneBy(['reference' => $reference]);
-        } while ($existingOrder !== null); // Repetir si ya existe
-
-        return $reference;
-    }
-
-    private function generateSecureKey(int $customerId): string
-    {
-        $secret = 'my_secret_key';
-        return hash('sha256', $customerId . $secret . uniqid((string) $customerId, true));
-    }
-
-    private function updateProductStock($orderDetailData)
-    {
-        // Buscar el registro de stock para el producto
-        $productStock = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-            ->findOneBy(['id_stock_available' => $orderDetailData['stock_available_id']]);
-
-        // Si existe, reducir el stock disponible en función de la cantidad de pedido
-        if ($productStock) {
-            $newQuantity = $productStock->getQuantity() - $orderDetailData['product_quantity'];
-            $productStock->setQuantity($newQuantity);
-            $this->entityManagerInterface->persist($productStock); // Persistir los cambios
+            $responseData[] = $orderData;
         }
+
+        return new JsonResponse($responseData, JsonResponse::HTTP_OK);
+
     }
 }
