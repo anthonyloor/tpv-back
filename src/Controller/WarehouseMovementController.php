@@ -12,13 +12,16 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Entity\LpWarehouseMovement;
 use App\Entity\LpWarehouseMovementDetails;
 use App\Entity\LpWarehouseMovementIncidents;
+use App\Logic\WareHouseMovementLogic;
 
 class WarehouseMovementController extends AbstractController
 {
     private $entityManagerInterface;
-    public function __construct(EntityManagerInterface $entityManagerInterface)
+    private $wareHouseMovementLogic;
+    public function __construct(EntityManagerInterface $entityManagerInterface, WareHouseMovementLogic $wareHouseMovementLogic)
     {
         $this->entityManagerInterface = $entityManagerInterface;
+        $this->wareHouseMovementLogic = $wareHouseMovementLogic;
     }
 
     #[Route('/get_warehouse_movements', name: 'get_warehouse_movements')]
@@ -26,43 +29,44 @@ class WarehouseMovementController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         $repository = $this->entityManagerInterface->getRepository(LpWarehouseMovement::class);
-        if (isset($data['data1'], $data['data2'])) 
+        if (isset($data['data1'], $data['data2']))
             $movements = $repository->findByDateRange(new \DateTime($data['data1']), new \DateTime($data['data2']));
         else
             $movements = $repository->findBy([], ['id_warehouse_movement' => 'DESC'], 100);
 
-            $movementIncidentJSONComplete = [];
-            $movementDetailsJSONComplete = [];
-            $movementsJSONComplete = [];
-            foreach ($movements as $movement) {
-                $movementDetails = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->findBy(['id_warehouse_movement' => $movement->getIdWarehouseMovement()]);
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movements);
+        return new JsonResponse($movementsJSON);
+    }
 
-                foreach ($movementDetails as $detail) {
-                    $movementIncidents = $this->entityManagerInterface->getRepository(LpWarehouseMovementIncidents::class)->findBy(['id_warehouse_movement_detail' => $detail->getIdWarehouseMovementDetail()]);
-                    foreach($movementIncidents as $movementIncident){
-                        $movementIncidentJSON = [
-                            'id_incident' => $movementIncident->getIdWarehouseMovementIncidents(),
-                            'description' => $movementIncident->getDescription(),
-                        ];
-                        $movementIncidentJSONComplete[] = $movementIncidentJSON;
-                    }
+    #[Route('/get_warehouse_movement', name: 'get_warehouse_movement')]
+    public function getWareHouseMovement(Request $request): Response
+    {
+        $id = $request->query->get('id_warehouse_movement');
 
-                    $movementDetailsJSON = [
-                        'id_warehouse_movement_detail' => $detail->getIdWarehouseMovementDetail(),
-                        'product_name' => $detail->getProductName(),
-                        'sent_quantity' => $detail->getSentQuantity(),
-                        'recived_quantity' => $detail->getRecivedQuantity(),
-                        'movement_incidents' => $movementIncidentJSONComplete
-                    ];
-                    $movementDetailsJSONComplete[] = $movementDetailsJSON;
-                }
-                $movementsJSON = [
-                    'id_warehouse_movement' => $movement->getIdWarehouseMovement(),
-                    'date_add' => $movement->getDateAdd()->format('Y-m-d'),
-                    'movement_details' => $movementDetailsJSONComplete,
-                ];
+        $repository = $this->entityManagerInterface->getRepository(LpWarehouseMovement::class);
+        $movement = $repository->find($id);
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON([$movement]);
+        return new JsonResponse($movementsJSON);
+    }
 
+    #[Route('/create_warehouse_movement', name: 'create_warehouse_movement')]
+    public function createWareHouseMovement(Request $request):Response
+    {
+        $data = json_decode($request->getContent(), true);
+        if(!isset($data['description'],$data['type'],$data['id_employee'],$data['movements_details']))
+        {
+            return new JsonResponse(['error' => 'Missing parameters'], 400);
+        }
+        $newWareHouseMovement = $this->wareHouseMovementLogic->generateWareHouseMovement($data);
+        if($data['movements_details'] != null){
+            foreach($data['movements_details'] as $detail)
+            {
+                $this->wareHouseMovementLogic->generateWareHouseMovementDetail($detail, $newWareHouseMovement);
             }
-            return new JsonResponse($movementsJSON);
+        }
+
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON([$newWareHouseMovement]);
+
+        return new JsonResponse($movementsJSON);
     }
 }

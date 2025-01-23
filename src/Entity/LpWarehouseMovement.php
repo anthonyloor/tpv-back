@@ -16,10 +16,10 @@ class LpWarehouseMovement
     #[ORM\Column(type: "string", length: 255)]
     private ?string $description = null;
 
-    #[ORM\Column(type: "integer")]
+    #[ORM\Column(type: "integer", nullable: true)]
     private ?int $id_shop_origin = null;
 
-    #[ORM\Column(type: "integer")]
+    #[ORM\Column(type: "integer", nullable: true)]
     private ?int $id_shop_destiny = null;
 
     #[ORM\Column(type: "string", length: 100)]
@@ -69,7 +69,7 @@ class LpWarehouseMovement
         return $this->id_shop_origin;
     }
 
-    public function setIdShopOrigin(int $id_shop_origin): self
+    public function setIdShopOrigin(?int $id_shop_origin): self
     {
         $this->id_shop_origin = $id_shop_origin;
         return $this;
@@ -80,7 +80,7 @@ class LpWarehouseMovement
         return $this->id_shop_destiny;
     }
 
-    public function setIdShopDestiny(int $id_shop_destiny): self
+    public function setIdShopDestiny(?int $id_shop_destiny): self
     {
         $this->id_shop_destiny = $id_shop_destiny;
         return $this;
