@@ -32,7 +32,7 @@ class WarehouseMovementController extends AbstractController
         if (isset($data['data1'], $data['data2']))
             $movements = $repository->findByDateRange(new \DateTime($data['data1']), new \DateTime($data['data2']));
         else
-            $movements = $repository->findBy([], ['id_warehouse_movement' => 'DESC'], 100);
+            $movements = $repository->findBy([], ['id_warehouse_movement' => 'DESC'], 50);
 
         $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movements);
         return new JsonResponse($movementsJSON);
@@ -67,6 +67,25 @@ class WarehouseMovementController extends AbstractController
 
         $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON([$newWareHouseMovement]);
 
+        return new JsonResponse($movementsJSON);
+    }
+
+    #[Route('/update_warehouse_movement', name: 'update_warehouse_movement')]
+    public function updateWareHouseMovement(Request $request):Response
+    {
+        $data = json_decode($request->getContent(), true);
+        if(!isset($data['id_warehouse_movement'],$data['status']))
+        {
+            return new JsonResponse(['error' => 'Missing parameters'], 400);
+        }
+        $repository = $this->entityManagerInterface->getRepository(LpWarehouseMovement::class);
+        $movement = $repository->find($data['id_warehouse_movement']);
+        if($movement == null)
+        {
+            return new JsonResponse(['error' => 'Movement not found'], 404);
+        }
+        $this->wareHouseMovementLogic->updateWareHouseMovement($data, $movement);
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON([$movement]);
         return new JsonResponse($movementsJSON);
     }
 }

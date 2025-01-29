@@ -9,7 +9,7 @@ use App\Entity\LpWarehouseMovementIncidents;
 
 class WareHouseMovementLogic
 {
- 
+
     private $entityManagerInterface;
 
     public function __construct(EntityManagerInterface $entityManagerInterface)
@@ -17,11 +17,12 @@ class WareHouseMovementLogic
         $this->entityManagerInterface = $entityManagerInterface;
     }
 
-    public function generateWareHouseMovementJSON($movements):array
+    public function generateWareHouseMovementJSON($movements): array
     {
-        $movementIncidentJSONComplete = [];
-        $movementDetailsJSONComplete = [];
+        $movementsJSONComplete = [];
         foreach ($movements as $movement) {
+            $movementIncidentJSONComplete = [];
+            $movementDetailsJSONComplete = [];
             $movementDetails = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->findBy(['id_warehouse_movement' => $movement->getIdWarehouseMovement()]);
 
             foreach ($movementDetails as $detail) {
@@ -45,20 +46,21 @@ class WareHouseMovementLogic
             }
             $movementsJSON = [
                 'id_warehouse_movement' => $movement->getIdWarehouseMovement(),
-                'date_add' => $movement->getDateAdd()->format('Y-m-d'),
+                'date_add' => $movement->getDateAdd()->format('Y-m-d H:i:s'),
                 'description' => $movement->getDescription(),
                 'id_shop_origin' => $movement->getIdShopOrigin(),
                 'id_shop_destiny' => $movement->getIdShopDestiny(),
                 'status' => $movement->getStatus(),
                 'type' => $movement->getType(),
+                'modify_reason' => $movement->getModifyReason(),
                 'movement_details' => $movementDetailsJSONComplete
             ];
+            $movementsJSONComplete[] = $movementsJSON;
         }
-        return $movementsJSON;
-
+        return $movementsJSONComplete;
     }
 
-    public function generateWareHouseMovement($data):LpWarehouseMovement
+    public function generateWareHouseMovement($data): LpWarehouseMovement
     {
         $newWareHouseMovement = new LpWarehouseMovement();
         $newWareHouseMovement->setDescription($data['description']);
@@ -74,7 +76,7 @@ class WareHouseMovementLogic
         return $newWareHouseMovement;
     }
 
-    public function generateWareHouseMovementDetail($detail,$newWareHouseMovement):LpWarehouseMovementDetails
+    public function generateWareHouseMovementDetail($detail, $newWareHouseMovement): LpWarehouseMovementDetails
     {
         $newWareHouseMovementDetail = new LpWarehouseMovementDetails();
         $newWareHouseMovementDetail->setSentQuantity($detail['sent_quantity']);
@@ -85,5 +87,77 @@ class WareHouseMovementLogic
         $this->entityManagerInterface->persist($newWareHouseMovementDetail);
         $this->entityManagerInterface->flush();
         return $newWareHouseMovementDetail;
+    }
+
+    public function generateWareHouseMovementIncident($incident, $newWareHouseMovementDetail): LpWarehouseMovementIncidents
+    {
+        $newWareHouseMovementIncident = new LpWarehouseMovementIncidents();
+        $newWareHouseMovementIncident->setDescription($incident['description']);
+        $newWareHouseMovementIncident->setIdWarehouseMovementDetail($newWareHouseMovementDetail->getIdWarehouseMovementDetail());
+        $this->entityManagerInterface->persist($newWareHouseMovementIncident);
+        $this->entityManagerInterface->flush();
+        return $newWareHouseMovementIncident;
+    }
+
+    public function updateWareHouseMovement($data, $movement): LpWarehouseMovement
+    {
+        $status = $movement->getStatus();
+
+        if ($status == "En creacion") {
+            //Se puede modificar cualquier cosa
+            $movement->setDescription($data['description']);
+            $movement->setIdShopOrigin($data['id_shop_origin'] ?? null);
+            $movement->setIdShopDestiny($data['id_shop_destiny'] ?? null);
+            $movement->setStatus($data['status']);
+            $movement->setType($data['type']);
+            $movement->setDateModified(new \DateTime());
+
+            if (!empty($data['movement_details'])) {
+                foreach ($data['movement_details'] as $detail) {
+
+                    $movementDetail = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->find($detail['id_warehouse_movement_detail']);
+                    if (!$movementDetail) {
+                        //Generar un nuevo movimiento detail
+                        $movementDetail = new LpWarehouseMovementDetails();
+                        $movementDetail->setIdWarehouseMovement($movement->getIdWarehouseMovement());
+                    } else {
+                        //Sobre escribir el movimiento detail
+                        $movementDetail->setSentQuantity($detail['sent_quantity']);
+                        $movementDetail->setIdProduct($detail['id_product']);
+                        $movementDetail->setIdProductAttribute($detail['id_product_attribute']);
+                        $movementDetail->setProductName($detail['product_name']);
+                    }
+
+                    $this->entityManagerInterface->persist($movementDetail);
+                    $this->entityManagerInterface->flush();
+                }
+            }
+        }
+        if ($status == "Enviado" || $status == "Recibido") {
+            //Solo se puede modificar el estado y date_modified, modify_reason
+            $movement->setStatus($data['status']);
+            $movement->setDateModified(new \DateTime());
+            $movement->setModifyReason($data['modify_reason']);
+        }
+        if ($status == "En revision" || $status == "Incidencia pendiente") {
+            //se puede modificar el estado y movement details y date_modified, modify_reason
+            $movement->setStatus($data['status']);
+            $movement->setDateModified(new \DateTime());
+            $movement->setModifyReason($data['modify_reason']);
+            foreach ($data['movement_details'] as $detail) {
+
+                $movementDetail = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->find($detail['id_warehouse_movement_detail']);
+
+                //Sobre escribir el movimiento detail
+                $movementDetail->setRecivedQuantity($detail['recived_quantity']);
+                $movementDetail->setStatus($detail['status']);
+
+                $this->entityManagerInterface->persist($movementDetail);
+                $this->entityManagerInterface->flush();
+            }
+        }
+        $this->entityManagerInterface->persist($movement);
+        $this->entityManagerInterface->flush();
+        return $movement;
     }
 }

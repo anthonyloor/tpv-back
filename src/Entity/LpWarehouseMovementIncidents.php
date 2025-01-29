@@ -30,4 +30,23 @@ class LpWarehouseMovementIncidents
     {
         return $this->description;
     }
+
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    public function getIdWarehouseMovementDetail(): ?int
+    {
+        return $this->id_warehouse_movement_detail;
+    }
+
+    public function setIdWarehouseMovementDetail(int $id_warehouse_movement_detail): self
+    {
+        $this->id_warehouse_movement_detail = $id_warehouse_movement_detail;
+
+        return $this;
+    }
 }

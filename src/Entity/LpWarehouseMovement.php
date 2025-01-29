@@ -28,16 +28,16 @@ class LpWarehouseMovement
     #[ORM\Column(type: "string", length: 100)]
     private ?string $type = null;
 
-    #[ORM\Column(type: "date")]
+    #[ORM\Column(type: "datetime")]
     private ?\DateTimeInterface $date_add = null;
 
-    #[ORM\Column(type: "date")]
+    #[ORM\Column(type: "datetime")]
     private ?\DateTimeInterface $date_recived = null;
 
-    #[ORM\Column(type: "date")]
+    #[ORM\Column(type: "datetime")]
     private ?\DateTimeInterface $date_excute = null;
 
-    #[ORM\Column(type: "date")]
+    #[ORM\Column(type: "datetime")]
     private ?\DateTimeInterface $date_modified = null;
 
     #[ORM\Column(type: "integer")]
@@ -58,7 +58,7 @@ class LpWarehouseMovement
         return $this->description;
     }
 
-    public function setDescription(string $description): self
+    public function setDescription(?string $description): self
     {
         $this->description = $description;
         return $this;
