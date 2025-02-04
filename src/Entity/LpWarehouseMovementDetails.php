@@ -34,7 +34,21 @@ class LpWarehouseMovementDetails
     #[ORM\Column(type: "string", length: 100)]
     private ?string $status = null;
 
+    #[ORM\Column(type: "string", length: 13)]
+    private ?string $ean13 = null;
+
     // Getters y Setters
+
+    public function getEan13(): ?string
+    {
+        return $this->ean13;
+    }
+
+    public function setEan13(string $ean13): self
+    {
+        $this->ean13 = $ean13;
+        return $this;
+    }
 
     public function getIdWarehouseMovementDetail(): ?int
     {

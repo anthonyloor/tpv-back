@@ -17,47 +17,52 @@ class WareHouseMovementLogic
         $this->entityManagerInterface = $entityManagerInterface;
     }
 
-    public function generateWareHouseMovementJSON($movements): array
+    public function generateWareHouseMovementJSON($movement): array
     {
-        $movementsJSONComplete = [];
-        foreach ($movements as $movement) {
-            $movementIncidentJSONComplete = [];
-            $movementDetailsJSONComplete = [];
-            $movementDetails = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->findBy(['id_warehouse_movement' => $movement->getIdWarehouseMovement()]);
+        $movementsJSON = [
+            'id_warehouse_movement' => $movement->getIdWarehouseMovement(),
+            'date_add' => $movement->getDateAdd()->format('Y-m-d H:i:s'),
+            'date_recived' => $movement->getDateRecived() ? $movement->getDateRecived()->format('Y-m-d H:i:s') : null,
+            'date_excute' => $movement->getDateExcute() ? $movement->getDateExcute()->format('Y-m-d H:i:s') : null,
+            'date_modified' => $movement->getDateModified() ? $movement->getDateModified()->format('Y-m-d H:i:s') : null,
+            'description' => $movement->getDescription(),
+            'id_shop_origin' => $movement->getIdShopOrigin(),
+            'id_shop_destiny' => $movement->getIdShopDestiny(),
+            'status' => $movement->getStatus(),
+            'type' => $movement->getType(),
+            'modify_reason' => $movement->getModifyReason(),
+            'employee' => $movement->getIdEmployee(),
+        ];
+        return $movementsJSON;
+    }
 
-            foreach ($movementDetails as $detail) {
-                $movementIncidents = $this->entityManagerInterface->getRepository(LpWarehouseMovementIncidents::class)->findBy(['id_warehouse_movement_detail' => $detail->getIdWarehouseMovementDetail()]);
-                foreach ($movementIncidents as $movementIncident) {
-                    $movementIncidentJSON = [
-                        'id_incident' => $movementIncident->getIdWarehouseMovementIncidents(),
-                        'description' => $movementIncident->getDescription(),
-                    ];
-                    $movementIncidentJSONComplete[] = $movementIncidentJSON;
-                }
-
-                $movementDetailsJSON = [
-                    'id_warehouse_movement_detail' => $detail->getIdWarehouseMovementDetail(),
-                    'product_name' => $detail->getProductName(),
-                    'sent_quantity' => $detail->getSentQuantity(),
-                    'recived_quantity' => $detail->getRecivedQuantity(),
-                    'movement_incidents' => $movementIncidentJSONComplete
+    public function generateWareHouseMovementDetailJSON($movement): array
+    {
+        $movementDetails = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->findBy(['id_warehouse_movement' => $movement->getIdWarehouseMovement()]);
+        $movementDetailsJSONComplete = [];
+        $movementIncidentJSONComplete = [];
+        foreach ($movementDetails as $detail) {
+            $movementIncidents = $this->entityManagerInterface->getRepository(LpWarehouseMovementIncidents::class)->findBy(['id_warehouse_movement_detail' => $detail->getIdWarehouseMovementDetail()]);
+            foreach ($movementIncidents as $movementIncident) {
+                $movementIncidentJSON = [
+                    'id_incident' => $movementIncident->getIdWarehouseMovementIncidents(),
+                    'description' => $movementIncident->getDescription(),
                 ];
-                $movementDetailsJSONComplete[] = $movementDetailsJSON;
+                $movementIncidentJSONComplete[] = $movementIncidentJSON;
             }
-            $movementsJSON = [
-                'id_warehouse_movement' => $movement->getIdWarehouseMovement(),
-                'date_add' => $movement->getDateAdd()->format('Y-m-d H:i:s'),
-                'description' => $movement->getDescription(),
-                'id_shop_origin' => $movement->getIdShopOrigin(),
-                'id_shop_destiny' => $movement->getIdShopDestiny(),
-                'status' => $movement->getStatus(),
-                'type' => $movement->getType(),
-                'modify_reason' => $movement->getModifyReason(),
-                'movement_details' => $movementDetailsJSONComplete
+
+            $movementDetailsJSON = [
+                'id_warehouse_movement_detail' => $detail->getIdWarehouseMovementDetail(),
+                'product_name' => $detail->getProductName(),
+                'ean13' => $detail->getEan13(),
+                'sent_quantity' => $detail->getSentQuantity(),
+                'recived_quantity' => $detail->getRecivedQuantity(),
+                'status' => $detail->getStatus(),
+                'movement_incidents' => $movementIncidentJSONComplete
             ];
-            $movementsJSONComplete[] = $movementsJSON;
+            $movementDetailsJSONComplete[] = $movementDetailsJSON;
         }
-        return $movementsJSONComplete;
+        return $movementDetailsJSONComplete;
     }
 
     public function generateWareHouseMovement($data): LpWarehouseMovement
@@ -126,6 +131,7 @@ class WareHouseMovementLogic
                         $movementDetail->setIdProduct($detail['id_product']);
                         $movementDetail->setIdProductAttribute($detail['id_product_attribute']);
                         $movementDetail->setProductName($detail['product_name']);
+                        $movementDetail->setEan13($detail['ean13']);
                     }
 
                     $this->entityManagerInterface->persist($movementDetail);

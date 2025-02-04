@@ -32,10 +32,16 @@ class WarehouseMovementController extends AbstractController
         if (isset($data['data1'], $data['data2']))
             $movements = $repository->findByDateRange(new \DateTime($data['data1']), new \DateTime($data['data2']));
         else
+        {
             $movements = $repository->findBy([], ['id_warehouse_movement' => 'DESC'], 50);
-
-        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movements);
-        return new JsonResponse($movementsJSON);
+        }
+        $movementsJSONComplete = [];
+        foreach($movements as $movement)
+        {
+            $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movement);
+            $movementsJSONComplete[] = $movementsJSON;
+        }
+        return new JsonResponse($movementsJSONComplete);
     }
 
     #[Route('/get_warehouse_movement', name: 'get_warehouse_movement')]
@@ -45,7 +51,9 @@ class WarehouseMovementController extends AbstractController
 
         $repository = $this->entityManagerInterface->getRepository(LpWarehouseMovement::class);
         $movement = $repository->find($id);
-        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON([$movement]);
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movement);
+        $movementDetails = $this->wareHouseMovementLogic->generateWareHouseMovementDetailJSON($movement);
+        $movementsJSON['movement_details'] = $movementDetails;
         return new JsonResponse($movementsJSON);
     }
 
