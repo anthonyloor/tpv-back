@@ -88,6 +88,7 @@ class WareHouseMovementLogic
         $newWareHouseMovementDetail->setIdProduct($detail['id_product']);
         $newWareHouseMovementDetail->setIdProductAttribute($detail['id_product_attribute']);
         $newWareHouseMovementDetail->setProductName($detail['product_name']);
+        $newWareHouseMovementDetail->setEan13($detail['ean13']);
         $newWareHouseMovementDetail->setIdWarehouseMovement($newWareHouseMovement->getIdWarehouseMovement());
         $this->entityManagerInterface->persist($newWareHouseMovementDetail);
         $this->entityManagerInterface->flush();
@@ -117,6 +118,7 @@ class WareHouseMovementLogic
             $movement->setType($data['type']);
             $movement->setDateModified(new \DateTime());
 
+
             if (!empty($data['movement_details'])) {
                 foreach ($data['movement_details'] as $detail) {
 
@@ -125,14 +127,14 @@ class WareHouseMovementLogic
                         //Generar un nuevo movimiento detail
                         $movementDetail = new LpWarehouseMovementDetails();
                         $movementDetail->setIdWarehouseMovement($movement->getIdWarehouseMovement());
-                    } else {
-                        //Sobre escribir el movimiento detail
-                        $movementDetail->setSentQuantity($detail['sent_quantity']);
-                        $movementDetail->setIdProduct($detail['id_product']);
-                        $movementDetail->setIdProductAttribute($detail['id_product_attribute']);
-                        $movementDetail->setProductName($detail['product_name']);
-                        $movementDetail->setEan13($detail['ean13']);
                     }
+                    //Sobre escribir el movimiento detail
+                    $movementDetail->setSentQuantity($detail['sent_quantity']);
+                    $movementDetail->setIdProduct($detail['id_product']);
+                    $movementDetail->setIdProductAttribute($detail['id_product_attribute']);
+                    $movementDetail->setProductName($detail['product_name']);
+                    $movementDetail->setEan13($detail['ean13']);
+
 
                     $this->entityManagerInterface->persist($movementDetail);
                     $this->entityManagerInterface->flush();

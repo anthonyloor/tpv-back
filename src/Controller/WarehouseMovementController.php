@@ -73,7 +73,7 @@ class WarehouseMovementController extends AbstractController
             }
         }
 
-        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON([$newWareHouseMovement]);
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($newWareHouseMovement);
 
         return new JsonResponse($movementsJSON);
     }
@@ -93,7 +93,7 @@ class WarehouseMovementController extends AbstractController
             return new JsonResponse(['error' => 'Movement not found'], 404);
         }
         $this->wareHouseMovementLogic->updateWareHouseMovement($data, $movement);
-        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON([$movement]);
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movement);
         return new JsonResponse($movementsJSON);
     }
 }
