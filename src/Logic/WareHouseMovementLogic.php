@@ -6,6 +6,8 @@ use App\Entity\LpWarehouseMovement;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\LpWarehouseMovementDetails;
 use App\Entity\LpWarehouseMovementIncidents;
+use App\Entity\PsStockAvailable;
+use Utils\Logger\Logger;
 
 class WareHouseMovementLogic
 {
@@ -53,6 +55,8 @@ class WareHouseMovementLogic
 
             $movementDetailsJSON = [
                 'id_warehouse_movement_detail' => $detail->getIdWarehouseMovementDetail(),
+                'id_product' => $detail->getIdProduct(),
+                'id_product_attribute' => $detail->getIdProductAttribute(),
                 'product_name' => $detail->getProductName(),
                 'ean13' => $detail->getEan13(),
                 'sent_quantity' => $detail->getSentQuantity(),
@@ -166,6 +170,78 @@ class WareHouseMovementLogic
         }
         $this->entityManagerInterface->persist($movement);
         $this->entityManagerInterface->flush();
+        return $movement;
+    }
+
+    public function executeWareHouseMovement($movement): LpWarehouseMovement
+    {
+        $this->entityManagerInterface->getConnection()->beginTransaction(); // Start transaction
+        $logger = new Logger();
+        try {
+            $movement->setStatus('Ejecutado');
+            $movement->setDateExcute(new \DateTime());
+            $this->entityManagerInterface->persist($movement);
+            $movementType = $movement->getType();
+            $movementDetails = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->findBy(['id_warehouse_movement' => $movement->getIdWarehouseMovement()]);
+            $logger->log('Executing warehouse movement'.' movement_id: '. $movement->getIdWarehouseMovement());
+            foreach ($movementDetails as $detail) {
+                $idProduct = $detail->getIdProduct();
+                $idProductAttribute = $detail->getIdProductAttribute();
+                $sentQuantity = $detail->getSentQuantity();
+                $stockDestiny = $this->entityManagerInterface->getRepository(PsStockAvailable::class)->findOneBy([
+                    'id_product' => $idProduct,
+                    'id_product_attribute' => $idProductAttribute,
+                    'id_shop' => $movement->getIdShopDestiny()
+                ]);
+
+                $stockOrigin = $this->entityManagerInterface->getRepository(PsStockAvailable::class)->findOneBy([
+                    'id_product' => $idProduct,
+                    'id_product_attribute' => $idProductAttribute,
+                    'id_shop' => $movement->getIdShopOrigin()
+                ]);
+
+                if ($movementType === 'entrada') {
+                    // Update stock for destination shop only
+                    if ($stockDestiny) {
+                        $logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+                        $stockDestiny->setQuantity($stockDestiny->getQuantity() + $sentQuantity);
+                        $this->entityManagerInterface->persist($stockDestiny);
+                        $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+                    }
+                } elseif ($movementType === 'salida') {
+                    // Update stock for origin shop only
+
+                    if ($stockOrigin) {
+                        $logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
+                        $stockOrigin->setQuantity($stockOrigin->getQuantity() - $sentQuantity);
+                        $this->entityManagerInterface->persist($stockOrigin);
+                        $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
+
+                    }
+                } elseif ($movementType === 'traspaso') {
+                    // Update stock for both origin and destination shops
+                    if ($stockOrigin) {
+                        $logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
+                        $stockOrigin->setQuantity($stockOrigin->getQuantity() - $sentQuantity);
+                        $this->entityManagerInterface->persist($stockOrigin);
+                        $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
+                    }
+                    if ($stockDestiny) {
+                        $logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+                        $stockDestiny->setQuantity($stockDestiny->getQuantity() + $sentQuantity);
+                        $this->entityManagerInterface->persist($stockDestiny);
+                        $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+
+                    }
+                }
+            }
+
+            $this->entityManagerInterface->flush();
+            $this->entityManagerInterface->getConnection()->commit(); // Commit transaction
+        } catch (\Exception $e) {
+            $this->entityManagerInterface->getConnection()->rollBack(); // Rollback transaction
+            throw $e;
+        }
         return $movement;
     }
 }

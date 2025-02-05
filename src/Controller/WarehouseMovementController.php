@@ -96,4 +96,52 @@ class WarehouseMovementController extends AbstractController
         $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movement);
         return new JsonResponse($movementsJSON);
     }
+
+    #[Route('/execute_warehouse_movement', name: 'execute_warehouse_movement')]
+    public function executeWareHouseMovement(Request $request):Response
+    {
+        $data = json_decode($request->getContent(), true);
+        if(!isset($data['id_warehouse_movement']))
+        {
+            return new JsonResponse(['error' => 'Missing parameters'], 400);
+        }
+        $repository = $this->entityManagerInterface->getRepository(LpWarehouseMovement::class);
+        $movement = $repository->find($data['id_warehouse_movement']);
+        if($movement == null)
+        {
+            return new JsonResponse(['error' => 'Movement not found'], 404);
+        }
+        $this->wareHouseMovementLogic->executeWareHouseMovement($movement);
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movement);
+        return new JsonResponse($movementsJSON);
+    }
+
+    #[Route('/delete_warehouse_movement', name: 'delete_warehouse_movement')]
+    public function deleteWareHouseMovement(Request $request):Response
+    {
+        $data = json_decode($request->getContent(), true);
+        if(!isset($data['id_warehouse_movement']))
+        {
+            return new JsonResponse(['error' => 'Missing parameters'], 400);
+        }
+        $repository = $this->entityManagerInterface->getRepository(LpWarehouseMovement::class);
+        $movement = $repository->find($data['id_warehouse_movement']);
+        if($movement == null)
+        {
+            return new JsonResponse(['error' => 'Movement not found'], 404);
+        }
+        $detailsRepository = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class);
+        $details = $detailsRepository->findBy(['id_warehouse_movement' => $movement->getIdWarehouseMovement()]);
+        foreach ($details as $detail) {
+            $this->entityManagerInterface->remove($detail);
+            $incidentsRepository = $this->entityManagerInterface->getRepository(LpWarehouseMovementIncidents::class);
+            $incidents = $incidentsRepository->findBy(['id_warehouse_movement_detail' => $detail->getIdWarehouseMovementDetail()]);
+            foreach ($incidents as $incident) {
+                $this->entityManagerInterface->remove($incident);
+            }
+        }
+        $this->entityManagerInterface->remove($movement);
+        $this->entityManagerInterface->flush();
+        return new JsonResponse(['message' => 'Movement deleted']);
+    }
 }
