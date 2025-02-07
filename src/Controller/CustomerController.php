@@ -76,7 +76,6 @@ class CustomerController
 
         $customers = array_merge($customers, $customersMaylu);
 
-        $customers = array_merge($customers, $customersMaylu);
         if (empty($customers)) {
             return new Response('No customers found', Response::HTTP_NOT_FOUND);
         }
