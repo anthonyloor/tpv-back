@@ -11,6 +11,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Doctrine\ORM\EntityManagerInterface; // Asegúrate de que esta clase está importada
+use Doctrine\Persistence\ManagerRegistry;
+
 
 class AuthController extends AbstractController
 {
