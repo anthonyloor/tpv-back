@@ -1,6 +1,6 @@
 <?php
 
-namespace Utils\Logger;
+namespace App\Utils\Logger;
 
 class Logger
 {
@@ -11,7 +11,7 @@ class Logger
         $date = new \DateTime();
         $formattedDate = $date->format('Y-m-d');
         return 'tpv-back/logs/' .  'TPVLogs-' .$formattedDate.'.txt';
-    }
+    }   
 
     public function log($message)
     {
