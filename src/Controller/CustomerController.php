@@ -74,7 +74,6 @@ class CustomerController
             $customerMaylu->setOrigin('Fajas Maylu');
         }
 
-        $customers = array_merge($customers, $customersMaylu);
 
         if (empty($customers)) {
             return new Response('No customers found', Response::HTTP_NOT_FOUND);
@@ -83,6 +82,15 @@ class CustomerController
         // Convertir los objetos a arrays simples
         $customersArray = [];
         foreach ($customers as $customer) {
+            $customersArray[] = [
+                'id_customer' => $customer->getId(),
+                'firstname' => $customer->getFirstname(),
+                'lastname' => $customer->getLastname(),
+                'origin' => $customer->getOrigin(),
+            ];
+        }
+
+        foreach ($customersMaylu as $customer) {
             $customersArray[] = [
                 'id_customer' => $customer->getId(),
                 'firstname' => $customer->getFirstname(),
