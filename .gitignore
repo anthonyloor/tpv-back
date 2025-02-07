@@ -7,8 +7,10 @@
 /public/bundles/
 /var/
 /vendor/
+
 ###< symfony/framework-bundle ###
 .env
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
+public/tpv-back/logs/*
