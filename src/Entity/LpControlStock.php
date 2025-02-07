@@ -5,7 +5,7 @@ use App\Repository\LpControlStockRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: LpControlStockRepository::class)]
-class LpControlStockRepository
+class LpControlStock
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
