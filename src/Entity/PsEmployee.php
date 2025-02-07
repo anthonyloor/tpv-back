@@ -7,6 +7,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity()]
+#[ORM\Table(name: "ps_employee")]
 class PsEmployee implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]

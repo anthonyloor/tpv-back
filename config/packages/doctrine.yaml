@@ -10,10 +10,11 @@ doctrine:
         auto_generate_proxy_classes: true
         enable_lazy_ghost_objects: true
         default_entity_manager: default
-        
+
         entity_managers:
             default:
                 connection: default
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
                 mappings:
                     App:
                         type: attribute
@@ -21,8 +22,10 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Entity'
                         prefix: 'App\Entity'
                         alias: App
+
             fajas_maylu:
                 connection: fajas_maylu
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
                 mappings:
                     App:
                         type: attribute
