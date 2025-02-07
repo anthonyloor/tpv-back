@@ -66,14 +66,6 @@ class CustomerController
 		$customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
         $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
 
-        foreach ($customers as $customer) {
-            $customer->setOrigin('Mayret');
-        }
-
-        foreach ($customersMaylu as $customerMaylu) {
-            $customerMaylu->setOrigin('Fajas Maylu');
-        }
-
 
         if (empty($customers)) {
             return new Response('No customers found', Response::HTTP_NOT_FOUND);
@@ -86,7 +78,7 @@ class CustomerController
                 'id_customer' => $customer->getId(),
                 'firstname' => $customer->getFirstname(),
                 'lastname' => $customer->getLastname(),
-                'origin' => $customer->getOrigin(),
+                'origin' => 'Mayret',
             ];
         }
 
@@ -95,7 +87,7 @@ class CustomerController
                 'id_customer' => $customer->getId(),
                 'firstname' => $customer->getFirstname(),
                 'lastname' => $customer->getLastname(),
-                'origin' => $customer->getOrigin(),
+                'origin' => 'Fajas Maylu',
             ];
         }
 
