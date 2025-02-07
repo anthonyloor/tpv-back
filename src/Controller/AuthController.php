@@ -18,11 +18,11 @@ class AuthController extends AbstractController
     private $passwordHasher;
     private $entityManagerInterface;
 
-    public function __construct(JWTTokenManagerInterface $jwtManager, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManagerInterface)
+    public function __construct(JWTTokenManagerInterface $jwtManager, UserPasswordHasherInterface $passwordHasher, ManagerRegistry $doctrine)
     {
         $this->jwtManager = $jwtManager;
         $this->passwordHasher = $passwordHasher;
-        $this->entityManagerInterface = $entityManagerInterface;
+        $this->entityManagerInterface = $doctrine->getManager('default'); 
     }
 
     #[Route('/login', name: 'login', methods: ['POST'])]
