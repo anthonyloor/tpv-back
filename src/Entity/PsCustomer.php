@@ -79,6 +79,20 @@ class PsCustomer
     #[ORM\Column(name: 'max_payment_days')]
     private ?int $max_payment_days  = null;
 
+    private ?string $origin = null;
+
+    public function getOrigin(): ?string
+    {
+        return $this->origin;
+    }
+
+    public function setOrigin(?string $origin): static
+    {
+        $this->origin = $origin;
+
+        return $this;
+    }
+
     public function getMaxPaymentDays(): ?int
     {
         return $this->max_payment_days;

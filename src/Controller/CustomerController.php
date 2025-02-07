@@ -18,10 +18,12 @@ use App\Logic\CustomerLogic;
 class CustomerController
 {
     private $entityManagerInterface;
+    private $emFajasMaylu;
     private $customerLogic;
-    public function __construct(EntityManagerInterface $entityManagerInterface, CustomerLogic $customerLogic)
+    public function __construct(EntityManagerInterface $entityManagerInterface,ManagerRegistry $doctrine, CustomerLogic $customerLogic)
     {
         $this->entityManagerInterface = $entityManagerInterface;
+        $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
         $this->customerLogic = $customerLogic;
     }
 
@@ -60,7 +62,21 @@ class CustomerController
     public function getAllCustomers(): Response
     {
 		$customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
-        
+        $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
+
+        foreach ($customers as $customer) {
+            $customer->setOrigin('Mayret');
+        }
+
+        foreach ($customersMaylu as $customer) {
+            $customer->setOrigin('Fajas Maylu');
+        }
+
+        usort($customers, function($a, $b) {
+            return $b->getDateAdd() <=> $a->getDateAdd();
+        });
+
+        $customers = array_merge($customers, $customersMaylu);
         if (empty($customers)) {
             return new Response('No customers found', Response::HTTP_NOT_FOUND);
         }
@@ -72,6 +88,7 @@ class CustomerController
                 'id_customer' => $customer->getId(),
                 'firstname' => $customer->getFirstname(),
                 'lastname' => $customer->getLastname(),
+                'origin' => $customer->getOrigin(),
             ];
         }
 
@@ -177,4 +194,61 @@ class CustomerController
 
         return new JsonResponse(['message' => 'Address created successfully', 'id_address' => $address->getId()], Response::HTTP_CREATED);
     }
+
+    #[Route('/edit_customer', name: 'edit_customer', methods: ['POST'])]
+    public function editCustomer(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['id_customer']) || empty($data['firstname']) || empty($data['lastname'])) {
+            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
+        }
+
+        $customer = $this->entityManagerInterface->getRepository(PsCustomer::class)->find($data['id_customer']);
+        if (empty($customer)) {
+            return new Response('Customer not found', Response::HTTP_NOT_FOUND);
+        }
+
+        $customer->setFirstname($data['firstname']);
+        $customer->setLastname($data['lastname']);
+        $this->entityManagerInterface->flush();
+
+        return new JsonResponse(['message' => 'Customer updated successfully'], Response::HTTP_OK);
+    }
+
+    #[Route('/edit_address', name: 'edit_address', methods: ['POST'])]
+    public function editAdress()
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['id_address']) || empty($data['id_customer']) || empty($data['id_country']) || empty($data['id_state']) || empty($data['alias']) || empty($data['lastname']) || empty($data['firstname']) || empty($data['address1']) || empty($data['postcode']) || empty($data['city'])) {
+            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
+        }
+
+        $address = $this->entityManagerInterface->getRepository(PsAddress::class)->find($data['id_address']);
+        if (empty($address)) {
+            return new Response('Address not found', Response::HTTP_NOT_FOUND);
+        }
+
+        $address->setIdCountry($data['id_country']);
+        $address->setIdState($data['id_state']);
+        $address->setAlias($data['alias']);
+        $address->setCompany($data['company']);
+        $address->setLastname($data['lastname']);
+        $address->setFirstname($data['firstname']);
+        $address->setAddress1($data['address1']);
+        $address->setAddress2($data['address2']);
+        $address->setPostcode($data['postcode']);
+        $address->setCity($data['city']);
+        $address->setOther($data['other']);
+        $address->setPhone($data['phone']);
+        $address->setPhoneMobile($data['phone_mobile']);
+        $address->setVatNumber($data['vat_number']);
+        $address->setDni($data['dni']);
+        $address->setDateUpd(new \DateTime());
+        $this->entityManagerInterface->flush();
+
+        return new JsonResponse(['message' => 'Address updated successfully'], Response::HTTP_OK);
+    }
+
 }

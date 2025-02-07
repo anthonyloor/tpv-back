@@ -144,4 +144,6 @@ class WarehouseMovementController extends AbstractController
         $this->entityManagerInterface->flush();
         return new JsonResponse(['message' => 'Movement deleted']);
     }
+
+    
 }
