@@ -24,6 +24,7 @@ class CustomerController
     private $customerLogic;
     public function __construct(EntityManagerInterface $entityManagerInterface,ManagerRegistry $doctrine, CustomerLogic $customerLogic)
     {
+        $this->entityManagerInterface = $doctrine->getManager('default'); 
         $this->entityManagerInterface = $entityManagerInterface;
         $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
         $this->customerLogic = $customerLogic;
