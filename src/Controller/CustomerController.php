@@ -70,13 +70,11 @@ class CustomerController
             $customer->setOrigin('Mayret');
         }
 
-        foreach ($customersMaylu as $customer) {
-            $customer->setOrigin('Fajas Maylu');
+        foreach ($customersMaylu as $customerMaylu) {
+            $customerMaylu->setOrigin('Fajas Maylu');
         }
 
-        usort($customers, function($a, $b) {
-            return $b->getDateAdd() <=> $a->getDateAdd();
-        });
+        $customers = array_merge($customers, $customersMaylu);
 
         $customers = array_merge($customers, $customersMaylu);
         if (empty($customers)) {
