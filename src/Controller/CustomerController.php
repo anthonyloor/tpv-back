@@ -25,7 +25,7 @@ class CustomerController
     private $customerLogic;
     public function __construct(ManagerRegistry $doctrine, CustomerLogic $customerLogic)
     {
-        $this->entityManagerInterface = $doctrine->getManager('default'); 
+        $this->entityManagerInterface = $doctrine->getManager('default');
         $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
         $this->customerLogic = $customerLogic;
     }
@@ -64,7 +64,15 @@ class CustomerController
     #[Route('/get_all_customers', name: 'get_all_customers')]
     public function getAllCustomers(): Response
     {
-		$customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
+
+        $sql = "SELECT database()";
+        $dbNameDefault = $this->entityManagerInterface->getConnection()->executeQuery($sql)->fetchOne();
+        $dbNameFajasMaylu = $this->emFajasMaylu->getConnection()->executeQuery($sql)->fetchOne();
+
+        dump($dbNameDefault, $dbNameFajasMaylu);
+
+
+        $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
         $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findBy([], ['id_customer' => 'DESC'], 25);
 
 
@@ -154,7 +162,7 @@ class CustomerController
             $groupLang = $this->entityManagerInterface->getRepository(PsGroupLang::class)->findOneBy(['id_group' => $group->getIdGroup()]);
             $groupsArray[] = [
                 'id_group' => $group->getIdGroup(),
-                'name' => $groupLang->getName(), 
+                'name' => $groupLang->getName(),
             ];
         }
 
@@ -170,7 +178,7 @@ class CustomerController
         if (empty($data['firstname']) || empty($data['lastname'])) {
             return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
         }
-        
+
         $customer = $this->customerLogic->createCustomer($data);
         $this->entityManagerInterface->persist($customer);
         $this->entityManagerInterface->flush();
@@ -186,7 +194,7 @@ class CustomerController
         if (empty($data['id_customer']) || empty($data['id_country']) || empty($data['id_state']) || empty($data['alias']) || empty($data['lastname']) || empty($data['firstname']) || empty($data['address1']) || empty($data['postcode']) || empty($data['city'])) {
             return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
         }
-        
+
 
         $address = $this->customerLogic->createAddres($data);
         $this->entityManagerInterface->persist($address);
