@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\PsCustomer;
+use App\EntityFaJasMaylu\PsCustomer as PsCustomerMaylu;
 use App\Entity\PsAddress;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -64,7 +65,7 @@ class CustomerController
     public function getAllCustomers(): Response
     {
 		$customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
-        $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
+        $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findBy([], ['id_customer' => 'DESC'], 25);
 
 
         if (empty($customers)) {
@@ -216,7 +217,7 @@ class CustomerController
     }
 
     #[Route('/edit_address', name: 'edit_address', methods: ['POST'])]
-    public function editAdress()
+    public function editAdress(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
 
