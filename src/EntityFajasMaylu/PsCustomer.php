@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Entity;
+namespace App\EntityFajasMaylu;
 
 use App\Repository\PsCustomerRepository;
 use App\EntityCommon\PsCustomersBase;
