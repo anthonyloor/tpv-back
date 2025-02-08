@@ -6,7 +6,7 @@ use App\Repository\PsCustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PsCustomerRepository::class)]
-#[ORM\Table(name: 'ps_customer', schema: 'default')]  // Especifica el esquema si es necesario
+#[ORM\Table(name: 'ps_customer', schema: 'ps_mayret_2')]  // Especifica el esquema si es necesario
 class PsCustomer
 {
     #[ORM\Id]
