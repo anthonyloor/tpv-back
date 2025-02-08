@@ -9,5 +9,5 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: PsCustomerRepository::class)]
 class PsCustomer extends PsCustomersBase
 {
-    private $origin = 'mayret';
+    private $origin = 'maylu';
 }

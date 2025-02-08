@@ -7,7 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\LpWarehouseMovementDetails;
 use App\Entity\LpWarehouseMovementIncidents;
 use App\Entity\PsStockAvailable;
-use Utils\Logger\Logger;
+use App\Utils\Logger\Logger;
 
 class WareHouseMovementLogic
 {
