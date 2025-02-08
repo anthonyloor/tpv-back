@@ -27,7 +27,7 @@ doctrine:
                 connection: fajas_maylu
                 naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
                 mappings:
-                    App:
+                    AppFajasMaylu:
                         type: attribute
                         is_bundle: false
                         dir: '%kernel.project_dir%/src/EntityFajasMaylu'
