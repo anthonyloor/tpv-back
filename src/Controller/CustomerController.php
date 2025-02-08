@@ -64,32 +64,24 @@ class CustomerController
     #[Route('/get_all_customers', name: 'get_all_customers')]
     public function getAllCustomers(): Response
     {
-
-        $sql = "SELECT database()";
-        $dbNameDefault = $this->entityManagerInterface->getConnection()->executeQuery($sql)->fetchOne();
-        $dbNameFajasMaylu = $this->emFajasMaylu->getConnection()->executeQuery($sql)->fetchOne();
-
-        dump($dbNameDefault, $dbNameFajasMaylu);
-
-
-        //$customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
+        $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
         $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findBy([], ['id_customer' => 'DESC'], 25);
 
 
-        // if (empty($customers)) {
-        //     return new Response('No customers found', Response::HTTP_NOT_FOUND);
-        // }
+        if (empty($customers)) {
+            return new Response('No customers found', Response::HTTP_NOT_FOUND);
+        }
 
-        // // Convertir los objetos a arrays simples
-        // $customersArray = [];
-        // foreach ($customers as $customer) {
-        //     $customersArray[] = [
-        //         'id_customer' => $customer->getId(),
-        //         'firstname' => $customer->getFirstname(),
-        //         'lastname' => $customer->getLastname(),
-        //         'origin' => 'Mayret',
-        //     ];
-        // }
+        // Convertir los objetos a arrays simples
+        $customersArray = [];
+        foreach ($customers as $customer) {
+            $customersArray[] = [
+                'id_customer' => $customer->getId(),
+                'firstname' => $customer->getFirstname(),
+                'lastname' => $customer->getLastname(),
+                'origin' => 'Mayret',
+            ];
+        }
 
         foreach ($customersMaylu as $customer1) {
             $customersArray[] = [
