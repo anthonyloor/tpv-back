@@ -21,7 +21,7 @@ doctrine:
                         is_bundle: false
                         dir: '%kernel.project_dir%/src/Entity'
                         prefix: 'App\Entity'
-                        alias: App
+                        alias: Mayret
 
             fajas_maylu:
                 connection: fajas_maylu
@@ -32,4 +32,4 @@ doctrine:
                         is_bundle: false
                         dir: '%kernel.project_dir%/src/EntityFajasMaylu'
                         prefix: 'App\EntityFajasMaylu'
-                        alias: App
+                        alias: FajasMaylu
