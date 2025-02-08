@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\PsCustomer;
-use App\EntityFaJasMaylu\PsCustomer as PsCustomerMaylu;
+use App\EntityFajasMaylu\PsCustomer as PsCustomerMaylu;
 use App\Entity\PsAddress;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
