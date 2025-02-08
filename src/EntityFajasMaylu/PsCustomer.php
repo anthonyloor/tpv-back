@@ -2,10 +2,10 @@
 
 namespace App\EntityFajasMaylu;
 
-use App\Repository\PsCustomerRepository;
+use App\Repository\PsCustomerFajasMayluRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: PsCustomerRepository::class)]
+#[ORM\Entity(repositoryClass: PsCustomerFajasMayluRepository::class)]
 #[ORM\Table(name: 'ps_customer', schema: 'fajasmaylu_ps_2')]  // Especifica el esquema si es necesario
 class PsCustomer
 {
