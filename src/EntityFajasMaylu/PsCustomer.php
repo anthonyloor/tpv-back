@@ -1,6 +1,6 @@
 <?php
 
-namespace App\EntityFaJasMaylu;
+namespace App\EntityFajasMaylu;
 
 use App\Repository\PsCustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
