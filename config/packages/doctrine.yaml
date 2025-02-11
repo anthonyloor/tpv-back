@@ -22,6 +22,11 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Entity'
                         prefix: 'App\Entity'
                         alias: Mayret
+                dql:
+                    string_functions:
+                        IFNULL: App\Doctrine\Functions\IfNull
+                        GROUP_CONCAT: App\Doctrine\Functions\GroupConcat
+                        ROUND: App\Doctrine\Functions\Round
 
             fajas_maylu:
                 connection: fajas_maylu
@@ -33,3 +38,8 @@ doctrine:
                         dir: '%kernel.project_dir%/src/EntityFajasMaylu'
                         prefix: 'App\EntityFajasMaylu'
                         alias: FajasMaylu
+                dql:
+                    string_functions:
+                        IFNULL: App\Doctrine\Functions\IfNull
+                        GROUP_CONCAT: App\Doctrine\Functions\GroupConcat
+                        ROUND: App\Doctrine\Functions\Round
