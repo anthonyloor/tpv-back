@@ -80,7 +80,7 @@ class PsCustomer
     #[ORM\Column(name: 'max_payment_days')]
     private ?int $max_payment_days  = null;
 
-    private ?string $origin = null;
+    private ?string $origin = 'mayret';
 
     public function getOrigin(): ?string
     {

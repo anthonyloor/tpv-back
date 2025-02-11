@@ -4,22 +4,24 @@ namespace App\Logic;
 
 use App\Entity\PsAddress;
 use App\Entity\PsCustomer;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\PsGroup;
-use App\Entity\PsGroupLang;
-use App\Entity\PsCustomerGroup;
+
+use Doctrine\Persistence\ManagerRegistry;
+use App\EntityFajasMaylu\PsAddress as PsAddressMaylu;
 
 
 class CustomerLogic
 {
     private $entityManagerInterface;
+    private $emFajasMaylu;
 
-    public function __construct(EntityManagerInterface $entityManagerInterface)
+
+    public function __construct(ManagerRegistry $doctrine)
     {
-        $this->entityManagerInterface = $entityManagerInterface;
+        $this->entityManagerInterface = $doctrine->getManager('default');
+        $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
     }
 
-    public function createCustomer($data):PsCustomer
+    public function createCustomer($data): PsCustomer
     {
         $customer = new PsCustomer();
         $customer->setFirstname($data['firstname']);
@@ -45,7 +47,7 @@ class CustomerLogic
         return $customer;
     }
 
-    public function createAddres($data):PsAddress
+    public function createAddres($data): PsAddress
     {
         $address = new PsAddress();
         $address->setIdCustomer($data['id_customer']);
@@ -70,5 +72,39 @@ class CustomerLogic
         $address->setDeleted(0);
 
         return $address;
+    }
+
+    public function generateJSONCustomer($allCustomers): array
+    {
+        // Convertir los objetos a arrays simples
+        $customersArray = [];
+        foreach ($allCustomers as $customer) {
+
+
+            if ($customer->getOrigin() == 'mayret') {
+                $address = $this->entityManagerInterface->getRepository(PsAddress::class)->findOneBy(
+                    ['id_customer' => $customer->getId()]
+                );
+            } else {
+                $address = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findOneBy(
+                    ['id_customer' => $customer->getId()]
+                );
+            }
+
+
+            $phone = $address ? ($address->getPhone() ?: $address->getPhoneMobile()) : null;
+            $mobilePhone = $address ? ($address->getPhoneMobile() ?: $address->getPhone()) : null;
+            $finalPhone = $phone ? $phone : $mobilePhone;
+
+            $customersArray[] = [
+                'id_customer' => $customer->getId(),
+                'firstname' => $customer->getFirstname(),
+                'lastname' => $customer->getLastname(),
+                'email' => $customer->getEmail(),
+                'phone' => $finalPhone,
+                'origin' => $customer->getOrigin(),
+            ];
+        }
+        return $customersArray;
     }
 }

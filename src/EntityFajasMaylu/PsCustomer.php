@@ -2,7 +2,7 @@
 
 namespace App\EntityFajasMaylu;
 
-use App\Repository\PsCustomerFajasMayluRepository;
+use App\RepositoryFajasMaylu\PsCustomerFajasMayluRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PsCustomerFajasMayluRepository::class)]
@@ -80,7 +80,7 @@ class PsCustomer
     #[ORM\Column(name: 'max_payment_days')]
     private ?int $max_payment_days  = null;
 
-    private ?string $origin = null;
+    private ?string $origin = 'fajasmaylu';
 
     public function getOrigin(): ?string
     {

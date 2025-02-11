@@ -4,11 +4,10 @@ namespace App\Controller;
 
 use App\Entity\PsCustomer;
 use App\EntityFajasMaylu\PsCustomer as PsCustomerMaylu;
+use App\EntityFajasMaylu\PsAddress as PsAddressMaylu;
 use App\Entity\PsAddress;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -46,15 +45,7 @@ class CustomerController
             return new Response('No customers found', Response::HTTP_NOT_FOUND);
         }
 
-        $customersArray = [];
-        foreach ($customers as $customer) {
-            $customersArray[] = [
-                'id_customer' => $customer->getId(),
-                'firstname' => $customer->getFirstname(),
-                'lastname' => $customer->getLastname(),
-            ];
-        }
-
+        $customersArray = $this->customerLogic->generateJSONCustomer($customers);
         // Convertir el array resultante a JSON
         $responseContent = json_encode($customersArray);
         return new Response($responseContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
@@ -71,26 +62,10 @@ class CustomerController
         if (empty($customers)) {
             return new Response('No customers found', Response::HTTP_NOT_FOUND);
         }
+        // Merge both customer arrays
+        $allCustomers = array_merge($customers, $customersMaylu);
 
-        // Convertir los objetos a arrays simples
-        $customersArray = [];
-        foreach ($customers as $customer) {
-            $customersArray[] = [
-                'id_customer' => $customer->getId(),
-                'firstname' => $customer->getFirstname(),
-                'lastname' => $customer->getLastname(),
-                'origin' => 'Mayret',
-            ];
-        }
-
-        foreach ($customersMaylu as $customer1) {
-            $customersArray[] = [
-                'id_customer' => $customer1->getId(),
-                'firstname' => $customer1->getFirstname(),
-                'lastname' => $customer1->getLastname(),
-                'origin' => 'Fajas Maylu',
-            ];
-        }
+        $customersArray = $this->customerLogic->generateJSONCustomer($allCustomers);
 
         $responseContent = json_encode($customersArray);
         return new Response($responseContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);

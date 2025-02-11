@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Entity;
+namespace App\EntityFajasMaylu;
 
-use App\Repository\PsAddressRepository;
+use App\RepositoryFajasMaylu\PsAddressFajasMayluRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: PsAddressRepository::class)]
+#[ORM\Entity(repositoryClass: PsAddressFajasMayluRepository::class)]
 #[ORM\Table(name: "ps_address")]
 class PsAddress
 {
@@ -74,7 +74,7 @@ class PsAddress
     #[ORM\Column(type: "boolean", options: ["default" => 0])]
     private ?bool $deleted = null;
 
-    private $origin = 'mayret';
+    private $origin = 'fajasmaylu';
 
     // Getters y Setters
 
@@ -82,6 +82,7 @@ class PsAddress
     {
         return $this->origin;
     }
+
     public function getId(): ?int
     {
         return $this->id_address;

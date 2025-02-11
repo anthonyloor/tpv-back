@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Repository;
+namespace App\RepositoryFajasMaylu;
 
 use App\EntityFajasMaylu\PsCustomer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
