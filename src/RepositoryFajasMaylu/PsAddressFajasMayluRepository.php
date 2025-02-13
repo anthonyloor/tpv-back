@@ -12,7 +12,7 @@ class PsAddressFajasMayluRepository extends ServiceEntityRepository
         parent::__construct($registry, PsAddress::class);
     }
 
-    public function findAllByCustomerId(int $idCustomer): array
+    public function findAllByCustomerId1(int $idCustomer): array
     {
         return $this->createQueryBuilder('a')
             ->andWhere('a.id_customer = :idCustomer')

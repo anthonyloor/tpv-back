@@ -6,7 +6,7 @@ use App\RepositoryFajasMaylu\PsAddressFajasMayluRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PsAddressFajasMayluRepository::class)]
-#[ORM\Table(name: "ps_address")]
+#[ORM\Table(name: "ps_address",schema: 'fajasmaylu_ps_2')]
 class PsAddress
 {
     #[ORM\Id]
@@ -75,6 +75,16 @@ class PsAddress
     private ?bool $deleted = null;
 
     private $origin = 'fajasmaylu';
+
+    #[ORM\ManyToOne(targetEntity: PsCustomer::class, inversedBy: 'addresses')]
+    #[ORM\JoinColumn(name: 'id_customer', referencedColumnName: 'id_customer')]
+    private ?PsCustomer $customer = null;
+
+    public function getCustomer(): ?PsCustomer
+    {
+        return $this->customer;
+    }
+
 
     // Getters y Setters
 

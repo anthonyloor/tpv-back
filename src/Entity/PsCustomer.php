@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Repository\PsCustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 
 #[ORM\Entity(repositoryClass: PsCustomerRepository::class)]
 #[ORM\Table(name: 'ps_customer', schema: 'ps_mayret_2')]  // Especifica el esquema si es necesario
@@ -11,8 +13,8 @@ class PsCustomer
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name:'id_customer')]
-    private ?int $id_customer  = null;
+    #[ORM\Column(name: 'id_customer')]
+    private ?int $id_customer = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $company = null;
@@ -36,19 +38,19 @@ class PsCustomer
     private ?string $passwd = null;
 
     #[ORM\Column(name: 'id_shop')]
-    private ?int $id_shop  = null;
+    private ?int $id_shop = null;
 
     #[ORM\Column(name: 'id_gender')]
-    private ?int $id_gender  = null;
+    private ?int $id_gender = null;
 
     #[ORM\Column(name: 'id_default_group')]
-    private ?int $id_default_group  = null;
+    private ?int $id_default_group = null;
 
     #[ORM\Column(name: 'id_lang')]
-    private ?int $id_lang  = null;
+    private ?int $id_lang = null;
 
     #[ORM\Column(name: 'id_risk')]
-    private ?int $id_risk  = null;
+    private ?int $id_risk = null;
 
     #[ORM\Column(name: 'last_passwd_gen')]
     private ?\DateTime $last_passwd_gen = null;
@@ -60,13 +62,13 @@ class PsCustomer
     private ?string $note = null;
 
     #[ORM\Column(name: 'active')]
-    private ?int $active  = null;
+    private ?int $active = null;
 
     #[ORM\Column(name: 'is_guest')]
-    private ?int $is_guest  = null;
+    private ?int $is_guest = null;
 
     #[ORM\Column(name: 'deleted')]
-    private ?int $deleted  = null;
+    private ?int $deleted = null;
 
     #[ORM\Column(name: 'date_add')]
     private ?\DateTime $date_add = null;
@@ -75,12 +77,21 @@ class PsCustomer
     private ?\DateTime $date_upd = null;
 
     #[ORM\Column(name: 'newsletter')]
-    private ?int $newsletter  = null;
+    private ?int $newsletter = null;
 
     #[ORM\Column(name: 'max_payment_days')]
-    private ?int $max_payment_days  = null;
+    private ?int $max_payment_days = null;
 
     private ?string $origin = 'mayret';
+
+    #[ORM\OneToMany(targetEntity: PsAddress::class, mappedBy: 'customer')]
+    private Collection $addresses;
+
+    public function getAddresses(): Collection
+    {
+        return $this->addresses;
+    }
+
 
     public function getOrigin(): ?string
     {
@@ -280,7 +291,7 @@ class PsCustomer
     {
         return $this->id_customer;
     }
-    
+
     public function getCompany(): ?string
     {
         return $this->company;

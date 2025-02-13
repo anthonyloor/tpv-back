@@ -4,9 +4,11 @@ namespace App\EntityFajasMaylu;
 
 use App\RepositoryFajasMaylu\PsCustomerFajasMayluRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 
 #[ORM\Entity(repositoryClass: PsCustomerFajasMayluRepository::class)]
-#[ORM\Table(name: 'ps_customer', schema: 'fajasmaylu_ps_2')]  // Especifica el esquema si es necesario
+#[ORM\Table(name: 'ps_customer', schema: 'fajasmaylu_ps_2')]
 class PsCustomer
 {
     #[ORM\Id]
@@ -81,6 +83,14 @@ class PsCustomer
     private ?int $max_payment_days  = null;
 
     private ?string $origin = 'fajasmaylu';
+
+    #[ORM\OneToMany(targetEntity: PsAddress::class, mappedBy: 'customer')]
+    private Collection $addresses;
+
+    public function getAddresses(): Collection
+    {
+        return $this->addresses;
+    }
 
     public function getOrigin(): ?string
     {

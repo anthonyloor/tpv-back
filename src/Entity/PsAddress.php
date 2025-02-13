@@ -76,6 +76,16 @@ class PsAddress
 
     private $origin = 'mayret';
 
+    #[ORM\ManyToOne(targetEntity: PsCustomer::class, inversedBy: 'addresses')]
+    #[ORM\JoinColumn(name: 'id_customer', referencedColumnName: 'id_customer')]
+    private ?PsCustomer $customer = null;
+
+    public function getCustomer(): ?PsCustomer
+    {
+        return $this->customer;
+    }
+
+
     // Getters y Setters
 
     public function getOrigin(): ?string

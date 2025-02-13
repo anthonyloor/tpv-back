@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Entity;
-use App\Repository\PsOrdersRepository;
+namespace App\EntityFajasMaylu;
+use App\RepositoryFajasMaylu\PsOrdersFajasMayluRepository;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: PsOrdersRepository::class)]
+#[ORM\Entity(repositoryClass: PsOrdersFajasMayluRepository::class)]
+#[ORM\Table(name: 'ps_orders', schema: 'fajasmaylu_ps_2')]
 class PsOrders
 {
     #[ORM\Id]
@@ -101,15 +102,14 @@ class PsOrders
     #[ORM\Column(type: "datetime")]
     private ?\DateTimeInterface $date_upd = null;
 
-    private string $origin = 'mayret';
+    private $origin = 'fajasmaylu';
 
     // Getters y Setters
 
-    public function getOrigin(): string
+    public function getOrigin(): ?string
     {
         return $this->origin;
     }
-
     public function getIdOrder(): ?int
     {
         return $this->id_order;

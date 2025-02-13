@@ -102,6 +102,7 @@ class CustomerLogic
                 'lastname' => $customer->getLastname(),
                 'email' => $customer->getEmail(),
                 'phone' => $finalPhone,
+                'date_add' => $customer->getDateAdd()->format('Y-m-d H:i:s'),
                 'origin' => $customer->getOrigin(),
             ];
         }

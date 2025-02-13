@@ -39,13 +39,16 @@ class CustomerController
             return new Response('No filter provided', Response::HTTP_BAD_REQUEST);
         }
 
-        $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findAllByFullNameOrId($filter);
+        $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findAllByFullNameOrPhone($filter);
+        $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findAllByFullNameOrPhone($filter);
+
+        $allCustomers = array_merge($customers, $customersMaylu);
 
         if (empty($customers)) {
             return new Response('No customers found', Response::HTTP_NOT_FOUND);
         }
 
-        $customersArray = $this->customerLogic->generateJSONCustomer($customers);
+        $customersArray = $this->customerLogic->generateJSONCustomer($allCustomers);
         // Convertir el array resultante a JSON
         $responseContent = json_encode($customersArray);
         return new Response($responseContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
@@ -73,15 +76,23 @@ class CustomerController
 
 
     #[Route('/get_addresses', name: 'get_addresses')]
-    public function getAddressesByCustomer(): Response
+    public function getAddressesByCustomer(Request $request): Response
     {
-        $customerId = $_GET['customer'];
+       $data = json_decode($request->getContent(), true);
 
-        $addresses = $this->entityManagerInterface->getRepository(PsAddress::class)->findAllByCustomerId($customerId);
+        if (empty($data['id_customer'])) {
+            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
+        }
+
+        if($data['origin'] == 'fajasmaylu')
+            $addresses = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findAllByCustomerId1($data['id_customer']);
+        else
+            $addresses = $this->entityManagerInterface->getRepository(PsAddress::class)->findAllByCustomerId($data['id_customer']);
 
         if (empty($addresses)) {
             return new Response('No addresses found for this customer.', Response::HTTP_NOT_FOUND);
         }
+
 
         $addressesArray = [];
         foreach ($addresses as $address) {
@@ -107,6 +118,7 @@ class CustomerController
                 'date_upd' => $address->getDateUpd()->format('Y-m-d H:i:s'),
                 'active' => $address->isActive(),
                 'deleted' => $address->isDeleted(),
+                'origin' => $address->getOrigin(),
             ];
         }
 

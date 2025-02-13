@@ -3,12 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\LpPosOrders;
+use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
 use App\Logic\CartRuleLogic;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Doctrine\Persistence\ManagerRegistry;
 
 use App\Entity\PsOrders;
 use App\Entity\PsOrderDetail;
@@ -23,10 +25,12 @@ class OrdersController
     private $entityManagerInterface;
     private OrdersLogic $ordersLogic;
     private CartRuleLogic $cartRuleLogic;
+    private $emFajasMaylu;
 
-    public function __construct(EntityManagerInterface $entityManagerInterface, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic)
+    public function __construct(ManagerRegistry $doctrine, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic)
     {
-        $this->entityManagerInterface = $entityManagerInterface;
+        $this->entityManagerInterface = $doctrine->getManager('default');
+        $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
         $this->ordersLogic = $ordersLogic;
         $this->cartRuleLogic = $cartRuleLogic;
 
@@ -137,7 +141,7 @@ class OrdersController
     }
 
     #[Route('/get_order', name: 'get_order', methods: ['GET'])]
-    public function getOrder(Request $request): Response
+    public function getOrderByIdAndOrigin(Request $request): Response
     {
         $id_order = $request->query->get('id_order');
         if (!$id_order) {
@@ -180,16 +184,30 @@ class OrdersController
         // Devolver la respuesta como JSON
         return new JsonResponse($orderData, JsonResponse::HTTP_OK);
     }
-    #[Route('/get_orders', name: 'get_orders', methods: ['GET'])]
-    public function getOrders(): Response
+    #[Route('/get_shop_orders', name: 'get_shop_orders', methods: ['GET'])]
+    public function getOrdersByShop(Request $request): Response
     {
-        // Recuperar las últimas 100 órdenes
-        $orders = $this->entityManagerInterface->getRepository(PsOrders::class)
-            ->createQueryBuilder('o')
-            ->orderBy('o.date_add', 'DESC') // Ordenar por fecha de creación descendente
-            ->setMaxResults(100) // Limitar a 100 resultados
-            ->getQuery()
-            ->getResult();
+        $data = json_decode($request->getContent(), true);
+        if (!isset($data['id_shop'])) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+        
+        switch ($data['origin']) {
+            case 'fajasmaylu':
+                $orders = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findOrdersByShop($data['id_shop']);
+                break;
+            case 'mayret':
+                $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
+                break;
+            case 'all':
+                $ordersMaylu = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findOrdersByShop($data['id_shop']);
+                $ordersMayret = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
+                $orders = array_merge($ordersMayret, $ordersMaylu);
+                break;
+            default:
+            $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
+
+        }
 
         if (!$orders) {
             return new JsonResponse(['status' => 'error', 'message' => 'No orders found'], JsonResponse::HTTP_OK);
