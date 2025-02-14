@@ -31,24 +31,36 @@ class CustomerController
 
 
     #[Route('/get_customers_filtered', name: 'get_customers_filtered')]
-    public function getCustomers(): Response
+    public function getCustomers(Request $request): Response
     {
-        $filter = $_GET['filter'];
+        $data = json_decode($request->getContent(), true);
 
-        if (empty($filter)) {
-            return new Response('No filter provided', Response::HTTP_BAD_REQUEST);
+        if (!isset($data['filter'], $data['origin'])) {
+            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
         }
 
-        $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findAllByFullNameOrPhone($filter);
-        $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findAllByFullNameOrPhone($filter);
-
-        $allCustomers = array_merge($customers, $customersMaylu);
+        switch($data['origin']) {
+            case 'fajasmaylu':
+                $customers = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findAllByFullNameOrPhone($data['filter']);
+                break;
+            case 'mayret':
+                $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findAllByFullNameOrPhone($data['filter']);
+                break;
+            case 'all':
+                $customersMayret = $this->entityManagerInterface->getRepository(PsCustomer::class)->findAllByFullNameOrPhone($data['filter']);
+                $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findAllByFullNameOrPhone($data['filter']);
+                $customers = array_merge($customersMayret, $customersMaylu);
+                break;
+            default:
+                $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findAllByFullNameOrPhone($data['filter']);
+                break;
+        }
 
         if (empty($customers)) {
             return new Response('No customers found', Response::HTTP_NOT_FOUND);
         }
 
-        $customersArray = $this->customerLogic->generateJSONCustomer($allCustomers);
+        $customersArray = $this->customerLogic->generateJSONCustomer($customers);
         // Convertir el array resultante a JSON
         $responseContent = json_encode($customersArray);
         return new Response($responseContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
@@ -80,48 +92,31 @@ class CustomerController
     {
        $data = json_decode($request->getContent(), true);
 
-        if (empty($data['id_customer'])) {
+        if (!isset($data['id_customer'], $data['origin'])) {
             return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
         }
 
-        if($data['origin'] == 'fajasmaylu')
-            $addresses = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findAllByCustomerId1($data['id_customer']);
-        else
-            $addresses = $this->entityManagerInterface->getRepository(PsAddress::class)->findAllByCustomerId($data['id_customer']);
-
+        switch($data['origin']) {
+            case 'fajasmaylu':
+                $addresses = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findAllByCustomerId1($data['id_customer']);
+                break;
+            case 'mayret':
+                $addresses = $this->entityManagerInterface->getRepository(PsAddress::class)->findAllByCustomerId($data['id_customer']);
+                break;
+            case 'all':
+                $addressesMayret = $this->entityManagerInterface->getRepository(PsAddress::class)->findAllByCustomerId($data['id_customer']);
+                $addressesMaylu = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findAllByCustomerId1($data['id_customer']);
+                $addresses = array_merge($addressesMayret, $addressesMaylu);
+                break;
+            default:
+                $addresses = $this->entityManagerInterface->getRepository(PsAddress::class)->findAllByCustomerId($data['id_customer']);
+                break;
+        }
         if (empty($addresses)) {
             return new Response('No addresses found for this customer.', Response::HTTP_NOT_FOUND);
         }
 
-
-        $addressesArray = [];
-        foreach ($addresses as $address) {
-            $addressesArray[] = [
-                'id_address' => $address->getId(),
-                'id_country' => $address->getIdCountry(),
-                'id_state' => $address->getIdState(),
-                'id_customer' => $address->getIdCustomer(),
-                'alias' => $address->getAlias(),
-                'company' => $address->getCompany(),
-                'lastname' => $address->getLastname(),
-                'firstname' => $address->getFirstname(),
-                'address1' => $address->getAddress1(),
-                'address2' => $address->getAddress2(),
-                'postcode' => $address->getPostcode(),
-                'city' => $address->getCity(),
-                'other' => $address->getOther(),
-                'phone' => $address->getPhone(),
-                'phone_mobile' => $address->getPhoneMobile(),
-                'vat_number' => $address->getVatNumber(),
-                'dni' => $address->getDni(),
-                'date_add' => $address->getDateAdd()->format('Y-m-d H:i:s'),
-                'date_upd' => $address->getDateUpd()->format('Y-m-d H:i:s'),
-                'active' => $address->isActive(),
-                'deleted' => $address->isDeleted(),
-                'origin' => $address->getOrigin(),
-            ];
-        }
-
+        $addressesArray = $this->customerLogic->generateJSONAdresses($addresses);
         $responseContent = json_encode($addressesArray);
         return new Response($responseContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }

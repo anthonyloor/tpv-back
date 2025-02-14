@@ -108,4 +108,36 @@ class CustomerLogic
         }
         return $customersArray;
     }
+
+    public function generateJSONAdresses($addresses): array
+    {
+        $addressesArray = [];
+        foreach ($addresses as $address) {
+            $addressesArray[] = [
+                'id_address' => $address->getId(),
+                'id_country' => $address->getIdCountry(),
+                'id_state' => $address->getIdState(),
+                'id_customer' => $address->getIdCustomer(),
+                'alias' => $address->getAlias(),
+                'company' => $address->getCompany(),
+                'lastname' => $address->getLastname(),
+                'firstname' => $address->getFirstname(),
+                'address1' => $address->getAddress1(),
+                'address2' => $address->getAddress2(),
+                'postcode' => $address->getPostcode(),
+                'city' => $address->getCity(),
+                'other' => $address->getOther(),
+                'phone' => $address->getPhone(),
+                'phone_mobile' => $address->getPhoneMobile(),
+                'vat_number' => $address->getVatNumber(),
+                'dni' => $address->getDni(),
+                'date_add' => $address->getDateAdd()->format('Y-m-d H:i:s'),
+                'date_upd' => $address->getDateUpd()->format('Y-m-d H:i:s'),
+                'active' => $address->isActive(),
+                'deleted' => $address->isDeleted(),
+                'origin' => $address->getOrigin(),
+            ];
+        }
+        return $addressesArray;
+    }
 }
