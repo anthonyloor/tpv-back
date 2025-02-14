@@ -9,6 +9,7 @@ use App\Entity\LpWarehouseMovementIncidents;
 use App\Entity\PsStockAvailable;
 use App\Utils\Logger\Logger;
 
+
 class WareHouseMovementLogic
 {
 

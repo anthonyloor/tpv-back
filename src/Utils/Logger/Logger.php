@@ -2,6 +2,7 @@
 
 namespace App\Utils\Logger;
 
+
 class Logger
 {
     private $logFile;

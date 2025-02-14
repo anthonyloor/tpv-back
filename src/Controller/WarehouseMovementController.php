@@ -145,5 +145,4 @@ class WarehouseMovementController extends AbstractController
         return new JsonResponse(['message' => 'Movement deleted']);
     }
 
-    
 }
