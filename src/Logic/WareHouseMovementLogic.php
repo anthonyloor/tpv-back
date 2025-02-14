@@ -137,7 +137,12 @@ class WareHouseMovementLogic
                         $movementDetail->setIdWarehouseMovement($movement->getIdWarehouseMovement());
                     }
                     //Sobre escribir el movimiento detail
-                    $movementDetail->setSentQuantity($detail['sent_quantity']);
+                    if (isset($detail['sent_quantity'])) {
+                        $movementDetail->setSentQuantity($detail['sent_quantity']);
+                    }
+                    if (isset($detail['recived_quantity'])) {
+                        $movementDetail->setRecivedQuantity($detail['recived_quantity']);
+                    }
                     $movementDetail->setIdProduct($detail['id_product']);
                     $movementDetail->setIdProductAttribute($detail['id_product_attribute']);
                     $movementDetail->setProductName($detail['product_name']);
