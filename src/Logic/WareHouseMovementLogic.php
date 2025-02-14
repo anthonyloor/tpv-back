@@ -92,7 +92,7 @@ class WareHouseMovementLogic
     public function generateWareHouseMovementDetail($detail, $newWareHouseMovement): LpWarehouseMovementDetails
     {
         $newWareHouseMovementDetail = new LpWarehouseMovementDetails();
-        $newWareHouseMovementDetail->setSentQuantity($detail['sent_quantity']);
+        $newWareHouseMovementDetail->setRecivedQuantity($detail['recived_quantity']);
         $newWareHouseMovementDetail->setIdProduct($detail['id_product']);
         $newWareHouseMovementDetail->setIdProductAttribute($detail['id_product_attribute']);
         $newWareHouseMovementDetail->setProductName($detail['product_name']);
