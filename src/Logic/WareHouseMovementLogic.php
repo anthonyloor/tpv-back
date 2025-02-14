@@ -196,6 +196,7 @@ class WareHouseMovementLogic
                 $idProduct = $detail->getIdProduct();
                 $idProductAttribute = $detail->getIdProductAttribute();
                 $sentQuantity = $detail->getSentQuantity();
+                $recivedQuantity = $detail->getRecivedQuantity();
                 $stockDestiny = $this->entityManagerInterface->getRepository(PsStockAvailable::class)->findOneBy([
                     'id_product' => $idProduct,
                     'id_product_attribute' => $idProductAttribute,
@@ -212,7 +213,7 @@ class WareHouseMovementLogic
                     // Update stock for destination shop only
                     if ($stockDestiny) {
                         $logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
-                        $stockDestiny->setQuantity($stockDestiny->getQuantity() + $sentQuantity);
+                        $stockDestiny->setQuantity($stockDestiny->getQuantity() + $recivedQuantity);
                         $this->entityManagerInterface->persist($stockDestiny);
                         $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
                         for ($i = 0; $i < $sentQuantity; $i++) {
