@@ -66,7 +66,8 @@ class WareHouseMovementLogic
                 'sent_quantity' => $detail->getSentQuantity(),
                 'recived_quantity' => $detail->getRecivedQuantity(),
                 'status' => $detail->getStatus(),
-                'movement_incidents' => $movementIncidentJSONComplete
+                'movement_incidents' => $movementIncidentJSONComplete,
+                'id_control_stock' => $detail->getIdControlStock(),
             ];
             $movementDetailsJSONComplete[] = $movementDetailsJSON;
         }
@@ -97,6 +98,7 @@ class WareHouseMovementLogic
         $newWareHouseMovementDetail->setIdProductAttribute($detail['id_product_attribute']);
         $newWareHouseMovementDetail->setProductName($detail['product_name']);
         $newWareHouseMovementDetail->setEan13($detail['ean13']);
+        $newWareHouseMovementDetail->setIdControlStock($detail['id_control_stock']);
         $newWareHouseMovementDetail->setIdWarehouseMovement($newWareHouseMovement->getIdWarehouseMovement());
         $this->entityManagerInterface->persist($newWareHouseMovementDetail);
         $this->entityManagerInterface->flush();
@@ -217,7 +219,7 @@ class WareHouseMovementLogic
                         $this->entityManagerInterface->persist($stockDestiny);
                         $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
                         for ($i = 1; $i <= $recivedQuantity; $i++) {
-                            $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny());
+                            $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny(),$detail->getEan13());
                             $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada');
                         }
 

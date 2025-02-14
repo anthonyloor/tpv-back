@@ -11,17 +11,14 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 
 use App\Entity\PsProductLang;
-use App\Entity\PsProductAttribute;
 use App\Entity\PsAttributeLang;
 use App\Entity\PsProductAttributeCombination;
 use App\Entity\PsStockAvailable;
 use App\Entity\PsShop;
-use App\Entity\PsProductAttributeImage;
-use App\Entity\PsImage;
-use App\Entity\PsSpecificPrice;
 use App\Entity\PsProductShop;
 use App\Entity\PsCategoryLang;
 use App\Entity\PsCategory;
+use App\Entity\LpControlStock;
 
 class ProductController extends AbstractController
 {
@@ -66,8 +63,10 @@ class ProductController extends AbstractController
 	->innerJoin(PsShop::class, 'shop', 'WITH', 'sav.id_shop = shop.id_shop')
 	->leftJoin(PsCategoryLang::class, 'cl', 'WITH', 'sa.id_category_default = cl.id_category AND cl.id_lang = 1 AND cl.id_shop = 1')
 	->leftJoin(PsCategory::class, 'c', 'WITH', 'c.id_category = cl.id_category')
-	->where('p.reference LIKE :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2')
-	->setParameter('empty', '')
+  ->leftJoin(LpControlStock::class, 'lcs', 'WITH', 'sav.id_shop = lcs.id_shop AND sav.id_product = lcs.id_product AND sav.id_product_attribute = lcs.id_product_attribute')
+  ->addSelect('lcs.id_control_stock AS id_control_stock')
+	->where('p.reference = :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2')
+	->setParameter('empty', value: '')
 	->setParameter('searchTerm', $b)
 	->setParameter('searchTerm2', $b)
 	->groupBy('sav.id_product, sav.id_product_attribute, sav.id_shop')

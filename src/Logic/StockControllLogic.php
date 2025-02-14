@@ -21,12 +21,14 @@ class StockControllLogic
         $this->logger = $logger;
     }
 
-    public function createControlStock($idProduct,$idProductAttribute,$idShop): LpControlStock
+    public function createControlStock($idProduct,$idProductAttribute,$idShop,$ean13): LpControlStock
     {
         $controlStock = new LpControlStock();
         $controlStock->setIdProduct($idProduct);
         $controlStock->setIdProductAtributte($idProductAttribute);
         $controlStock->setIdShop($idShop);
+        $controlStock->setDateAdd(new \DateTime());
+        $controlStock->setEan13($ean13);
         $this->entityManagerInterface->persist($controlStock);
         $this->entityManagerInterface->flush();
         $this->logger->log('Control stock created with id_control_stock '. $controlStock->getIdControlStock()
