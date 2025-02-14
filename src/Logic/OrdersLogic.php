@@ -168,6 +168,7 @@ class OrdersLogic
             'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
             'total_products' => $order->getTotalProducts(),
             'date_add' => $order->getDateAdd()->format('Y-m-d H:i:s'),
+            'origin' => $order->getOrigin(),
             'order_details' => []
         ];
 

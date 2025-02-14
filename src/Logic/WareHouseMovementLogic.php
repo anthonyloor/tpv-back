@@ -7,7 +7,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\LpWarehouseMovementDetails;
 use App\Entity\LpWarehouseMovementIncidents;
 use App\Entity\PsStockAvailable;
-use Utils\Logger\Logger;
+use App\Utils\Logger\Logger;
+
 
 class WareHouseMovementLogic
 {
@@ -121,7 +122,7 @@ class WareHouseMovementLogic
             $movement->setStatus($data['status']);
             $movement->setType($data['type']);
             $movement->setDateModified(new \DateTime());
-
+            $movement->setModifyReason($data['modify_reason']);
 
             if (!empty($data['movement_details'])) {
                 foreach ($data['movement_details'] as $detail) {
@@ -138,7 +139,6 @@ class WareHouseMovementLogic
                     $movementDetail->setIdProductAttribute($detail['id_product_attribute']);
                     $movementDetail->setProductName($detail['product_name']);
                     $movementDetail->setEan13($detail['ean13']);
-
 
                     $this->entityManagerInterface->persist($movementDetail);
                     $this->entityManagerInterface->flush();

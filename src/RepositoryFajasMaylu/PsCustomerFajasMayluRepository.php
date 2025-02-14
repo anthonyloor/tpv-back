@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Repository;
+namespace App\RepositoryFajasMaylu;
 
-use App\Entity\PsCustomer;
+use App\EntityFajasMaylu\PsCustomer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-class PsCustomerRepository extends ServiceEntityRepository
+class PsCustomerFajasMayluRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
@@ -25,7 +25,6 @@ class PsCustomerRepository extends ServiceEntityRepository
             ->getResult();
     }
     
-
     public function findAllCustomers(): array
     {
         return $this->createQueryBuilder('c')

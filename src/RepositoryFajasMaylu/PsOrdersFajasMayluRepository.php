@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Repository;
+namespace App\RepositoryFajasMaylu;
 
-use App\Entity\PsOrders;
+use App\EntityFajasMaylu\PsOrders;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-class PsOrdersRepository extends ServiceEntityRepository
+class PsOrdersFajasMayluRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
