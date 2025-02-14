@@ -14,11 +14,14 @@ class WareHouseMovementLogic
 {
 
     private $entityManagerInterface;
+    private $stockControllLogic;
 
-    public function __construct(EntityManagerInterface $entityManagerInterface)
+    public function __construct(EntityManagerInterface $entityManagerInterface, StockControllLogic $stockControllLogic)
     {
         $this->entityManagerInterface = $entityManagerInterface;
+        $this->stockControllLogic = $stockControllLogic;
     }
+
 
     public function generateWareHouseMovementJSON($movement): array
     {
@@ -207,6 +210,11 @@ class WareHouseMovementLogic
                         $stockDestiny->setQuantity($stockDestiny->getQuantity() + $sentQuantity);
                         $this->entityManagerInterface->persist($stockDestiny);
                         $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+                        for ($i = 0; $i < $sentQuantity; $i++) {
+                            $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny());
+                            $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada');
+                        }
+
                     }
                 } elseif ($movementType === 'salida') {
                     // Update stock for origin shop only

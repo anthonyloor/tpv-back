@@ -19,9 +19,6 @@ class LpControlStock
     private ?int $id_product_atributte = null;
 
     #[ORM\Column(type: "integer")]
-    private ?int $id_stock_available = null;  
-
-    #[ORM\Column(type: "integer")]
     private ?int $id_shop = null;
 
     //getters and setters
@@ -55,17 +52,6 @@ class LpControlStock
     public function setIdProductAtributte(?int $id_product_atributte): self
     {
         $this->id_product_atributte = $id_product_atributte;
-        return $this;
-    }
-
-    public function getIdStockAvailable(): ?int
-    {
-        return $this->id_stock_available;
-    }
-
-    public function setIdStockAvailable(?int $id_stock_available): self
-    {
-        $this->id_stock_available = $id_stock_available;
         return $this;
     }
 
