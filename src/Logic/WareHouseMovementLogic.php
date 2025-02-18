@@ -93,13 +93,13 @@ class WareHouseMovementLogic
     public function generateWareHouseMovementDetail($detail, $newWareHouseMovement): LpWarehouseMovementDetails
     {
         $newWareHouseMovementDetail = new LpWarehouseMovementDetails();
-        $newWareHouseMovementDetail->setRecivedQuantity($detail['recived_quantity'] ?? 0);
-        $newWareHouseMovementDetail->setSentQuantity($detail['sent_quantity'] ?? 0);
+        $newWareHouseMovementDetail->setRecivedQuantity($detail['recived_quantity'] ?? null);
+        $newWareHouseMovementDetail->setSentQuantity($detail['sent_quantity'] ?? null);
         $newWareHouseMovementDetail->setIdProduct($detail['id_product']);
         $newWareHouseMovementDetail->setIdProductAttribute($detail['id_product_attribute']);
         $newWareHouseMovementDetail->setProductName($detail['product_name']);
         $newWareHouseMovementDetail->setEan13($detail['ean13']);
-        $newWareHouseMovementDetail->setIdControlStock($detail['id_control_stock']);
+        $newWareHouseMovementDetail->setIdControlStock($detail['id_control_stock']?? null);
         $newWareHouseMovementDetail->setIdWarehouseMovement($newWareHouseMovement->getIdWarehouseMovement());
         $this->entityManagerInterface->persist($newWareHouseMovementDetail);
         $this->entityManagerInterface->flush();
