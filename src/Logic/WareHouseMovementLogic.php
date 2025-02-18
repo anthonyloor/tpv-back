@@ -232,7 +232,7 @@ class WareHouseMovementLogic
                         $stockOrigin->setQuantity($stockOrigin->getQuantity() - $sentQuantity);
                         $this->entityManagerInterface->persist($stockOrigin);
                         $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
-
+                        $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Salida de producto','Salida');
                     }
                 } elseif ($movementType === 'traspaso') {
                     // Update stock for both origin and destination shops
@@ -247,8 +247,8 @@ class WareHouseMovementLogic
                         $stockDestiny->setQuantity($stockDestiny->getQuantity() + $sentQuantity);
                         $this->entityManagerInterface->persist($stockDestiny);
                         $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
-
                     }
+                    $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Traspaso de producto','Traspaso');
                 }
             }
 

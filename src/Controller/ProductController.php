@@ -53,24 +53,24 @@ class ProductController extends AbstractController
     pl.linkRewrite AS link_rewrite,
     sa.active AS active
 	")
-	->from(PsStockAvailable::class, 'sav')
-	->innerJoin('sav.id_product', 'p')
-	->leftJoin('sav.id_product_attribute', 'pa')
-	->leftJoin(PsProductAttributeCombination::class, 'pac', 'WITH', 'sav.id_product_attribute = pac.id_product_attribute')
-	->innerJoin(PsProductLang::class, 'pl', 'WITH', 'sav.id_product = pl.id_product AND pl.id_lang = 1')
-	->leftJoin(PsAttributeLang::class, 'al', 'WITH', 'pac.idAttribute = al.idAttribute AND al.id_lang = 1')
-	->innerJoin(PsProductShop::class, 'sa', 'WITH', 'sav.id_product = sa.id_product')
-	->innerJoin(PsShop::class, 'shop', 'WITH', 'sav.id_shop = shop.id_shop')
-	->leftJoin(PsCategoryLang::class, 'cl', 'WITH', 'sa.id_category_default = cl.id_category AND cl.id_lang = 1 AND cl.id_shop = 1')
-	->leftJoin(PsCategory::class, 'c', 'WITH', 'c.id_category = cl.id_category')
-  ->leftJoin(LpControlStock::class, 'lcs', 'WITH', 'sav.id_shop = lcs.id_shop AND sav.id_product = lcs.id_product AND sav.id_product_attribute = lcs.id_product_attribute')
-  ->addSelect('lcs.id_control_stock AS id_control_stock')
-	->where('p.reference = :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2')
-	->setParameter('empty', value: '')
-	->setParameter('searchTerm', $b)
-	->setParameter('searchTerm2', $b)
-	->groupBy('sav.id_product, sav.id_product_attribute, sav.id_shop')
-	->orderBy('p.id_product', 'DESC');
+      ->from(PsStockAvailable::class, 'sav')
+      ->innerJoin('sav.id_product', 'p')
+      ->leftJoin('sav.id_product_attribute', 'pa')
+      ->leftJoin(PsProductAttributeCombination::class, 'pac', 'WITH', 'sav.id_product_attribute = pac.id_product_attribute')
+      ->innerJoin(PsProductLang::class, 'pl', 'WITH', 'sav.id_product = pl.id_product AND pl.id_lang = 1')
+      ->leftJoin(PsAttributeLang::class, 'al', 'WITH', 'pac.idAttribute = al.idAttribute AND al.id_lang = 1')
+      ->innerJoin(PsProductShop::class, 'sa', 'WITH', 'sav.id_product = sa.id_product')
+      ->innerJoin(PsShop::class, 'shop', 'WITH', 'sav.id_shop = shop.id_shop')
+      ->leftJoin(PsCategoryLang::class, 'cl', 'WITH', 'sa.id_category_default = cl.id_category AND cl.id_lang = 1 AND cl.id_shop = 1')
+      ->leftJoin(PsCategory::class, 'c', 'WITH', 'c.id_category = cl.id_category')
+      ->leftJoin(LpControlStock::class, 'lcs', 'WITH', 'sav.id_shop = lcs.id_shop AND sav.id_product = lcs.id_product AND sav.id_product_attribute = lcs.id_product_attribute')
+      ->addSelect('lcs.id_control_stock AS id_control_stock')
+      ->where('p.reference = :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2')
+      ->setParameter('empty', value: '')
+      ->setParameter('searchTerm', $b)
+      ->setParameter('searchTerm2', $b)
+      ->groupBy('sav.id_product, sav.id_product_attribute, sav.id_shop, lcs.id_control_stock')
+      ->orderBy('p.id_product', 'DESC');
     $resultado = $qb->getQuery()->getResult();
 
     foreach ($resultado as &$row) {
