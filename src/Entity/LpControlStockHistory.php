@@ -18,6 +18,9 @@ class LpControlStockHistory
     #[ORM\Column(type: 'string', length: 255)]
     private string $reason;
 
+    #[ORM\Column(type: 'integer')]
+    private int $id_shop;
+
     #[ORM\Column(type: 'string', length: 255)]
     private string $type;
 
@@ -25,6 +28,17 @@ class LpControlStockHistory
     private \DateTimeInterface $date;
 
     // Getters and setters for each property
+
+    public function getIdShop(): ?int
+    {
+        return $this->id_shop;
+    }
+
+    public function setIdShop(int $id_shop): self
+    {
+        $this->id_shop = $id_shop;
+        return $this;
+    }
 
     public function getIdControlStockHistory(): ?int
     {

@@ -24,6 +24,22 @@ class PsCustomerRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findByCustomerById(string $search): array
+    {
+        $queryBuilder = $this->createQueryBuilder('c');
+
+        // Concatenar firstname y lastname
+        $queryBuilder
+            ->where(
+                $queryBuilder->expr()->orX(
+                    $queryBuilder->expr()->eq('c.id_customer', ':searchId')
+                )
+            )
+            ->setParameter('searchId', $search);
+
+        return $queryBuilder->getQuery()->getResult();
+    }
     
 
     public function findAllCustomers(): array

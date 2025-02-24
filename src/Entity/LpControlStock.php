@@ -24,10 +24,38 @@ class LpControlStock
     #[ORM\Column(type: "datetime")]
     private ?\DateTimeInterface $date_add = null;
 
+    #[ORM\Column(type: "datetime")]
+    private ?\DateTimeInterface $date_upd = null;
+
     #[ORM\Column(type: "string", length: 13)]
     private ?string $ean13 = null;
 
+    #[ORM\Column(type: "boolean")]
+    private ?bool $active = null;
+
     //getters and setters
+
+    public function getActive(): ?bool
+    {
+        return $this->active;
+    }
+
+    public function setActive(?bool $active): self
+    {
+        $this->active = $active;
+        return $this;
+    }
+
+    public function getDateUpd(): ?\DateTimeInterface
+    {
+        return $this->date_upd;
+    }
+
+    public function setDateUpd(?\DateTimeInterface $date_upd): self
+    {
+        $this->date_upd = $date_upd;
+        return $this;
+    }
 
     public function getEan13(): ?string
     {

@@ -8,18 +8,20 @@ use App\Entity\LpWarehouseMovementDetails;
 use App\Entity\LpWarehouseMovementIncidents;
 use App\Entity\PsStockAvailable;
 use App\Utils\Logger\Logger;
-
+use App\Entity\LpControlStock;
 
 class WareHouseMovementLogic
 {
 
     private $entityManagerInterface;
     private $stockControllLogic;
+    private $logger;
 
-    public function __construct(EntityManagerInterface $entityManagerInterface, StockControllLogic $stockControllLogic)
+    public function __construct(EntityManagerInterface $entityManagerInterface, StockControllLogic $stockControllLogic, Logger $logger)
     {
         $this->entityManagerInterface = $entityManagerInterface;
         $this->stockControllLogic = $stockControllLogic;
+        $this->logger = $logger;
     }
 
 
@@ -187,14 +189,13 @@ class WareHouseMovementLogic
     public function executeWareHouseMovement($movement): LpWarehouseMovement
     {
         $this->entityManagerInterface->getConnection()->beginTransaction(); // Start transaction
-        $logger = new Logger();
         try {
             $movement->setStatus('Ejecutado');
             $movement->setDateExcute(new \DateTime());
             $this->entityManagerInterface->persist($movement);
             $movementType = $movement->getType();
             $movementDetails = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->findBy(['id_warehouse_movement' => $movement->getIdWarehouseMovement()]);
-            $logger->log('Executing warehouse movement'.' movement_id: '. $movement->getIdWarehouseMovement());
+            $this->logger->log('Executing warehouse movement'.' movement_id: '. $movement->getIdWarehouseMovement());
             foreach ($movementDetails as $detail) {
                 $idProduct = $detail->getIdProduct();
                 $idProductAttribute = $detail->getIdProductAttribute();
@@ -215,41 +216,63 @@ class WareHouseMovementLogic
                 if ($movementType === 'entrada') {
                     // Update stock for destination shop only
                     if ($stockDestiny) {
-                        $logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+                        $this->logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
                         $stockDestiny->setQuantity($stockDestiny->getQuantity() + $recivedQuantity);
                         $this->entityManagerInterface->persist($stockDestiny);
-                        $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+                        $this->logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
                         for ($i = 1; $i <= $recivedQuantity; $i++) {
                             $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny(),$detail->getEan13());
-                            $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada');
+                            $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada',$movement->getIdShopDestiny());
+                            $this->logger->log(
+                            ' id_control_stock ' . $controllStock->getIdControlStock()
+                            . ' id_product ' . $controllStock->getIdProduct()
+                            . ' id_product_attribute ' . $controllStock->getIdProductAtributte()
+                            . ' id_shop ' . $controllStock->getIdShop()
+                            . ' ean13 ' . $controllStock->getEan13()
+                            . ' reason ' . 'Entrada de producto'
+                            . ' type ' . 'Entrada'
+                            . ' date ' . (new \DateTime())->format('Y-m-d H:i:s')
+                        );
                         }
-
                     }
                 } elseif ($movementType === 'salida') {
                     // Update stock for origin shop only
 
                     if ($stockOrigin) {
-                        $logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
+                        $this->logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
                         $stockOrigin->setQuantity($stockOrigin->getQuantity() - $sentQuantity);
                         $this->entityManagerInterface->persist($stockOrigin);
-                        $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
-                        $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Salida de producto','Salida');
+                        $this->logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
+                        $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($detail->getIdControlStock());
+                        if ($controlStock) {
+                            $controlStock->setActive(false);
+                            $controlStock->setDateUpd(new \DateTime());
+                            $this->entityManagerInterface->persist($controlStock);
+                        }
+                        $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Salida de producto','Salida', $movement->getIdShopOrigin());
                     }
                 } elseif ($movementType === 'traspaso') {
                     // Update stock for both origin and destination shops
                     if ($stockOrigin) {
-                        $logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
+                        $this->logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
                         $stockOrigin->setQuantity($stockOrigin->getQuantity() - $sentQuantity);
                         $this->entityManagerInterface->persist($stockOrigin);
-                        $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
+                        $this->logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
                     }
                     if ($stockDestiny) {
-                        $logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+                        $this->logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
                         $stockDestiny->setQuantity($stockDestiny->getQuantity() + $sentQuantity);
                         $this->entityManagerInterface->persist($stockDestiny);
-                        $logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+                        $this->logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
                     }
-                    $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Traspaso de producto','Traspaso');
+                    $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($detail->getIdControlStock());
+                    if ($controlStock) {
+                        $controlStock->setIdShop($movement->getIdShopDestiny());
+                        $controlStock->setDateUpd(new \DateTime());
+                        $this->entityManagerInterface->persist($controlStock);
+                    }
+                    $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Traspaso de producto','Traspaso',$movement->getIdShopDestiny());
+
                 }
             }
 

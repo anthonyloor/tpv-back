@@ -235,10 +235,17 @@ class OrdersController
     public function getSaleReportOrders(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
-        if (!isset($data['license'], $data['date1'], $data['date2'])) {
+        if (!isset($data['license'], $data['date2'])) {
             return new JsonResponse(
                 ['status' => 'error', 'message' => 'Invalid data provided']
             );
+        }
+
+        if($data['date1'] == null)
+        {
+            $posSessions = $this->entityManagerInterface->getRepository(LpPosSessions::class)
+                ->findOneActiveByLicense($data['license']);
+            $data['date1'] = $posSessions->getDateAdd()->format('Y-m-d');
         }
 
         $posOrders = $this->entityManagerInterface->getRepository(LpPosOrders::class)

@@ -29,42 +29,90 @@ class CustomerController
         $this->customerLogic = $customerLogic;
     }
 
-
     #[Route('/get_customers_filtered', name: 'get_customers_filtered')]
     public function getCustomers(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['filter'], $data['origin'])) {
+        // Verifica que al menos exista 'origin'
+        if (!isset($data['origin'])) {
             return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
         }
 
-        switch($data['origin']) {
-            case 'fajasmaylu':
-                $customers = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findAllByFullNameOrPhone($data['filter']);
-                break;
-            case 'mayret':
-                $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findAllByFullNameOrPhone($data['filter']);
-                break;
-            case 'all':
-                $customersMayret = $this->entityManagerInterface->getRepository(PsCustomer::class)->findAllByFullNameOrPhone($data['filter']);
-                $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findAllByFullNameOrPhone($data['filter']);
-                $customers = array_merge($customersMayret, $customersMaylu);
-                break;
-            default:
-                $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findAllByFullNameOrPhone($data['filter']);
-                break;
+        $customers = [];
+
+        // Si viene id_customer, se busca por ID
+        if (isset($data['id_customer'])) {
+            switch ($data['origin']) {
+                case 'fajasmaylu':
+                    // Ajusta el método si en PsCustomerMaylu también creas un findAllByFullNameOrId
+                    $customers = $this->emFajasMaylu
+                        ->getRepository(PsCustomerMaylu::class)
+                        ->findByCustomerById($data['id_customer']);
+                    break;
+                case 'mayret':
+                    $customers = $this->entityManagerInterface
+                        ->getRepository(PsCustomer::class)
+                        ->findByCustomerById($data['id_customer']);
+                    break;
+                case 'all':
+                    $customersMayret = $this->entityManagerInterface
+                        ->getRepository(PsCustomer::class)
+                        ->findByCustomerById($data['id_customer']);
+                    // De igual forma, usaría el método en la entidad PsCustomerMaylu
+                    $customersMaylu = $this->emFajasMaylu
+                        ->getRepository(PsCustomerMaylu::class)
+                        ->findByCustomerById($data['id_customer']);
+                    $customers = array_merge($customersMayret, $customersMaylu);
+                    break;
+                default:
+                    $customers = $this->entityManagerInterface
+                        ->getRepository(PsCustomer::class)
+                        ->findByCustomerById($data['id_customer']);
+                    break;
+            }
+            // Si no hay id_customer, entonces revisa si viene filter y busca por filtro
+        } elseif (isset($data['filter'])) {
+            switch ($data['origin']) {
+                case 'fajasmaylu':
+                    $customers = $this->emFajasMaylu
+                        ->getRepository(PsCustomerMaylu::class)
+                        ->findAllByFullNameOrPhone($data['filter']);
+                    break;
+                case 'mayret':
+                    $customers = $this->entityManagerInterface
+                        ->getRepository(PsCustomer::class)
+                        ->findAllByFullNameOrPhone($data['filter']);
+                    break;
+                case 'all':
+                    $customersMayret = $this->entityManagerInterface
+                        ->getRepository(PsCustomer::class)
+                        ->findAllByFullNameOrPhone($data['filter']);
+                    $customersMaylu = $this->emFajasMaylu
+                        ->getRepository(PsCustomerMaylu::class)
+                        ->findAllByFullNameOrPhone($data['filter']);
+                    $customers = array_merge($customersMayret, $customersMaylu);
+                    break;
+                default:
+                    $customers = $this->entityManagerInterface
+                        ->getRepository(PsCustomer::class)
+                        ->findAllByFullNameOrPhone($data['filter']);
+                    break;
+            }
+        } else {
+            // Si no viene ni id_customer ni filter
+            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
         }
 
         if (empty($customers)) {
             return new Response('No customers found', Response::HTTP_NOT_FOUND);
         }
 
+        // Genera el array en formato deseado
         $customersArray = $this->customerLogic->generateJSONCustomer($customers);
-        // Convertir el array resultante a JSON
         $responseContent = json_encode($customersArray);
-        return new Response($responseContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
 
+        return new Response($responseContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
     #[Route('/get_all_customers', name: 'get_all_customers')]
@@ -90,13 +138,13 @@ class CustomerController
     #[Route('/get_addresses', name: 'get_addresses')]
     public function getAddressesByCustomer(Request $request): Response
     {
-       $data = json_decode($request->getContent(), true);
+        $data = json_decode($request->getContent(), true);
 
         if (!isset($data['id_customer'], $data['origin'])) {
             return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
         }
 
-        switch($data['origin']) {
+        switch ($data['origin']) {
             case 'fajasmaylu':
                 $addresses = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findAllByCustomerId1($data['id_customer']);
                 break;

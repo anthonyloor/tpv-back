@@ -28,6 +28,8 @@ class StockControllLogic
         $controlStock->setIdProductAtributte($idProductAttribute);
         $controlStock->setIdShop($idShop);
         $controlStock->setDateAdd(new \DateTime());
+        $controlStock->setDateUpd(new \DateTime());
+        $controlStock->setActive(true);
         $controlStock->setEan13($ean13);
         $this->entityManagerInterface->persist($controlStock);
         $this->entityManagerInterface->flush();
@@ -38,24 +40,20 @@ class StockControllLogic
         return $controlStock;
     }
 
-    public function createControlStockHistory($idControlStock, $reason, $type): void
+    public function createControlStockHistory($idControlStock, $reason, $type,$idShop): void
     {
         if ($idControlStock != null) {
             $controlStockHistory = new LpControlStockHistory();
             $controlStockHistory->setIdControlStock($idControlStock);
+            $controlStockHistory->setIdShop($idShop);
             $controlStockHistory->setReason($reason);
             $controlStockHistory->setType($type);
             $controlStockHistory->setDate(new \DateTime());
             $this->entityManagerInterface->persist($controlStockHistory);
             $this->entityManagerInterface->flush();
-            $this->logger->log('Control stock history created with id_control_stock_history ' . $controlStockHistory->getIdControlStockHistory()
-                . ' id_control_stock ' . $controlStockHistory->getIdControlStock()
-                . ' reason ' . $controlStockHistory->getReason()
-                . ' type ' . $controlStockHistory->getType()
-                . ' date ' . $controlStockHistory->getDate()->format('Y-m-d H:i:s'));
+            $this->logger->log('Control stock history created with id_control_stock_history '. $controlStockHistory->getIdControlStockHistory());
         }
+
     }
-
-
 
 }
