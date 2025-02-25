@@ -248,8 +248,8 @@ class WareHouseMovementLogic
                             $controlStock->setActive(false);
                             $controlStock->setDateUpd(new \DateTime());
                             $this->entityManagerInterface->persist($controlStock);
+                            $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Salida de producto','Salida', $movement->getIdShopOrigin());
                         }
-                        $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Salida de producto','Salida', $movement->getIdShopOrigin());
                     }
                 } elseif ($movementType === 'traspaso') {
                     // Update stock for both origin and destination shops
@@ -270,8 +270,8 @@ class WareHouseMovementLogic
                         $controlStock->setIdShop($movement->getIdShopDestiny());
                         $controlStock->setDateUpd(new \DateTime());
                         $this->entityManagerInterface->persist($controlStock);
+                        $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Traspaso de producto','Traspaso',$movement->getIdShopDestiny());
                     }
-                    $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Traspaso de producto','Traspaso',$movement->getIdShopDestiny());
 
                 }
             }

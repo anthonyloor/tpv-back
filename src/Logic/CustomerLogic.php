@@ -4,6 +4,7 @@ namespace App\Logic;
 
 use App\Entity\PsAddress;
 use App\Entity\PsCustomer;
+use App\EntityFajasMaylu\PsCustomer as PsCustomerMaylu;
 
 use Doctrine\Persistence\ManagerRegistry;
 use App\EntityFajasMaylu\PsAddress as PsAddressMaylu;
@@ -50,7 +51,10 @@ class CustomerLogic
     public function createAddres($data): PsAddress
     {
         $address = new PsAddress();
-        $address->setIdCustomer($data['id_customer']);
+        $customer = $this->entityManagerInterface
+            ->getRepository(PsCustomer::class)
+            ->findOneBy(['id_customer' => $data['id_customer']]);
+        $address->setCustomer($customer);
         $address->setIdCountry($data['id_country']);
         $address->setIdState($data['id_state']);
         $address->setAlias($data['alias']);
