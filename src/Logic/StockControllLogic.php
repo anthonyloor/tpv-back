@@ -30,6 +30,7 @@ class StockControllLogic
         $controlStock->setDateAdd(new \DateTime());
         $controlStock->setDateUpd(new \DateTime());
         $controlStock->setActive(true);
+        $controlStock->setPrinted(false);
         $controlStock->setEan13($ean13);
         $this->entityManagerInterface->persist($controlStock);
         $this->entityManagerInterface->flush();

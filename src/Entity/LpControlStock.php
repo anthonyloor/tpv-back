@@ -33,7 +33,21 @@ class LpControlStock
     #[ORM\Column(type: "boolean")]
     private ?bool $active = null;
 
+    #[ORM\Column(type: "boolean")]
+    private ?bool $printed = null;
+
     //getters and setters
+
+    public function getPrinted(): ?bool
+    {
+        return $this->printed;
+    }
+
+    public function setPrinted(?bool $printed): self
+    {
+        $this->printed = $printed;
+        return $this;
+    }
 
     public function getActive(): ?bool
     {

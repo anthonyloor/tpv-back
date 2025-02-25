@@ -216,4 +216,17 @@ class OrdersLogic
 
         return $orderDetail;
     }
+
+    public function getOrderDetailsWithOriginalId($id_order)
+    {
+        $oneYearAgo = (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->modify('-1 year');
+
+        return $this->entityManagerInterface->createQueryBuilder()
+            ->select('od')
+            ->from(PsOrderDetail::class, 'od')
+            ->where('od.product_name LIKE :id_order')
+            ->setParameter('id_order', '%' . $id_order . '%')
+            ->getQuery()
+            ->getResult();
+    }
 }

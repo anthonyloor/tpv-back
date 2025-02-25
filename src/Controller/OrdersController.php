@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\LpPosOrders;
 use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
 use App\Logic\CartRuleLogic;
+use App\Logic\StockControllLogic;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,16 +24,19 @@ use App\Entity\PsOrderCartRule;
 class OrdersController
 {
     private $entityManagerInterface;
+    private $emFajasMaylu;
     private OrdersLogic $ordersLogic;
     private CartRuleLogic $cartRuleLogic;
-    private $emFajasMaylu;
 
-    public function __construct(ManagerRegistry $doctrine, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic)
+    private StockControllLogic $stockControllLogic;
+
+    public function __construct(ManagerRegistry $doctrine, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic, StockControllLogic $stockControllLogic)
     {
         $this->entityManagerInterface = $doctrine->getManager('default');
         $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
         $this->ordersLogic = $ordersLogic;
         $this->cartRuleLogic = $cartRuleLogic;
+        $this->stockControllLogic = $stockControllLogic;
 
     }
 
@@ -87,6 +91,14 @@ class OrdersController
             $orderDetail = $this->ordersLogic->generateOrderDetail($data, $orderDetailData, $newPsOrder);
             $this->entityManagerInterface->persist($orderDetail);
             $this->ordersLogic->updateProductStock($orderDetailData); // Llamamos a la función de actualización de stock
+        }
+        if(isset($orderDetailData['id_control_stock']))
+        {
+            if ($orderDetailData['product_quantity'] > 0) {
+                $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Venta de producto', 'Venta', $data['id_shop']);
+            } else {
+                $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Devolución de producto', 'Devolución', $data['id_shop']);
+            }
         }
         $this->entityManagerInterface->flush();
 
@@ -181,6 +193,27 @@ class OrdersController
             $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail);
         }
 
+        // Obtener el detalle de la orden que contiene el id de la orden original en el nombre
+        $orderDetailsWithOriginalId = $this->ordersLogic->getOrderDetailsWithOriginalId($id_order);
+
+        foreach ($orderDetailsWithOriginalId as $detail) {
+            $newOrderId = $detail->getOrder()->getIdOrder();
+            $newOrder = $this->entityManagerInterface->getRepository(PsOrders::class)->find($newOrderId);
+
+            if ($newOrder) {
+                $newOrderData = $this->ordersLogic->generateOrderJSON($newOrder);
+                $newOrderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                    ->findBy(['idOrder' => $newOrderId]);
+
+                foreach ($newOrderDetails as $newDetail) {
+                    $newOrderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($newDetail);
+                }
+
+                $orderData['returns'][] = $newOrderData;
+            }
+        }
+
+
         // Devolver la respuesta como JSON
         return new JsonResponse($orderData, JsonResponse::HTTP_OK);
     }
@@ -266,4 +299,6 @@ class OrdersController
         return new JsonResponse($responseData, JsonResponse::HTTP_OK);
 
     }
+
+
 }
