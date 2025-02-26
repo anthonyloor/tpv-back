@@ -77,7 +77,7 @@ class OrdersLogic
         $orderDetail->setReductionPercent(0);
         $orderDetail->setReductionAmount(0);
         $orderDetail->setReductionAmountTaxExcl(0);
-        $orderDetail->setReductionAmountTaxIncl(0);
+        $orderDetail->setReductionAmountTaxIncl($orderDetailData['reduction_amount_tax_incl']);
         $orderDetail->setGroupReduction(0);
         $orderDetail->setProductQuantityDiscount(0);
         $orderDetail->setTaxName("IVA");
