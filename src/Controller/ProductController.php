@@ -74,7 +74,7 @@ class ProductController extends AbstractController
     $resultado = $qb->getQuery()->getResult();
 
     foreach ($resultado as &$row) {
-      $row['price'] = (float) number_format((float) $row['price'], 2, '.', '');
+      $row['price'] = (float) number_format((float) $row['price'] * 1.21, 2, '.', '');
     }
 
     return new JsonResponse($resultado);
