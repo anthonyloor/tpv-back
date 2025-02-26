@@ -211,6 +211,7 @@ class OrdersLogic
             'total_price_tax_excl' => $detail->getTotalPriceTaxExcl(),
             'unit_price_tax_incl' => $detail->getUnitPriceTaxIncl(),
             'unit_price_tax_excl' => $detail->getUnitPriceTaxExcl(),
+            'reduction_amount_tax_incl' => $detail->getReductionAmountTaxIncl(),
             'id_shop' => $detail->getIdShop()
         ];
 
