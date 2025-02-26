@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -20,13 +21,20 @@ use App\Entity\PsCategoryLang;
 use App\Entity\PsCategory;
 use App\Entity\LpControlStock;
 
+use App\Logic\ProductLogic;
+use App\Logic\StockControllLogic;
+
 class ProductController extends AbstractController
 {
 
   private $entityManagerInterface;
-  public function __construct(EntityManagerInterface $entityManagerInterface)
+  private $productLogic;
+  private $controlStockLogic;
+  public function __construct(EntityManagerInterface $entityManagerInterface, ProductLogic $productLogic, StockControllLogic $controlStockLogic)
   {
     $this->entityManagerInterface = $entityManagerInterface;
+    $this->productLogic = $productLogic;
+    $this->controlStockLogic = $controlStockLogic;
   }
 
   #[Route('/product_search', name: 'product_search')]
@@ -80,4 +88,37 @@ class ProductController extends AbstractController
     return new JsonResponse($resultado);
 
   }
+
+  #[Route('/get_product_price_tag', name: 'get_product_price_tag')]
+  public function getProductPriceTag(Request $request): Response
+  {
+    $data = json_decode($request->getContent(), true);
+    $response = [];
+    if (isset($data['id_control_stock'])) {
+      $idControlStock = $data['id_control_stock'];
+      $lpControlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->findOneBy(['id_control_stock' => $idControlStock, 'ean13' => $data['ean13']]);
+      if (!$lpControlStock) {
+        return new JsonResponse(['error' => 'No se ha encontrado identificador unico'], Response::HTTP_NOT_FOUND);
+      }else{
+        $response = $this->controlStockLogic->generateControlStockJSON($lpControlStock);
+        $lpControlStock->setPrinted(true);
+        $this->entityManagerInterface->persist($lpControlStock);
+      }
+    } else {
+      if(!$this->controlStockLogic->controlMaxPriceTags($data['ean13'],$data['quantity'],$data['quantity_print'])){
+        $response = ['error' => 'Se ha superado la cantidad maxima de etiquetas o no se puede imprimir esa cantidad para este producto'];
+      }else{
+        $response['tags'] = [];
+        for ($i = 0; $i < $data['quantity_print']; $i++) {
+          $lpControlStock = $this->controlStockLogic->createControlStock($data['id_product'], $data['id_product_attribute'], $data['id_shop'], $data['ean13'], true);
+          $response['tags'][] = $this->controlStockLogic->generateControlStockJSON($lpControlStock);
+          $this->entityManagerInterface->persist($lpControlStock);
+        }
+      }
+    }
+    $this->entityManagerInterface->flush();
+
+    return new JsonResponse($response);
+  }
+
 }

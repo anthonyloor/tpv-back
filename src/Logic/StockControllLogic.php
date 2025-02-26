@@ -21,7 +21,7 @@ class StockControllLogic
         $this->logger = $logger;
     }
 
-    public function createControlStock($idProduct, $idProductAttribute, $idShop, $ean13): LpControlStock
+    public function createControlStock($idProduct, $idProductAttribute, $idShop, $ean13,$printed = false): LpControlStock
     {
         $controlStock = new LpControlStock();
         $controlStock->setIdProduct($idProduct);
@@ -30,7 +30,7 @@ class StockControllLogic
         $controlStock->setDateAdd(new \DateTime());
         $controlStock->setDateUpd(new \DateTime());
         $controlStock->setActive(true);
-        $controlStock->setPrinted(false);
+        $controlStock->setPrinted($printed);
         $controlStock->setEan13($ean13);
         $this->entityManagerInterface->persist($controlStock);
         $this->entityManagerInterface->flush();
@@ -55,6 +55,31 @@ class StockControllLogic
             $this->logger->log('Control stock history created with id_control_stock_history '. $controlStockHistory->getIdControlStockHistory());
         }
 
+    }
+
+    public function generateControlStockJSON($controlStock): array
+    {
+        $orderData = [
+            'id_control_stock' => $controlStock->getIdControlStock(),
+            'id_product' => $controlStock->getIdProduct(),
+            'id_product_attribute' => $controlStock->getIdProductAtributte(),
+            'id_shop' => $controlStock->getIdShop(),
+            'date_add' => $controlStock->getDateAdd()->format('Y-m-d H:i:s'),
+            'ean13' => $controlStock->getEan13(),
+            'active' => $controlStock->getActive(),
+            'printed' => $controlStock->getPrinted()
+        ];
+        return $orderData;
+    }
+
+    public function controlMaxPriceTags($ean13,$quantity,$quantityPrint):bool
+    {
+        $repository = $this->entityManagerInterface->getRepository(LpControlStock::class);
+        $controlStocks = $repository->findBy(['ean13' => $ean13, 'active' => true]);
+        if (count($controlStocks) + $quantityPrint > $quantity) {
+            return false;
+        }
+        return true;
     }
 
 }
