@@ -219,11 +219,12 @@ class OrdersController
             }
         }
 
+        $orderData['payment_amounts'] = $this->ordersLogic->generateJSONOrderPayments($id_order);
 
         // Devolver la respuesta como JSON
         return new JsonResponse($orderData, JsonResponse::HTTP_OK);
     }
-    #[Route('/get_shop_orders', name: 'get_shop_orders', methods: ['GET'])]
+    #[Route('/get_shop_orders', name: 'get_shop_orders', methods: ['POST'])]
     public function getOrdersByShop(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);

@@ -230,4 +230,17 @@ class OrdersLogic
             ->getQuery()
             ->getResult();
     }
+
+    public function generateJSONOrderPayments($idOrder) : array
+    {
+        $posOrder = $this->entityManagerInterface->getRepository(LpPosOrders::class)
+            ->findOneBy(['id_order' => $idOrder]);
+        $payments = [
+            'total_cash' => $posOrder->getTotalCash(),
+            'total_card' => $posOrder->getTotalCard(),
+            'total_bizum' => $posOrder->getTotalBizum()
+        ];
+
+        return $payments;
+    }
 }
