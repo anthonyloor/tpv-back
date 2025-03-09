@@ -85,6 +85,12 @@ class PsAddress
         return $this->customer;
     }
 
+    public function setCustomer(?PsCustomer $customer): static
+    {
+        $this->customer = $customer;
+        return $this;
+    }
+
 
     // Getters y Setters
 

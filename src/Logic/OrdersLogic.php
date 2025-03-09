@@ -77,7 +77,7 @@ class OrdersLogic
         $orderDetail->setReductionPercent(0);
         $orderDetail->setReductionAmount(0);
         $orderDetail->setReductionAmountTaxExcl(0);
-        $orderDetail->setReductionAmountTaxIncl(0);
+        $orderDetail->setReductionAmountTaxIncl($orderDetailData['reduction_amount_tax_incl']);
         $orderDetail->setGroupReduction(0);
         $orderDetail->setProductQuantityDiscount(0);
         $orderDetail->setTaxName("IVA");
@@ -211,9 +211,36 @@ class OrdersLogic
             'total_price_tax_excl' => $detail->getTotalPriceTaxExcl(),
             'unit_price_tax_incl' => $detail->getUnitPriceTaxIncl(),
             'unit_price_tax_excl' => $detail->getUnitPriceTaxExcl(),
+            'reduction_amount_tax_incl' => $detail->getReductionAmountTaxIncl(),
             'id_shop' => $detail->getIdShop()
         ];
 
         return $orderDetail;
+    }
+
+    public function getOrderDetailsWithOriginalId($id_order)
+    {
+        $oneYearAgo = (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->modify('-1 year');
+
+        return $this->entityManagerInterface->createQueryBuilder()
+            ->select('od')
+            ->from(PsOrderDetail::class, 'od')
+            ->where('od.product_name LIKE :id_order')
+            ->setParameter('id_order', '%' . $id_order . '%')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function generateJSONOrderPayments($idOrder) : array
+    {
+        $posOrder = $this->entityManagerInterface->getRepository(LpPosOrders::class)
+            ->findOneBy(['id_order' => $idOrder]);
+        $payments = [
+            'total_cash' => $posOrder->getTotalCash(),
+            'total_card' => $posOrder->getTotalCard(),
+            'total_bizum' => $posOrder->getTotalBizum()
+        ];
+
+        return $payments;
     }
 }
