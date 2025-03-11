@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\PsProduct;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -119,6 +120,19 @@ class ProductController extends AbstractController
     $this->entityManagerInterface->flush();
 
     return new JsonResponse($response);
+  }
+
+  #[Route('/get_stock_report', name: 'get_stock_report')]
+  public function getStockReport(Request $request):Response
+  {
+    $data = json_decode($request->getContent(), true);
+    if(!isset($data['license'], $data['search_term'])){
+      return new JsonResponse(['error' => 'Faltan parametros'], Response::HTTP_BAD_REQUEST);
+    }
+    
+    $products = $this->entityManagerInterface->getRepository(PsStockAvailable::class)->findByAttribute($data['search_term'], $data['value'], $data['id_shop']);
+    $productsJSON = $this->productLogic->generateProductStockReportJSON($products);
+    return new JsonResponse($productsJSON);
   }
 
 }

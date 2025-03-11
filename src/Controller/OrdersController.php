@@ -120,12 +120,6 @@ class OrdersController
                 $this->entityManagerInterface->persist($cart_rule);
                 $this->entityManagerInterface->flush();
 
-
-                $orderCartRule = $this->cartRuleLogic->generateOrderCartRule($newPsOrder, $cart_rule, $discount);
-                $this->entityManagerInterface->persist($orderCartRule);
-
-                $this->entityManagerInterface->flush();
-
                 $remainingAmount = $cart_rule->getReductionAmount() - $discount['amount'];
 
                 if ($remainingAmount > 0) {
