@@ -180,7 +180,8 @@ class OrdersController
                 $orderData['order_cart_rules'][] = [
                     'code' => $cartRule->getCode(),
                     'name' => $cartRuleLang ? $cartRuleLang->getName() : $orderCartRule->getName(),
-                    'value' => $orderCartRule->getValue()
+                    'value' => $orderCartRule->getValue(),
+                    'description' => $cartRule ? $cartRule->getDescription() : $cartRule->getDescription(),
                 ];
             }
         }

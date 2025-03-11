@@ -23,6 +23,18 @@ class PsStockAvailableRepository extends ServiceEntityRepository
         parent::__construct($registry, PsStockAvailable::class);
     }
 
+    public function findOneByProductAttributeShop($idProduct, $idProductAttributte, $idShop):?PsStockAvailable
+    {
+        return $this->createQueryBuilder('p')
+        ->andWhere('p.id_product = :idProduct')
+        ->andWhere('p.id_product_attribute = :idProductAttribute')
+        ->andWhere('p.id_shop = :shop')
+        ->setParameter('idProduct', $idProduct)
+        ->setParameter('idProductAttribute', $idProductAttributte)
+        ->setParameter('shop', $idShop)
+        ->getQuery()
+        ->getOneOrNullResult();
+    }
 
     public function findByAttribute(string $searchTerm, mixed $value, string $id_shop): array  
     {
