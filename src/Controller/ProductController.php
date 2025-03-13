@@ -106,7 +106,7 @@ class ProductController extends AbstractController
         $this->entityManagerInterface->persist($lpControlStock);
       }
     } else {
-      if(!$this->controlStockLogic->controlMaxPriceTags($data['ean13'],$data['quantity'],$data['quantity_print'])){
+      if(!$this->controlStockLogic->controlMaxPriceTags($data['ean13'],$data['quantity'],$data['quantity_print'],$data['id_shop'])){
         $response = ['error' => 'Se ha superado la cantidad maxima de etiquetas o no se puede imprimir esa cantidad para este producto'];
       }else{
         $response['tags'] = [];

@@ -72,10 +72,10 @@ class StockControllLogic
         return $orderData;
     }
 
-    public function controlMaxPriceTags($ean13,$quantity,$quantityPrint):bool
+    public function controlMaxPriceTags($ean13,$quantity,$quantityPrint,$idShop):bool
     {
         $repository = $this->entityManagerInterface->getRepository(LpControlStock::class);
-        $controlStocks = $repository->findBy(['ean13' => $ean13, 'active' => true, 'printed' => true]);
+        $controlStocks = $repository->findBy(['ean13' => $ean13, 'active' => true, 'printed' => true, 'id_shop' => $idShop]);
         if (count($controlStocks) + $quantityPrint > $quantity) {
             return false;
         }
