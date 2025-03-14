@@ -275,7 +275,7 @@ class CustomerController
         $address->setPhoneMobile($data['phone_mobile']);
         $address->setVatNumber($data['vat_number']);
         $address->setDni($data['dni']);
-        $address->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin'));
+        $address->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $this->entityManagerInterface->flush();
 
         return new JsonResponse(['message' => 'Address updated successfully'], Response::HTTP_OK);
