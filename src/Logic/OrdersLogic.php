@@ -267,8 +267,8 @@ class OrdersLogic
         $newOrderPayment->setAmount($psOrder->getTotalPaid());
         $newOrderPayment->setPaymentMethod($paymentMethod);
 
-        $this->entityManager->persist($newOrderPayment);
-        $this->entityManager->flush();
+        $this->entityManagerInterface->persist($newOrderPayment);
+        $this->entityManagerInterface->flush();
 
         return $newOrderPayment;
     }
