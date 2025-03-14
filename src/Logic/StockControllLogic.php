@@ -27,8 +27,8 @@ class StockControllLogic
         $controlStock->setIdProduct($idProduct);
         $controlStock->setIdProductAtributte($idProductAttribute);
         $controlStock->setIdShop($idShop);
-        $controlStock->setDateAdd(new \DateTime());
-        $controlStock->setDateUpd(new \DateTime());
+        $controlStock->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $controlStock->setActive(true);
         $controlStock->setPrinted($printed);
         $controlStock->setEan13($ean13);
@@ -49,7 +49,7 @@ class StockControllLogic
             $controlStockHistory->setIdShop($idShop);
             $controlStockHistory->setReason($reason);
             $controlStockHistory->setType($type);
-            $controlStockHistory->setDate(new \DateTime());
+            $controlStockHistory->setDate(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
             $this->entityManagerInterface->persist($controlStockHistory);
             $this->entityManagerInterface->flush();
             $this->logger->log('Control stock history created with id_control_stock_history '. $controlStockHistory->getIdControlStockHistory());

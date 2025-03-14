@@ -106,7 +106,7 @@ class OrdersController
                 $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Devolución de producto', 'Devolución', $data['id_shop']);
                 $controlStock->setActive(active: true);
             }
-            $controlStock->setDateUpd(new \DateTime());
+            $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
             $this->entityManagerInterface->persist($controlStock);
         }
         $this->entityManagerInterface->flush();
@@ -134,8 +134,8 @@ class OrdersController
                         'reduction_amount' => $remainingAmount,
                         'reduction_percent' => 0,
                         'active' => true,
-                        'date_from' => (new \DateTime())->format('Y-m-d H:i:s'),
-                        'date_to' => (new \DateTime('+1 year'))->format('Y-m-d H:i:s'),
+                        'date_from' => (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s'),
+                        'date_to' => (new \DateTime('now', new \DateTimeZone('Europe/Berlin'))->modify('+6 months'))->format('Y-m-d H:i:s'),
                         'id_customer' => $data['id_customer'],
                     ];
                     $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($newCartRuleData);

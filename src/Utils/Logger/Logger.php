@@ -9,7 +9,7 @@ class Logger
 
     private function getLogFilePath()
     {
-        $date = new \DateTime();
+        $date = new \DateTime('now', new \DateTimeZone('Europe/Berlin'));
         $formattedDate = $date->format('Y-m-d');
         return 'tpv-back/logs/' .  'TPVLogs-' .$formattedDate.'.txt';
     }   
@@ -21,7 +21,7 @@ class Logger
         if (!is_dir($logDir)) {
             mkdir($logDir, 0777, true);
         }
-        $date = new \DateTime();
+        $date = new \DateTime('now', new \DateTimeZone('Europe/Berlin'));
         $formattedDate = $date->format('Y-m-d H:i:s');
         $logMessage = "[$formattedDate] $message" . PHP_EOL;
 

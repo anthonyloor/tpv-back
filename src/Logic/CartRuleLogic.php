@@ -73,8 +73,8 @@ class CartRuleLogic
         $cartRule->setCode($this->generateUniqueCartRuleCode());
         $cartRule->setActive(true);
         $cartRule->setIdCustomer($data['id_customer']);
-        $cartRule->setDateAdd(new \DateTime());
-        $cartRule->setDateUpd(new \DateTime());
+        $cartRule->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $cartRule->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
 
         // Configurar descuento (por porcentaje o cantidad)
         $cartRule->setReductionPercent($data['reduction_percent']);

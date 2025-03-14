@@ -36,9 +36,9 @@ class CustomerLogic
         $customer->setNewsletter(0);
         $customer->setActive(1);
         $customer->setDeleted(0);
-        $customer->setDateAdd(new \DateTime());
-        $customer->setDateUpd(new \DateTime());
-        $customer->setLastPasswdGen(new \DateTime());
+        $customer->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $customer->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $customer->setLastPasswdGen(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $customer->setSecureKey(md5(uniqid()));
         $customer->setIdGender(0);
         $customer->setIdRisk(0);
@@ -70,8 +70,8 @@ class CustomerLogic
         $address->setPhoneMobile($data['phone_mobile'] ?? '');
         $address->setVatNumber($data['vat_number'] ?? '');
         $address->setDni($data['dni'] ?? '');
-        $address->setDateAdd(new \DateTime());
-        $address->setDateUpd(new \DateTime());
+        $address->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $address->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $address->setActive(1);
         $address->setDeleted(0);
 
