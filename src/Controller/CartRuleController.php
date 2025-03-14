@@ -39,7 +39,7 @@ class CartRuleController
     }
 
     #[Route('/get_cart_rules', name: 'get_cart_rules', methods: ['GET'])]
-    public function getCartRules(Request request): Response
+    public function getCartRules(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
 
