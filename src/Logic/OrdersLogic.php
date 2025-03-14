@@ -266,6 +266,8 @@ class OrdersLogic
         $newOrderPayment->setIdCurrency($psOrder->getIdCurrency());
         $newOrderPayment->setAmount($psOrder->getTotalPaid());
         $newOrderPayment->setPaymentMethod($paymentMethod);
+        $newOrderPayment->setConversionRate(1);
+        $newOrderPayment->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
 
         $this->entityManagerInterface->persist($newOrderPayment);
         $this->entityManagerInterface->flush();
