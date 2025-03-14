@@ -135,7 +135,7 @@ class OrdersController
                         'reduction_percent' => 0,
                         'active' => true,
                         'date_from' => (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s'),
-                        'date_to' => (new \DateTime('now', new \DateTimeZone('Europe/Berlin'))->modify('+6 months'))->format('Y-m-d H:i:s'),
+                        'date_to' => (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->modify('+6 months')->format('Y-m-d H:i:s'),
                         'id_customer' => $data['id_customer'],
                     ];
                     $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($newCartRuleData);
