@@ -59,8 +59,7 @@ class ProductController extends AbstractController
     sa.price AS price,
     sav.quantity AS quantity,
     shop.name AS shop_name,
-    pl.linkRewrite AS link_rewrite,
-    sa.active AS active
+    pl.linkRewrite AS link_rewrite
 	")
       ->from(PsStockAvailable::class, 'sav')
       ->innerJoin('sav.id_product', 'p')
@@ -73,8 +72,8 @@ class ProductController extends AbstractController
       ->leftJoin(PsCategoryLang::class, 'cl', 'WITH', 'sa.id_category_default = cl.id_category AND cl.id_lang = 1 AND cl.id_shop = 1')
       ->leftJoin(PsCategory::class, 'c', 'WITH', 'c.id_category = cl.id_category')
       ->leftJoin(LpControlStock::class, 'lcs', 'WITH', 'sav.id_shop = lcs.id_shop AND sav.id_product = lcs.id_product AND sav.id_product_attribute = lcs.id_product_attribute')
-      ->addSelect('lcs.id_control_stock AS id_control_stock')
-      ->where('p.reference = :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2')
+      ->addSelect('lcs.id_control_stock AS id_control_stock, lcs.active as active_control_stock')
+      ->where('(p.reference = :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2) AND lcs.active = 1')
       ->setParameter('empty', value: '')
       ->setParameter('searchTerm', $b)
       ->setParameter('searchTerm2', $b)
