@@ -246,7 +246,7 @@ class OrdersLogic
         return $payments;
     }
 
-    public function generateOrderHistory($psOrder $idEmployee): PsOrderHistory
+    public function generateOrderHistory($psOrder, $idEmployee): PsOrderHistory
     {
         $newOrderHistory = new PsOrderHistory();
 
