@@ -89,7 +89,7 @@ class OrdersController
         $this->entityManagerInterface->flush();
 
         $orderHistory = $this->ordersLogic->generateOrderHistory($newPsOrder, $data['id_employee']);
-        $orderPaymet = $this->ordersLogic->generateOrderPayments($newPsOrder, $data);
+        $this->ordersLogic->generateOrderPayments($newPsOrder, $data);
 
         foreach ($data['order_details'] as $orderDetailData) {
             $orderDetail = $this->ordersLogic->generateOrderDetail($data, $orderDetailData, $newPsOrder);
