@@ -9,6 +9,8 @@ use App\Entity\PsOrderDetail;
 use App\Entity\PsStockAvailable;
 use App\Entity\LpPosSessions;
 use App\Entity\LpPosOrders;
+use App\Entity\PsOrderHistory;
+use App\Entity\PsOrderPayment;
 
 class OrdersLogic
 {
@@ -242,5 +244,43 @@ class OrdersLogic
         ];
 
         return $payments;
+    }
+
+    public function generateOrderHistory($psOrder $idEmployee): PsOrderHistory
+    {
+        $newOrderHistory = new PsOrderHistory();
+
+        $newOrderHistory->setIdEmployee($idEmployee);
+        $newOrderHistory->setIdOrder($psOrder->getIdOrder());
+        $newOrderHistory->setIdOrderState($psOrder->getCurrentState());
+        $newOrderHistory->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $this->entityManagerInterface->persist($newOrderHistory);
+        $this->entityManagerInterface->flush();
+        return $newOrderHistory;
+    }
+
+    public function createOrderPayment($psOrder, string $paymentMethod): PsOrderPayment
+    {
+        $newOrderPayment = new PsOrderPayment();
+        $newOrderPayment->setOrderReference($psOrder->getReference());
+        $newOrderPayment->setIdCurrency($psOrder->getIdCurrency());
+        $newOrderPayment->setAmount($psOrder->getTotalPaid());
+        $newOrderPayment->setPaymentMethod($paymentMethod);
+
+        $this->entityManager->persist($newOrderPayment);
+        $this->entityManager->flush();
+
+        return $newOrderPayment;
+    }
+
+    public function generateOrderPayments($psOrder, $data)
+    {
+        $paymentMethods = ['tarjeta', 'bizum', 'efectivo'];
+
+        foreach ($paymentMethods as $method) {
+            if (str_contains($data['payment'], $method)) {
+                $this->createOrderPayment($psOrder, $method);
+            }
+        }
     }
 }
