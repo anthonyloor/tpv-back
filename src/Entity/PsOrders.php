@@ -80,6 +80,9 @@ class PsOrders
     #[ORM\Column(type: "decimal", precision: 17, scale: 2)]
     private ?float $total_products = null;
 
+    #[ORM\Column(type: "decimal", precision: 17, scale: 2)]
+    private ?float $total_products_wt = null;
+
     #[ORM\Column]
     private ?int $round_mode = null;
 
@@ -360,6 +363,17 @@ class PsOrders
     public function setTotalProducts(?float $total_products): self
     {
         $this->total_products = $total_products;
+        return $this;
+    }
+
+    public function getTotalProductsWt(): ?float
+    {
+        return $this->total_products_wt;
+    }
+
+    public function setTotalProductsWt(?float $total_products_wt): self
+    {
+        $this->total_products_wt = $total_products_wt;
         return $this;
     }
 

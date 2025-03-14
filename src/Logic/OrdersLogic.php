@@ -45,6 +45,7 @@ class OrdersLogic
         $newPsOrder->setTotalPaidTaxExcl($data['total_paid_tax_excl']);
         $newPsOrder->setTotalPaidReal($data['total_paid']);
         $newPsOrder->setTotalProducts($data['total_products']);
+        $newPsOrder->setTotalProductsWt($data['total_products']);
         $newPsOrder->setInvoiceNumber(0);
         $newPsOrder->setInvoiceDate(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $newPsOrder->setValid(1);
