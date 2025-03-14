@@ -73,7 +73,7 @@ class ProductController extends AbstractController
       ->leftJoin(PsCategory::class, 'c', 'WITH', 'c.id_category = cl.id_category')
       ->leftJoin(LpControlStock::class, 'lcs', 'WITH', 'sav.id_shop = lcs.id_shop AND sav.id_product = lcs.id_product AND sav.id_product_attribute = lcs.id_product_attribute')
       ->addSelect('lcs.id_control_stock AS id_control_stock, lcs.active as active_control_stock')
-      ->where('(p.reference = :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2) AND lcs.active = 1')
+      ->where('(p.reference = :searchTerm OR pa.ean13 = :searchTerm2 OR p.ean13 = :searchTerm2)')
       ->setParameter('empty', value: '')
       ->setParameter('searchTerm', $b)
       ->setParameter('searchTerm2', $b)
