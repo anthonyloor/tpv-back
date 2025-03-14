@@ -259,12 +259,12 @@ class OrdersLogic
         return $newOrderHistory;
     }
 
-    public function createOrderPayment($psOrder, string $paymentMethod): PsOrderPayment
+    public function createOrderPayment($psOrder, string $paymentMethod, float $amount): PsOrderPayment
     {
         $newOrderPayment = new PsOrderPayment();
         $newOrderPayment->setOrderReference($psOrder->getReference());
         $newOrderPayment->setIdCurrency($psOrder->getIdCurrency());
-        $newOrderPayment->setAmount($psOrder->getTotalPaid());
+        $newOrderPayment->setAmount($amount); // Usamos el monto específico de cada método
         $newOrderPayment->setPaymentMethod($paymentMethod);
         $newOrderPayment->setConversionRate(1);
         $newOrderPayment->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
@@ -275,13 +275,17 @@ class OrdersLogic
         return $newOrderPayment;
     }
 
-    public function generateOrderPayments($psOrder, $data)
+    public function generateOrderPayments($psOrder, array $data)
     {
-        $paymentMethods = ['tarjeta', 'bizum', 'efectivo'];
+        $paymentMethods = [
+            'tarjeta' => $data['total_card'] ?? 0,
+            'bizum'   => $data['total_bizum'] ?? 0,
+            'efectivo' => $data['total_cash'] ?? 0
+        ];
 
-        foreach ($paymentMethods as $method) {
-            if (str_contains($data['payment'], $method)) {
-                $this->createOrderPayment($psOrder, $method);
+        foreach ($paymentMethods as $method => $amount) {
+            if ($amount > 0) { // Solo creamos pagos si hay un monto mayor a 0
+                $this->createOrderPayment($psOrder, $method, $amount);
             }
         }
     }
