@@ -88,7 +88,7 @@ class OrdersController
         $this->entityManagerInterface->persist($pos_session);
         $this->entityManagerInterface->flush();
 
-        $orderHistory = $this->ordersLogic->createOrderHistory($newPsOrder, $data['id_employee']);
+        $orderHistory = $this->ordersLogic->generateOrderHistory($newPsOrder, $data['id_employee']);
         $orderPaymet = $this->ordersLogic->generateOrderPayments($newPsOrder, $data);
 
         foreach ($data['order_details'] as $orderDetailData) {
