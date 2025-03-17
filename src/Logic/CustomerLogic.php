@@ -101,7 +101,7 @@ class CustomerLogic
             $finalPhone = $phone ? $phone : $mobilePhone;
 
             $customersArray[] = [
-                'id_customer' => $customer->getId(),
+                'id_customer' => $customer->getIdAddress(),
                 'firstname' => $customer->getFirstname(),
                 'lastname' => $customer->getLastname(),
                 'email' => $customer->getEmail(),
