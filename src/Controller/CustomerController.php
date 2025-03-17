@@ -222,7 +222,7 @@ class CustomerController
         $this->entityManagerInterface->persist($address);
         $this->entityManagerInterface->flush();
 
-        return new JsonResponse(['message' => 'Address created successfully', 'id_address' => $address->getId()], Response::HTTP_CREATED);
+        return new JsonResponse(['message' => 'Address created successfully', 'id_address' => $address->getIdAddress()], Response::HTTP_CREATED);
     }
 
     #[Route('/edit_customer', name: 'edit_customer', methods: ['POST'])]

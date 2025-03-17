@@ -98,7 +98,7 @@ class PsAddress
     {
         return $this->origin;
     }
-    public function getId(): ?int
+    public function getIdAddress(): ?int
     {
         return $this->id_address;
     }

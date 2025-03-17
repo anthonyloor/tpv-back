@@ -6,7 +6,7 @@ use App\RepositoryFajasMaylu\PsAddressFajasMayluRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PsAddressFajasMayluRepository::class)]
-#[ORM\Table(name: "ps_address",schema: 'fajasmaylu_ps_2')]
+#[ORM\Table(name: "ps_address",schema: '%env(DB_SCHEMA_2)%')]
 class PsAddress
 {
     #[ORM\Id]

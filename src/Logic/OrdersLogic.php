@@ -12,6 +12,8 @@ use App\Entity\LpPosOrders;
 use App\Entity\PsOrderHistory;
 use App\Entity\PsOrderPayment;
 use App\Entity\PsOrderState;
+use App\Entity\PsCustomer;
+use App\Entity\PsAddress;
 
 class OrdersLogic
 {
@@ -32,10 +34,16 @@ class OrdersLogic
         $newPsOrder->setIdShop($data['id_shop']);
         $newPsOrder->setIdCarrier(0);
         $newPsOrder->setIdLang(1);
-        $newPsOrder->setIdCustomer($data['id_customer']);
+
+        $customer = $this->entityManagerInterface->getRepository(PsCustomer::class)->find($data['id_customer']);
+        $newPsOrder->setCustomer($customer);
+
         $newPsOrder->setIdCart(0);
         $newPsOrder->setIdCurrency(1);
-        $newPsOrder->setIdAddressDelivery($data['id_address_delivery']);
+
+        $addressDelivery = $this->entityManagerInterface->getRepository(PsAddress::class)->find($data['id_address_delivery']);
+        $newPsOrder->setAddressDelivery($addressDelivery);
+
         $newPsOrder->setIdAddressInvoice($data['id_address_delivery']);
         $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->find(19);
         $newPsOrder->setCurrentState($orderState);
@@ -165,12 +173,17 @@ class OrdersLogic
     {
         $posOrder = $this->entityManagerInterface->getRepository(LpPosOrders::class)
             ->findOneBy(['id_order' => $order->getIdOrder()]);
+
+        $customer = $order->getCustomer()->getIdCustomer() == 0 ? null : $order->getCustomer();
+        $addressDelivery = $order->getAddressDelivery()->getIdAddress() == 0 ? null : $order->getAddressDelivery();
         $orderData = [
             'id_order' => $order->getIdOrder(),
             'id_shop' => $order->getIdShop(),
-            'id_customer' => $order->getIdCustomer(),
-            'id_employee' => $posOrder ? $posOrder->getIdEmployee() : null,
-            'id_address_delivery' => $order->getIdAddressDelivery(),
+            'id_customer' => $customer?->getIdCustomer(),
+            'customer_name' => $customer?->getFirstname() . ' '. $customer?->getLastname(),
+            'id_employee' => $posOrder?->getIdEmployee(),
+            'id_address_delivery' => $addressDelivery?->getIdAddress(),
+            'address_delivery_name' => $addressDelivery?->getAddress1(),
             'payment' => $order->getPayment(),
             'total_paid' => $order->getTotalPaid(),
             'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
