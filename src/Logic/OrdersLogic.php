@@ -11,6 +11,7 @@ use App\Entity\LpPosSessions;
 use App\Entity\LpPosOrders;
 use App\Entity\PsOrderHistory;
 use App\Entity\PsOrderPayment;
+use App\Entity\PsOrderState;
 
 class OrdersLogic
 {
@@ -36,7 +37,8 @@ class OrdersLogic
         $newPsOrder->setIdCurrency(1);
         $newPsOrder->setIdAddressDelivery($data['id_address_delivery']);
         $newPsOrder->setIdAddressInvoice($data['id_address_delivery']);
-        $newPsOrder->setCurrentState(19);
+        $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->find(19);
+        $newPsOrder->setCurrentState($orderState);
         $newPsOrder->setSecureKey($this->generateSecureKey($data['id_customer']));
         $newPsOrder->setPayment($data['payment']);
         $newPsOrder->setModule("LP-TPV");
@@ -161,15 +163,21 @@ class OrdersLogic
 
     public function generateOrderJSON($order)
     {
+        $posOrder = $this->entityManagerInterface->getRepository(LpPosOrders::class)
+            ->findOneBy(['id_order' => $order->getIdOrder()]);
         $orderData = [
             'id_order' => $order->getIdOrder(),
             'id_shop' => $order->getIdShop(),
             'id_customer' => $order->getIdCustomer(),
+            'id_employee' => $posOrder->getIdEmployee(),
             'id_address_delivery' => $order->getIdAddressDelivery(),
             'payment' => $order->getPayment(),
             'total_paid' => $order->getTotalPaid(),
             'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
             'total_products' => $order->getTotalProducts(),
+			'current_state' => $order->getCurrentState()->getIdOrderState(),
+            'current_state_name' => $order->getCurrentStateName(),
+			'valid' => $order->getValid(),
             'date_add' => $order->getDateAdd()->format('Y-m-d H:i:s'),
             'origin' => $order->getOrigin(),
             'order_details' => []
