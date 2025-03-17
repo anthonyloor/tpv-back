@@ -8,7 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 
 #[ORM\Entity(repositoryClass: PsCustomerRepository::class)]
-#[ORM\Table(name: 'ps_customer', schema: 'ps_mayret_2')]  // Especifica el esquema si es necesario
+#[ORM\Table(name: 'ps_customer')] 
 class PsCustomer
 {
     #[ORM\Id]
