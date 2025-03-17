@@ -169,7 +169,7 @@ class OrdersLogic
             'id_order' => $order->getIdOrder(),
             'id_shop' => $order->getIdShop(),
             'id_customer' => $order->getIdCustomer(),
-            'id_employee' => $posOrder->getIdEmployee(),
+            'id_employee' => $posOrder ? $posOrder->getIdEmployee() : null,
             'id_address_delivery' => $order->getIdAddressDelivery(),
             'payment' => $order->getPayment(),
             'total_paid' => $order->getTotalPaid(),

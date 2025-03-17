@@ -3,6 +3,7 @@
 namespace App\EntityFajasMaylu;
 use App\RepositoryFajasMaylu\PsOrdersFajasMayluRepository;
 
+use App\Entity\PsOrderState;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -103,6 +104,10 @@ class PsOrders
     private ?\DateTimeInterface $date_upd = null;
 
     private $origin = 'fajasmaylu';
+
+    #[ORM\ManyToOne(targetEntity: PsOrderState::class)]
+    #[ORM\JoinColumn(name: "current_state", referencedColumnName: "id_order_state", nullable: true)]
+    private ?PsOrderState $currentState = null;
 
     // Getters y Setters
 
@@ -231,14 +236,14 @@ class PsOrders
         return $this;
     }
 
-    public function getCurrentState(): ?int
+    public function getCurrentState(): ?PsOrderState
     {
-        return $this->current_state;
+        return $this->currentState;
     }
 
-    public function setCurrentState(?int $current_state): self
+    public function setCurrentState(?PsOrderState $currentState): self
     {
-        $this->current_state = $current_state;
+        $this->currentState = $currentState;
         return $this;
     }
 
@@ -438,5 +443,10 @@ class PsOrders
     {
         $this->date_upd = $date_upd;
         return $this;
+    }
+
+    public function getCurrentStateName(): ?string
+    {
+        return $this->currentState?->getOrderStateLang()?->getName();
     }
 }
