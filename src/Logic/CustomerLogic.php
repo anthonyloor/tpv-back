@@ -101,7 +101,7 @@ class CustomerLogic
             $finalPhone = $phone ? $phone : $mobilePhone;
 
             $customersArray[] = [
-                'id_customer' => $customer->getIdAddress(),
+                'id_customer' => $customer->getIdCustomer(),
                 'firstname' => $customer->getFirstname(),
                 'lastname' => $customer->getLastname(),
                 'email' => $customer->getEmail(),
@@ -118,7 +118,7 @@ class CustomerLogic
         $addressesArray = [];
         foreach ($addresses as $address) {
             $addressesArray[] = [
-                'id_address' => $address->getId(),
+                'id_address' => $address->getIdAddress(),
                 'id_country' => $address->getIdCountry(),
                 'id_state' => $address->getIdState(),
                 'id_customer' => $address->getIdCustomer(),
