@@ -8,17 +8,14 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class PsCustomerFajasMayluRepository extends ServiceEntityRepository
 {
-    private $emFajasMaylu;
-
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, PsCustomer::class);
-        $this->emFajasMaylu = $registry->getManager('fajas_maylu');
     }
 
     public function findAllByFullNameOrPhone(string $search): array
     {
-        return $this->·emFajasMaylu->createQueryBuilder('c')
+        return $this->createQueryBuilder('c')
             ->leftJoin('c.addresses', 'a') // Usa el nombre correcto de la relación
             ->where('CONCAT(c.firstname, \' \', c.lastname) LIKE :search')
             ->orWhere('a.phone LIKE :search')
