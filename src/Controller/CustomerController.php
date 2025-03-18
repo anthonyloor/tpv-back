@@ -77,7 +77,7 @@ class CustomerController
                 case 'fajasmaylu':
                     $customers = $this->emFajasMaylu
                         ->getRepository(PsCustomerMaylu::class)
-                        ->findAllByFullNameOrPhone1($data['filter']);
+                        ->findAllByFullNameOrPhone($data['filter']);
                     break;
                 case 'mayret':
                     $customers = $this->entityManagerInterface
@@ -90,7 +90,7 @@ class CustomerController
                         ->findAllByFullNameOrPhone($data['filter']);
                     $customersMaylu = $this->emFajasMaylu
                         ->getRepository(PsCustomerMaylu::class)
-                        ->findAllByFullNameOrPhone1($data['filter']);
+                        ->findAllByFullNameOrPhone($data['filter']);
                     $customers = array_merge($customersMayret, $customersMaylu);
                     break;
                 default:
