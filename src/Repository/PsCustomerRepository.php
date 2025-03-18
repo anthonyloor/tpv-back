@@ -5,17 +5,24 @@ namespace App\Repository;
 use App\Entity\PsCustomer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 
 class PsCustomerRepository extends ServiceEntityRepository
 {
+    private EntityManagerInterface $em;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, PsCustomer::class);
+        $this->em = $registry->getManager('default');
+
     }
 
     public function findAllByFullNameOrPhone(string $search): array
     {
-        return $this->createQueryBuilder('c')
+        return $this->em->createQueryBuilder()
+            ->select('c')
+            ->from(PsCustomer::class, 'c')
             ->leftJoin('c.addresses', 'a') // Usa el nombre correcto de la relación
             ->where('CONCAT(c.firstname, \' \', c.lastname) LIKE :search')
             ->orWhere('a.phone LIKE :search')
@@ -40,7 +47,7 @@ class PsCustomerRepository extends ServiceEntityRepository
 
         return $queryBuilder->getQuery()->getResult();
     }
-    
+
 
     public function findAllCustomers(): array
     {
