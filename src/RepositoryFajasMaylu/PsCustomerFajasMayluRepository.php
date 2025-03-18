@@ -54,5 +54,9 @@ class PsCustomerFajasMayluRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-
+    public function findRecentCustomers(): array
+    {
+        return $this->em->getRepository(PsCustomer::class)
+            ->findBy([], ['id_customer' => 'DESC'], 25);
+    }
 }

@@ -57,4 +57,9 @@ class PsCustomerRepository extends ServiceEntityRepository
     }
 
 
+    public function findRecentCustomers(): array
+    {
+        return $this->em->getRepository(PsCustomer::class)
+            ->findBy([], ['id_customer' => 'DESC'], 25);
+    }
 }

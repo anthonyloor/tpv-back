@@ -103,8 +103,8 @@ class CustomerController
     #[Route('/get_all_customers', name: 'get_all_customers')]
     public function getAllCustomers(): Response
     {
-        $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findBy([], ['id_customer' => 'DESC'], 25);
-        $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findBy([], ['id_customer' => 'DESC'], 25);
+        $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findRecentCustomers();
+        $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findRecentCustomers();
 
 
         if (empty($customers)) {
