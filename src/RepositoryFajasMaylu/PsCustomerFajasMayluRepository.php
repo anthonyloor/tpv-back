@@ -13,7 +13,7 @@ class PsCustomerFajasMayluRepository extends ServiceEntityRepository
         parent::__construct($registry, PsCustomer::class);
     }
 
-    public function findAllByFullNameOrPhone(string $search): array
+    public function findAllByFullNameOrPhone1(string $search): array
     {
         return $this->createQueryBuilder('c')
             ->leftJoin('c.addresses', 'a') // Usa el nombre correcto de la relación
