@@ -86,12 +86,10 @@ class CustomerLogic
 
 
             if ($customer->getOrigin() == 'mayret') {
-                $address = $this->entityManagerInterface->getRepository(PsAddress::class)->findOneBy(
-                    ['id_customer' => $customer->getId()]
+                $address = $this->entityManagerInterface->getRepository(PsAddress::class)->findOneByCustomerId($customer->getIdCustomer()
                 );
             } else {
-                $address = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findOneBy(
-                    ['id_customer' => $customer->getId()]
+                $address = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findOneByCustomerId($customer->getIdCustomer()
                 );
             }
 

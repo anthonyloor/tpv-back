@@ -26,4 +26,17 @@ class PsAddressRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findOneByCustomerId(int $idCustomer): ?PsAddress
+    {
+        return $this->em->createQueryBuilder()
+            ->select('a')
+            ->from(PsAddress::class, 'a')
+            ->andWhere('a.id_customer = :idCustomer')
+            ->setParameter('idCustomer', $idCustomer)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
 }
