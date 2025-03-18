@@ -59,7 +59,12 @@ class PsCustomerRepository extends ServiceEntityRepository
 
     public function findRecentCustomers(): array
     {
-        return $this->em->getRepository(PsCustomer::class)
-            ->findBy([], ['id_customer' => 'DESC'], 25);
+        return $this->em->createQueryBuilder()
+            ->select('c')
+            ->from(PsCustomer::class, 'c')
+            ->orderBy('c.id_customer', 'DESC')
+            ->setMaxResults(25)
+            ->getQuery()
+            ->getResult();
     }
 }
