@@ -3,7 +3,7 @@
 namespace App\EntityFajasMaylu;
 use App\RepositoryFajasMaylu\PsOrdersFajasMayluRepository;
 
-use App\Entity\PsOrderState;
+use App\EntityFajasMaylu\PsOrderState;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
