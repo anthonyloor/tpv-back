@@ -9,6 +9,11 @@ use App\Entity\PsOrderDetail;
 use App\Entity\PsStockAvailable;
 use App\Entity\LpPosSessions;
 use App\Entity\LpPosOrders;
+use App\Entity\PsOrderHistory;
+use App\Entity\PsOrderPayment;
+use App\Entity\PsOrderState;
+use App\Entity\PsCustomer;
+use App\Entity\PsAddress;
 
 class OrdersLogic
 {
@@ -29,12 +34,19 @@ class OrdersLogic
         $newPsOrder->setIdShop($data['id_shop']);
         $newPsOrder->setIdCarrier(0);
         $newPsOrder->setIdLang(1);
-        $newPsOrder->setIdCustomer($data['id_customer']);
+
+        $customer = $this->entityManagerInterface->getRepository(PsCustomer::class)->find($data['id_customer']);
+        $newPsOrder->setCustomer($customer);
+
         $newPsOrder->setIdCart(0);
         $newPsOrder->setIdCurrency(1);
-        $newPsOrder->setIdAddressDelivery($data['id_address_delivery']);
+
+        $addressDelivery = $this->entityManagerInterface->getRepository(PsAddress::class)->find($data['id_address_delivery']);
+        $newPsOrder->setAddressDelivery($addressDelivery);
+
         $newPsOrder->setIdAddressInvoice($data['id_address_delivery']);
-        $newPsOrder->setCurrentState(19);
+        $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->find(19);
+        $newPsOrder->setCurrentState($orderState);
         $newPsOrder->setSecureKey($this->generateSecureKey($data['id_customer']));
         $newPsOrder->setPayment($data['payment']);
         $newPsOrder->setModule("LP-TPV");
@@ -43,6 +55,7 @@ class OrdersLogic
         $newPsOrder->setTotalPaidTaxExcl($data['total_paid_tax_excl']);
         $newPsOrder->setTotalPaidReal($data['total_paid']);
         $newPsOrder->setTotalProducts($data['total_products']);
+        $newPsOrder->setTotalProductsWt($data['total_paid']);
         $newPsOrder->setInvoiceNumber(0);
         $newPsOrder->setInvoiceDate(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $newPsOrder->setValid(1);
@@ -158,15 +171,26 @@ class OrdersLogic
 
     public function generateOrderJSON($order)
     {
+        $posOrder = $this->entityManagerInterface->getRepository(LpPosOrders::class)
+            ->findOneBy(['id_order' => $order->getIdOrder()]);
+
+        $customer = $order->getCustomer()->getIdCustomer() == 0 ? null : $order->getCustomer();
+        $addressDelivery = $order->getAddressDelivery()->getIdAddress() == 0 ? null : $order->getAddressDelivery();
         $orderData = [
             'id_order' => $order->getIdOrder(),
             'id_shop' => $order->getIdShop(),
-            'id_customer' => $order->getIdCustomer(),
-            'id_address_delivery' => $order->getIdAddressDelivery(),
+            'id_customer' => $customer?->getIdCustomer(),
+            'customer_name' => $customer?->getFirstname() . ' '. $customer?->getLastname(),
+            'id_employee' => $posOrder?->getIdEmployee(),
+            'id_address_delivery' => $addressDelivery?->getIdAddress(),
+            'address_delivery_name' => $addressDelivery?->getAddress1(),
             'payment' => $order->getPayment(),
             'total_paid' => $order->getTotalPaid(),
             'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
             'total_products' => $order->getTotalProducts(),
+			'current_state' => $order->getCurrentState()->getIdOrderState(),
+            'current_state_name' => $order->getCurrentStateName(),
+			'valid' => $order->getValid(),
             'date_add' => $order->getDateAdd()->format('Y-m-d H:i:s'),
             'origin' => $order->getOrigin(),
             'order_details' => []
@@ -242,5 +266,49 @@ class OrdersLogic
         ];
 
         return $payments;
+    }
+
+    public function generateOrderHistory($psOrder, $idEmployee): PsOrderHistory
+    {
+        $newOrderHistory = new PsOrderHistory();
+
+        $newOrderHistory->setIdEmployee($idEmployee);
+        $newOrderHistory->setIdOrder($psOrder->getIdOrder());
+        $newOrderHistory->setIdOrderState($psOrder->getCurrentState());
+        $newOrderHistory->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $this->entityManagerInterface->persist($newOrderHistory);
+        $this->entityManagerInterface->flush();
+        return $newOrderHistory;
+    }
+
+    public function createOrderPayment($psOrder, string $paymentMethod, float $amount): PsOrderPayment
+    {
+        $newOrderPayment = new PsOrderPayment();
+        $newOrderPayment->setOrderReference($psOrder->getReference());
+        $newOrderPayment->setIdCurrency($psOrder->getIdCurrency());
+        $newOrderPayment->setAmount($amount); // Usamos el monto específico de cada método
+        $newOrderPayment->setPaymentMethod($paymentMethod);
+        $newOrderPayment->setConversionRate(1);
+        $newOrderPayment->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+
+        $this->entityManagerInterface->persist($newOrderPayment);
+        $this->entityManagerInterface->flush();
+
+        return $newOrderPayment;
+    }
+
+    public function generateOrderPayments($psOrder, array $data)
+    {
+        $paymentMethods = [
+            'tarjeta' => $data['total_card'] ?? 0,
+            'bizum'   => $data['total_bizum'] ?? 0,
+            'efectivo' => $data['total_cash'] ?? 0
+        ];
+
+        foreach ($paymentMethods as $method => $amount) {
+            if ($amount > 0) { // Solo creamos pagos si hay un monto mayor a 0
+                $this->createOrderPayment($psOrder, $method, $amount);
+            }
+        }
     }
 }

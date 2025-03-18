@@ -84,8 +84,8 @@ class WareHouseMovementLogic
         $newWareHouseMovement->setIdShopDestiny($data['id_shop_destiny'] ?? null);
         $newWareHouseMovement->setStatus('En creacion');
         $newWareHouseMovement->setType($data['type']);
-        $newWareHouseMovement->setDateAdd(new \DateTime());
-        $newWareHouseMovement->setDateModified(new \DateTime());
+        $newWareHouseMovement->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $newWareHouseMovement->setDateModified(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $newWareHouseMovement->setIdEmployee($data['id_employee']);
         $this->entityManagerInterface->persist($newWareHouseMovement);
         $this->entityManagerInterface->flush();
@@ -129,7 +129,7 @@ class WareHouseMovementLogic
             $movement->setIdShopDestiny($data['id_shop_destiny'] ?? null);
             $movement->setStatus($data['status']);
             $movement->setType($data['type']);
-            $movement->setDateModified(new \DateTime());
+            $movement->setDateModified(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
             $movement->setModifyReason($data['modify_reason']);
 
             if (!empty($data['movement_details'])) {
@@ -161,13 +161,13 @@ class WareHouseMovementLogic
         if ($status == "Enviado" || $status == "Recibido") {
             //Solo se puede modificar el estado y date_modified, modify_reason
             $movement->setStatus($data['status']);
-            $movement->setDateModified(new \DateTime());
+            $movement->setDateModified(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
             $movement->setModifyReason($data['modify_reason']);
         }
         if ($status == "En revision" || $status == "Incidencia pendiente") {
             //se puede modificar el estado y movement details y date_modified, modify_reason
             $movement->setStatus($data['status']);
-            $movement->setDateModified(new \DateTime());
+            $movement->setDateModified(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
             $movement->setModifyReason($data['modify_reason']);
             foreach ($data['movement_details'] as $detail) {
 
@@ -191,7 +191,7 @@ class WareHouseMovementLogic
         $this->entityManagerInterface->getConnection()->beginTransaction(); // Start transaction
         try {
             $movement->setStatus('Ejecutado');
-            $movement->setDateExcute(new \DateTime());
+            $movement->setDateExcute(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
             $this->entityManagerInterface->persist($movement);
             $movementType = $movement->getType();
             $movementDetails = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->findBy(['id_warehouse_movement' => $movement->getIdWarehouseMovement()]);
@@ -231,7 +231,7 @@ class WareHouseMovementLogic
                             . ' ean13 ' . $controllStock->getEan13()
                             . ' reason ' . 'Entrada de producto'
                             . ' type ' . 'Entrada'
-                            . ' date ' . (new \DateTime())->format('Y-m-d H:i:s')
+                            . ' date ' . (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s')
                         );
                         }
                     }
@@ -246,7 +246,7 @@ class WareHouseMovementLogic
                         $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($detail->getIdControlStock());
                         if ($controlStock) {
                             $controlStock->setActive(false);
-                            $controlStock->setDateUpd(new \DateTime());
+                            $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
                             $this->entityManagerInterface->persist($controlStock);
                             $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Salida de producto','Salida', $movement->getIdShopOrigin());
                         }
@@ -268,7 +268,7 @@ class WareHouseMovementLogic
                     $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($detail->getIdControlStock());
                     if ($controlStock) {
                         $controlStock->setIdShop($movement->getIdShopDestiny());
-                        $controlStock->setDateUpd(new \DateTime());
+                        $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
                         $this->entityManagerInterface->persist($controlStock);
                         $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Traspaso de producto','Traspaso',$movement->getIdShopDestiny());
                     }

@@ -6,7 +6,7 @@ use App\RepositoryFajasMaylu\PsAddressFajasMayluRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PsAddressFajasMayluRepository::class)]
-#[ORM\Table(name: "ps_address",schema: 'fajasmaylu_ps_2')]
+#[ORM\Table(name: "ps_address", schema: 'fajasmaylu_ps')]
 class PsAddress
 {
     #[ORM\Id]
@@ -99,7 +99,7 @@ class PsAddress
         return $this->origin;
     }
 
-    public function getId(): ?int
+    public function getIdAddress(): ?int
     {
         return $this->id_address;
     }

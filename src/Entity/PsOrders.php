@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 use App\Repository\PsOrdersRepository;
+use App\Entity\PsOrderState;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -29,8 +30,9 @@ class PsOrders
     #[ORM\Column]
     private ?int $id_lang = null;
 
-    #[ORM\Column]
-    private ?int $id_customer = null;
+    #[ORM\ManyToOne(targetEntity: PsCustomer::class)]
+    #[ORM\JoinColumn(name: "id_customer", referencedColumnName: "id_customer", nullable: true)]
+    private ?PsCustomer $customer = null;
 
     #[ORM\Column]
     private ?int $id_cart = null;
@@ -38,14 +40,13 @@ class PsOrders
     #[ORM\Column]
     private ?int $id_currency = null;
 
-    #[ORM\Column]
-    private ?int $id_address_delivery = null;
+    #[ORM\ManyToOne(targetEntity: PsAddress::class)]
+    #[ORM\JoinColumn(name: "id_address_delivery", referencedColumnName: "id_address", nullable: false)]
+    private ?PsAddress $addressDelivery = null;
+    
 
     #[ORM\Column]
     private ?int $id_address_invoice = null;
-
-    #[ORM\Column]
-    private ?int $current_state = null;
 
     #[ORM\Column(length: 32)]
     private ?string $secure_key = null;
@@ -80,6 +81,9 @@ class PsOrders
     #[ORM\Column(type: "decimal", precision: 17, scale: 2)]
     private ?float $total_products = null;
 
+    #[ORM\Column(type: "decimal", precision: 17, scale: 2)]
+    private ?float $total_products_wt = null;
+
     #[ORM\Column]
     private ?int $round_mode = null;
 
@@ -102,6 +106,10 @@ class PsOrders
     private ?\DateTimeInterface $date_upd = null;
 
     private string $origin = 'mayret';
+
+    #[ORM\ManyToOne(targetEntity: PsOrderState::class)]
+    #[ORM\JoinColumn(name: "current_state", referencedColumnName: "id_order_state", nullable: true)]
+    private ?PsOrderState $currentState = null;
 
     // Getters y Setters
 
@@ -176,14 +184,14 @@ class PsOrders
         return $this;
     }
 
-    public function getIdCustomer(): ?int
+    public function getCustomer(): ?PsCustomer
     {
-        return $this->id_customer;
+        return $this->customer;
     }
 
-    public function setIdCustomer(?int $id_customer): self
+    public function setCustomer(?PsCustomer $customer): self
     {
-        $this->id_customer = $id_customer;
+        $this->customer = $customer;
         return $this;
     }
 
@@ -209,14 +217,14 @@ class PsOrders
         return $this;
     }
 
-    public function getIdAddressDelivery(): ?int
+    public function getAddressDelivery(): ?PsAddress
     {
-        return $this->id_address_delivery;
+        return $this->addressDelivery;
     }
 
-    public function setIdAddressDelivery(?int $id_address_delivery): self
+    public function setAddressDelivery(?PsAddress $addressDelivery): self
     {
-        $this->id_address_delivery = $id_address_delivery;
+        $this->addressDelivery = $addressDelivery;
         return $this;
     }
 
@@ -231,14 +239,14 @@ class PsOrders
         return $this;
     }
 
-    public function getCurrentState(): ?int
+    public function getCurrentState(): ?PsOrderState
     {
-        return $this->current_state;
+        return $this->currentState;
     }
 
-    public function setCurrentState(?int $current_state): self
+    public function setCurrentState(?PsOrderState $currentState): self
     {
-        $this->current_state = $current_state;
+        $this->currentState = $currentState;
         return $this;
     }
 
@@ -363,6 +371,17 @@ class PsOrders
         return $this;
     }
 
+    public function getTotalProductsWt(): ?float
+    {
+        return $this->total_products_wt;
+    }
+
+    public function setTotalProductsWt(?float $total_products_wt): self
+    {
+        $this->total_products_wt = $total_products_wt;
+        return $this;
+    }
+
     public function getRoundMode(): ?int
     {
         return $this->round_mode;
@@ -438,5 +457,10 @@ class PsOrders
     {
         $this->date_upd = $date_upd;
         return $this;
+    }
+
+    public function getCurrentStateName(): ?string
+    {
+        return $this->currentState?->getOrderStateLang()?->getName();
     }
 }

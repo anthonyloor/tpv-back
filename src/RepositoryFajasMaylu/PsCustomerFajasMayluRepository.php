@@ -5,17 +5,23 @@ namespace App\RepositoryFajasMaylu;
 use App\EntityFajasMaylu\PsCustomer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 
 class PsCustomerFajasMayluRepository extends ServiceEntityRepository
 {
+    private EntityManagerInterface $em;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, PsCustomer::class);
-    }
+        $this->em = $registry->getManager('fajas_maylu');
 
+    }
     public function findAllByFullNameOrPhone(string $search): array
     {
-        return $this->createQueryBuilder('c')
+        return $this->em->createQueryBuilder()
+            ->select('c')
+            ->from(PsCustomer::class, 'c')
             ->leftJoin('c.addresses', 'a') // Usa el nombre correcto de la relación
             ->where('CONCAT(c.firstname, \' \', c.lastname) LIKE :search')
             ->orWhere('a.phone LIKE :search')
@@ -48,5 +54,14 @@ class PsCustomerFajasMayluRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-
+    public function findRecentCustomers(): array
+    {
+        return $this->em->createQueryBuilder()
+            ->select('c')
+            ->from(PsCustomer::class, 'c')
+            ->orderBy('c.id_customer', 'DESC')
+            ->setMaxResults(25)
+            ->getQuery()
+            ->getResult();
+    }
 }

@@ -8,7 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 
 #[ORM\Entity(repositoryClass: PsCustomerFajasMayluRepository::class)]
-#[ORM\Table(name: 'ps_customer', schema: 'fajasmaylu_ps_2')]
+#[ORM\Table(name: 'ps_customer', schema: 'fajasmaylu_ps')]
 class PsCustomer
 {
     #[ORM\Id]
@@ -373,5 +373,17 @@ class PsCustomer
         $this->passwd = $passwd;
 
         return $this;
+    }
+
+    public function setIdCustomer(int $id_customer): static
+    {
+        $this->id_customer = $id_customer;
+
+        return $this;
+    }
+
+    public function getIdCustomer(): ?int
+    {
+        return $this->id_customer;
     }
 }

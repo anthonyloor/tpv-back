@@ -39,13 +39,29 @@ class CartRuleController
     }
 
     #[Route('/get_cart_rules', name: 'get_cart_rules', methods: ['GET'])]
-    public function getCartRules(): Response
+    public function getCartRules(Request $request): Response
     {
-        $cartRules = $this->entityManagerInterface->getRepository(PsCartRule::class)->findBy(
-            ['active' => true],
-            ['id_cart_rule' => 'DESC'],
-            50
-        );
+        $data = json_decode($request->getContent(), true);
+
+        if (isset($data['date1']) && isset($data['date2'])) {
+            $date1 = new \DateTime($data['date1']);
+            $date2 = new \DateTime($data['date2']);
+            $cartRules = $this->entityManagerInterface->getRepository(PsCartRule::class)->createQueryBuilder('c')
+                ->where('c.active = :active')
+                ->andWhere('c.date_add BETWEEN :date1 AND :date2')
+                ->setParameter('active', true)
+                ->setParameter('date1', $date1->format('Y-m-d H:i:s'))
+                ->setParameter('date2', $date2->format('Y-m-d H:i:s'))
+                ->orderBy('c.id_cart_rule', 'DESC')
+                ->getQuery()
+                ->getResult();
+        } else {
+            $cartRules = $this->entityManagerInterface->getRepository(PsCartRule::class)->findBy(
+                ['active' => true],
+                ['id_cart_rule' => 'DESC'],
+                50
+            );
+        }
 
         $cartRulesData = array_map(function ($cartRule) {
             return $this->cartRuleLogic->generateCartRuleJSON($cartRule);

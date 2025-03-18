@@ -38,7 +38,7 @@ class LicenseController
             return new JsonResponse(['status' => 'error', 'message' => 'License not found'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $currentDate = new DateTime();
+        $currentDate = new \DateTime('now', new \DateTimeZone('Europe/Berlin'));
         if ($license->getExpireDate()< $currentDate) {
             return new JsonResponse(['status' => 'error', 'message' => 'License expired'], JsonResponse::HTTP_FORBIDDEN);
         }

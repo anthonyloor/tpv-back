@@ -36,9 +36,9 @@ class CustomerLogic
         $customer->setNewsletter(0);
         $customer->setActive(1);
         $customer->setDeleted(0);
-        $customer->setDateAdd(new \DateTime());
-        $customer->setDateUpd(new \DateTime());
-        $customer->setLastPasswdGen(new \DateTime());
+        $customer->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $customer->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $customer->setLastPasswdGen(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $customer->setSecureKey(md5(uniqid()));
         $customer->setIdGender(0);
         $customer->setIdRisk(0);
@@ -70,8 +70,8 @@ class CustomerLogic
         $address->setPhoneMobile($data['phone_mobile'] ?? '');
         $address->setVatNumber($data['vat_number'] ?? '');
         $address->setDni($data['dni'] ?? '');
-        $address->setDateAdd(new \DateTime());
-        $address->setDateUpd(new \DateTime());
+        $address->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $address->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $address->setActive(1);
         $address->setDeleted(0);
 
@@ -86,12 +86,10 @@ class CustomerLogic
 
 
             if ($customer->getOrigin() == 'mayret') {
-                $address = $this->entityManagerInterface->getRepository(PsAddress::class)->findOneBy(
-                    ['id_customer' => $customer->getId()]
+                $address = $this->entityManagerInterface->getRepository(PsAddress::class)->findOneByCustomerId($customer->getIdCustomer()
                 );
             } else {
-                $address = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findOneBy(
-                    ['id_customer' => $customer->getId()]
+                $address = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findOneByCustomerId($customer->getIdCustomer()
                 );
             }
 
@@ -101,7 +99,7 @@ class CustomerLogic
             $finalPhone = $phone ? $phone : $mobilePhone;
 
             $customersArray[] = [
-                'id_customer' => $customer->getId(),
+                'id_customer' => $customer->getIdCustomer(),
                 'firstname' => $customer->getFirstname(),
                 'lastname' => $customer->getLastname(),
                 'email' => $customer->getEmail(),
@@ -118,7 +116,7 @@ class CustomerLogic
         $addressesArray = [];
         foreach ($addresses as $address) {
             $addressesArray[] = [
-                'id_address' => $address->getId(),
+                'id_address' => $address->getIdAddress(),
                 'id_country' => $address->getIdCountry(),
                 'id_state' => $address->getIdState(),
                 'id_customer' => $address->getIdCustomer(),

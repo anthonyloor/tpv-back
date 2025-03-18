@@ -88,6 +88,9 @@ class OrdersController
         $this->entityManagerInterface->persist($pos_session);
         $this->entityManagerInterface->flush();
 
+        $orderHistory = $this->ordersLogic->generateOrderHistory($newPsOrder, $data['id_employee']);
+        $this->ordersLogic->generateOrderPayments($newPsOrder, $data);
+
         foreach ($data['order_details'] as $orderDetailData) {
             $orderDetail = $this->ordersLogic->generateOrderDetail($data, $orderDetailData, $newPsOrder);
             $this->entityManagerInterface->persist($orderDetail);
@@ -103,7 +106,7 @@ class OrdersController
                 $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Devolución de producto', 'Devolución', $data['id_shop']);
                 $controlStock->setActive(active: true);
             }
-            $controlStock->setDateUpd(new \DateTime());
+            $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
             $this->entityManagerInterface->persist($controlStock);
         }
         $this->entityManagerInterface->flush();
@@ -120,12 +123,6 @@ class OrdersController
                 $this->entityManagerInterface->persist($cart_rule);
                 $this->entityManagerInterface->flush();
 
-
-                $orderCartRule = $this->cartRuleLogic->generateOrderCartRule($newPsOrder, $cart_rule, $discount);
-                $this->entityManagerInterface->persist($orderCartRule);
-
-                $this->entityManagerInterface->flush();
-
                 $remainingAmount = $cart_rule->getReductionAmount() - $discount['amount'];
 
                 if ($remainingAmount > 0) {
@@ -137,8 +134,8 @@ class OrdersController
                         'reduction_amount' => $remainingAmount,
                         'reduction_percent' => 0,
                         'active' => true,
-                        'date_from' => (new \DateTime())->format('Y-m-d H:i:s'),
-                        'date_to' => (new \DateTime('+1 year'))->format('Y-m-d H:i:s'),
+                        'date_from' => (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s'),
+                        'date_to' => (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->modify('+6 months')->format('Y-m-d H:i:s'),
                         'id_customer' => $data['id_customer'],
                     ];
                     $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($newCartRuleData);
@@ -186,7 +183,8 @@ class OrdersController
                 $orderData['order_cart_rules'][] = [
                     'code' => $cartRule->getCode(),
                     'name' => $cartRuleLang ? $cartRuleLang->getName() : $orderCartRule->getName(),
-                    'value' => $orderCartRule->getValue()
+                    'value' => $orderCartRule->getValue(),
+                    'description' => $cartRule ? $cartRule->getDescription() : $cartRule->getDescription(),
                 ];
             }
         }
