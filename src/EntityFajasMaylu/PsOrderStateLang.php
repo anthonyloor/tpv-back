@@ -1,8 +1,9 @@
 <?php
 namespace App\EntityFajasMaylu;
 use Doctrine\ORM\Mapping as ORM;
+use App\RepositoryFajasMaylu\PsOrderStateLangFajasMayluRepository;
 
-#[ORM\Entity(repositoryClass: PsOrderStateLangRepository::class)]
+#[ORM\Entity(repositoryClass: PsOrderStateLangFajasMayluRepository::class)]
 #[ORM\Table(name: "ps_order_state_lang", schema: 'fajasmaylu_ps')]
 class PsOrderStateLang
 {

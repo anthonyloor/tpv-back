@@ -1,6 +1,7 @@
 <?php
 namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\PsOrderStateLangRepository;
 
 #[ORM\Entity(repositoryClass: PsOrderStateLangRepository::class)]
 #[ORM\Table(name: "ps_order_state_lang")]

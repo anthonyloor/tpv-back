@@ -3,9 +3,9 @@ namespace App\EntityFajasMaylu;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
-use App\Repository\PsOrderStateRepository;
+use App\RepositoryFajasMaylu\PsOrderStateFajasMayluRepository;
 
-#[ORM\Entity(repositoryClass:PsOrderStateRepository::class)]
+#[ORM\Entity(repositoryClass:PsOrderStateFajasMayluRepository::class)]
 #[ORM\Table(name: "ps_order_state", schema: 'fajasmaylu_ps')]
 class PsOrderState
 {
