@@ -194,7 +194,7 @@ class OrdersController
 
         // Procesar los detalles de la orden
         foreach ($orderDetails as $detail) {
-            $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail);
+            $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail,$order->getOrigin());
         }
 
         // Obtener el detalle de la orden que contiene el id de la orden original en el nombre
@@ -210,7 +210,7 @@ class OrdersController
                     ->findBy(['idOrder' => $newOrderId]);
 
                 foreach ($newOrderDetails as $newDetail) {
-                    $newOrderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($newDetail);
+                    $newOrderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($newDetail,$newOrder->getOrigin());
                 }
 
                 $orderData['returns'][] = $newOrderData;
@@ -312,7 +312,7 @@ class OrdersController
                 ->findBy(['idOrder' => $order->getIdOrder()]);
 
             foreach ($orderDetails as $detail) {
-                $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail);
+                $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
             }
             $responseData[] = $orderData;
         }

@@ -215,7 +215,7 @@ class OrdersLogic
         return $orderData;
     }
 
-    public function generateOrderDetailJSON($detail, string $origin = "default")
+    public function generateOrderDetailJSON($detail, string $origin)
     {
         switch ($origin) {
             case "fajas_maylu":
@@ -234,6 +234,13 @@ class OrdersLogic
                         $detail->getIdShop()
                     );
                 break;
+            default:
+                $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+                    ->findOneByProductAttributeShop(
+                        $detail->getProductId(),
+                        $detail->getProductAttributeId(),
+                        $detail->getIdShop()
+                    );
         }
 
         $stock_available_id = $stockAvailable ? $stockAvailable->getIdStockAvailable() : null;
