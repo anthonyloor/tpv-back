@@ -282,11 +282,20 @@ class OrdersLogic
     {
         $posOrder = $this->entityManagerInterface->getRepository(LpPosOrders::class)
             ->findOneBy(['id_order' => $idOrder]);
-        $payments = [
-            'total_cash' => $posOrder->getTotalCash(),
-            'total_card' => $posOrder->getTotalCard(),
-            'total_bizum' => $posOrder->getTotalBizum()
-        ];
+
+        if (!$posOrder) {
+            $payments = [
+                'total_cash' => 0,
+                'total_card' => 0,
+                'total_bizum' => 0
+            ];
+        }else{
+            $payments = [
+                'total_cash' => $posOrder->getTotalCash(),
+                'total_card' => $posOrder->getTotalCard(),
+                'total_bizum' => $posOrder->getTotalBizum()
+            ];
+        }
 
         return $payments;
     }
