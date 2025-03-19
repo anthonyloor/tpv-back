@@ -254,7 +254,7 @@ class OrdersController
 
         foreach ($orders as $order) {
             $orderData = $this->ordersLogic->generateOrderJSON($order);
-            switch ($data['origin']) {
+            switch ($order->getOrigin()) {
                 case 'fajasmaylu':
                     $orderDetails = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
                         ->findByOrderId($order->getIdOrder());
@@ -262,13 +262,6 @@ class OrdersController
                 case 'mayret':
                     $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
                         ->findByOrderId($order->getIdOrder());
-                    break;
-                case 'all':
-                    $orderDetailsMayret = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-                    ->findByOrderId($order->getIdOrder());
-                    $orderDetailsMaylu = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
-                        ->findByOrderId($order->getIdOrder());
-                    $orderDetails = array_merge($orderDetailsMayret, $orderDetailsMaylu);
                     break;
                 default:
                     $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
