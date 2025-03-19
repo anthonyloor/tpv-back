@@ -2,7 +2,7 @@
 
 namespace App\EntityFajasMaylu;
 
-use App\Repository\PsOrderDetailFajasMayluRepository;
+use App\RepositoryFajasMaylu\PsOrderDetailFajasMayluRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
