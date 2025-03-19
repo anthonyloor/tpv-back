@@ -23,7 +23,7 @@ class PsOrderDetailRepository extends ServiceEntityRepository
         return $this->em->createQueryBuilder()
             ->select('p')
             ->from(PsOrderDetail::class, 'p')
-            ->andWhere('p.id_order = :orderId')
+            ->andWhere('p.idOrder = :orderId')
             ->setParameter('orderId', $orderId)
             ->getQuery()
             ->getResult();
