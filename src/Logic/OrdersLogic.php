@@ -15,14 +15,19 @@ use App\Entity\PsOrderState;
 use App\Entity\PsCustomer;
 use App\Entity\PsAddress;
 
+use App\EntityFajasMaylu\PsStockAvailable as PsStockAvailableFajasMaylu;
+use Doctrine\Persistence\ManagerRegistry;
+
 class OrdersLogic
 {
 
     private $entityManagerInterface;
+    private $emFajasMaylu;
 
-    public function __construct(EntityManagerInterface $entityManagerInterface)
+    public function __construct(ManagerRegistry $doctrine)
     {
-        $this->entityManagerInterface = $entityManagerInterface;
+        $this->entityManagerInterface = $doctrine->getManager('default');
+        $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
     }
 
     public function generateOrder($data): PsOrders
@@ -180,7 +185,7 @@ class OrdersLogic
             'id_order' => $order->getIdOrder(),
             'id_shop' => $order->getIdShop(),
             'id_customer' => $customer?->getIdCustomer(),
-            'customer_name' => $customer?->getFirstname() . ' '. $customer?->getLastname(),
+            'customer_name' => $customer?->getFirstname() . ' ' . $customer?->getLastname(),
             'id_employee' => $posOrder?->getIdEmployee(),
             'id_address_delivery' => $addressDelivery?->getIdAddress(),
             'address_delivery_name' => $addressDelivery?->getAddress1(),
@@ -188,9 +193,9 @@ class OrdersLogic
             'total_paid' => $order->getTotalPaid(),
             'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
             'total_products' => $order->getTotalProducts(),
-			'current_state' => $order->getCurrentState()->getIdOrderState(),
+            'current_state' => $order->getCurrentState()->getIdOrderState(),
             'current_state_name' => $order->getCurrentStateName(),
-			'valid' => $order->getValid(),
+            'valid' => $order->getValid(),
             'date_add' => $order->getDateAdd()->format('Y-m-d H:i:s'),
             'origin' => $order->getOrigin(),
             'order_details' => []
@@ -210,15 +215,33 @@ class OrdersLogic
         return $orderData;
     }
 
-    public function generateOrderDetailJSON($detail)
+    public function generateOrderDetailJSON($detail, string $origin)
     {
-
-        $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-            ->findOneByProductAttributeShop(
-                $detail->getProductId(),
-                $detail->getProductAttributeId(),
-                $detail->getIdShop()
-            );
+        switch ($origin) {
+            case "fajas_maylu":
+                $stockAvailable = $this->emFajasMaylu->getRepository(PsStockAvailableFajasMaylu::class)
+                    ->findOneByProductAttributeShop(
+                        $detail->getProductId(),
+                        $detail->getProductAttributeId(),
+                        $detail->getIdShop()
+                    );
+                break;
+            case "mayret":
+                $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+                    ->findOneByProductAttributeShop(
+                        $detail->getProductId(),
+                        $detail->getProductAttributeId(),
+                        $detail->getIdShop()
+                    );
+                break;
+            default:
+                $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+                    ->findOneByProductAttributeShop(
+                        $detail->getProductId(),
+                        $detail->getProductAttributeId(),
+                        $detail->getIdShop()
+                    );
+        }
 
         $stock_available_id = $stockAvailable ? $stockAvailable->getIdStockAvailable() : null;
 
@@ -255,15 +278,24 @@ class OrdersLogic
             ->getResult();
     }
 
-    public function generateJSONOrderPayments($idOrder) : array
+    public function generateJSONOrderPayments($idOrder): array
     {
         $posOrder = $this->entityManagerInterface->getRepository(LpPosOrders::class)
             ->findOneBy(['id_order' => $idOrder]);
-        $payments = [
-            'total_cash' => $posOrder->getTotalCash(),
-            'total_card' => $posOrder->getTotalCard(),
-            'total_bizum' => $posOrder->getTotalBizum()
-        ];
+
+        if (!$posOrder) {
+            $payments = [
+                'total_cash' => 0,
+                'total_card' => 0,
+                'total_bizum' => 0
+            ];
+        }else{
+            $payments = [
+                'total_cash' => $posOrder->getTotalCash(),
+                'total_card' => $posOrder->getTotalCard(),
+                'total_bizum' => $posOrder->getTotalBizum()
+            ];
+        }
 
         return $payments;
     }
@@ -301,7 +333,7 @@ class OrdersLogic
     {
         $paymentMethods = [
             'tarjeta' => $data['total_card'] ?? 0,
-            'bizum'   => $data['total_bizum'] ?? 0,
+            'bizum' => $data['total_bizum'] ?? 0,
             'efectivo' => $data['total_cash'] ?? 0
         ];
 

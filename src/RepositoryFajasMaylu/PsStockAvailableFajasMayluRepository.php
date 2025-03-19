@@ -1,31 +1,30 @@
 <?php
 
-namespace App\Repository;
+namespace App\RepositoryFajasMaylu;
 
-use App\Entity\PsStockAvailable;
-use App\Entity\PsProductLang;
+use App\EntityFajasMaylu\PsStockAvailable;
+use App\EntityFajasMaylu\PsProductLang;
 
-use App\Entity\PsAttributeLang;
-use App\Entity\PsProductAttributeCombination;
-use App\Entity\PsShop;
-use App\Entity\PsProductShop;
-use App\Entity\PsCategoryLang;
-use App\Entity\PsCategory;
-
+use App\EntityFajasMaylu\PsAttributeLang;
+use App\EntityFajasMaylu\PsProductAttributeCombination;
+use App\EntityFajasMaylu\PsShop;
+use App\EntityFajasMaylu\PsProductShop;
+use App\EntityFajasMaylu\PsCategoryLang;
+use App\EntityFajasMaylu\PsCategory;
 use App\Entity\LpControlStock;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 
-class PsStockAvailableRepository extends ServiceEntityRepository
+class PsStockAvailableFajasMayluRepository extends ServiceEntityRepository
 {
     private EntityManagerInterface $em;
 
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, PsStockAvailable::class);
-        $this->em = $registry->getManager('default');
+        $this->em = $registry->getManager('fajas_maylu');
     }
 
     public function findOneByProductAttributeShop($idProduct, $idProductAttributte, $idShop):?PsStockAvailable
