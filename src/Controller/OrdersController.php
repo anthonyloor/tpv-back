@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\LpPosOrders;
 use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
+use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
 use App\Logic\CartRuleLogic;
 use App\Logic\StockControllLogic;
 use Symfony\Component\HttpFoundation\Response;
@@ -96,8 +97,7 @@ class OrdersController
             $this->entityManagerInterface->persist($orderDetail);
             $this->ordersLogic->updateProductStock($orderDetailData); // Llamamos a la función de actualización de stock
         }
-        if(isset($orderDetailData['id_control_stock']))
-        {
+        if (isset($orderDetailData['id_control_stock'])) {
             $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($orderDetailData['id_control_stock']);
             if ($orderDetailData['product_quantity'] > 0) {
                 $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Venta de producto', 'Venta', $data['id_shop']);
@@ -243,8 +243,7 @@ class OrdersController
                 $orders = array_merge($ordersMayret, $ordersMaylu);
                 break;
             default:
-            $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
-
+                $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
         }
 
         if (!$orders) {
@@ -255,12 +254,30 @@ class OrdersController
 
         foreach ($orders as $order) {
             $orderData = $this->ordersLogic->generateOrderJSON($order);
-            // Obtener los detalles de la orden
-            $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-                ->findBy(['idOrder' => $order->getIdOrder()]);
+            switch ($data['origin']) {
+                case 'fajasmaylu':
+                    $orderDetails = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
+                        ->findByOrderId($order->getIdOrder());
+                    break;
+                case 'mayret':
+                    $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                        ->findByOrderId($order->getIdOrder());
+                    break;
+                case 'all':
+                    $orderDetailsMayret = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                    ->findByOrderId($order->getIdOrder());
+                    $orderDetailsMaylu = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
+                        ->findByOrderId($order->getIdOrder());
+                    $orderDetails = array_merge($orderDetailsMayret, $orderDetailsMaylu);
+                    break;
+                default:
+                    $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                        ->findByOrderId($order->getIdOrder());
+            }
+
 
             foreach ($orderDetails as $detail) {
-                $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail);
+                $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail,$order->getOrigin());
             }
             $responseData[] = $orderData;
         }
@@ -279,8 +296,7 @@ class OrdersController
             );
         }
 
-        if($data['date1'] == null)
-        {
+        if ($data['date1'] == null) {
             $posSessions = $this->entityManagerInterface->getRepository(LpPosSessions::class)
                 ->findOneActiveByLicense($data['license']);
             $data['date1'] = $posSessions->getDateAdd()->format('Y-m-d');
