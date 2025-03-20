@@ -306,7 +306,7 @@ class OrdersLogic
 
         $newOrderHistory->setIdEmployee($idEmployee);
         $newOrderHistory->setIdOrder($psOrder->getIdOrder());
-        $newOrderHistory->setIdOrderState($psOrder->getCurrentState());
+        $newOrderHistory->setIdOrderState($psOrder->getCurrentState()->getIdOrderState());
         $newOrderHistory->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $this->entityManagerInterface->persist($newOrderHistory);
         $this->entityManagerInterface->flush();
