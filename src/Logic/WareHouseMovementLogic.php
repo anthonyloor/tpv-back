@@ -265,14 +265,16 @@ class WareHouseMovementLogic
                         $this->entityManagerInterface->persist($stockDestiny);
                         $this->logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
                     }
-                    $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($detail->getIdControlStock());
-                    if ($controlStock) {
-                        $controlStock->setIdShop($movement->getIdShopDestiny());
-                        $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
-                        $this->entityManagerInterface->persist($controlStock);
-                        $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Traspaso de producto','Traspaso',$movement->getIdShopDestiny());
+                    if($detail->getIdControlStock() != null)
+                    {
+                        $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($detail->getIdControlStock());
+                        if ($controlStock) {
+                            $controlStock->setIdShop($movement->getIdShopDestiny());
+                            $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+                            $this->entityManagerInterface->persist($controlStock);
+                            $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Traspaso de producto','Traspaso',$movement->getIdShopDestiny());
+                        }
                     }
-
                 }
             }
 
