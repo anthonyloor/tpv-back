@@ -145,4 +145,26 @@ class WarehouseMovementController extends AbstractController
         return new JsonResponse(['message' => 'Movement deleted']);
     }
 
+    #[Route('/delete_warehouse_movement_detail', name: 'delete_warehouse_movement_detail')]
+    public function deleteWareHouseMovementDetail(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        if (!isset($data['id_warehouse_movement_detail'])) {
+            return new JsonResponse(['error' => 'Missing parameters'], 400);
+        }
+        $detailsRepository = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class);
+        $detail = $detailsRepository->find($data['id_warehouse_movement_detail']);
+        if ($detail == null) {
+            return new JsonResponse(['error' => 'Detail not found'], 404);
+        }
+        $incidentsRepository = $this->entityManagerInterface->getRepository(LpWarehouseMovementIncidents::class);
+        $incidents = $incidentsRepository->findBy(['id_warehouse_movement_detail' => $detail->getIdWarehouseMovementDetail()]);
+        foreach ($incidents as $incident) {
+            $this->entityManagerInterface->remove($incident);
+        }
+        $this->entityManagerInterface->remove($detail);
+        $this->entityManagerInterface->flush();
+        return new JsonResponse(['message' => 'Detail deleted']);
+    }
+
 }
