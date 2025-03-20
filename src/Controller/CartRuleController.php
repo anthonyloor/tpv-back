@@ -80,9 +80,20 @@ class CartRuleController
         }
 
         $cartRule = $this->cartRuleLogic->createCartRuleFromJSON($data);
+        $quantity = $data['quantity'] ?? 1;
 
+        if (!is_int($quantity) || $quantity <= 0) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Invalid quantity provided'], JsonResponse::HTTP_BAD_REQUEST);
+        }
 
-        $cartRuleData = $this->cartRuleLogic->generateCartRuleJSON($cartRule);
-        return new JsonResponse($cartRuleData, JsonResponse::HTTP_CREATED);
+        $cartRules = [];
+        for ($i = 0; $i < $quantity; $i++) {
+            $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($data);
+            $this->entityManagerInterface->persist($newCartRule);
+            $cartRules[] = $this->cartRuleLogic->generateCartRuleJSON($newCartRule);
+        }
+
+        $this->entityManagerInterface->flush();
+        return new JsonResponse($cartRules, JsonResponse::HTTP_CREATED);
     }
 }
