@@ -134,6 +134,7 @@ class WareHouseMovementLogic
 
             if (!empty($data['movement_details'])) {
                 foreach ($data['movement_details'] as $detail) {
+                    $movementDetail = null;
                     if (!empty($detail['id_warehouse_movement_detail'])) {
                         $movementDetail = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->find($detail['id_warehouse_movement_detail']);
                     }
