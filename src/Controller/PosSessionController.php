@@ -105,7 +105,11 @@ class PosSessionController
                 'status' => 'OK',
                 'total_cash' => $pos_session->getTotalCash(),
                 'total_card' => $pos_session->getTotalCard(),
-                'total_bizum' => $pos_session->getTotalBizum()
+                'total_bizum' => $pos_session->getTotalBizum(),
+                'date_close' => $pos_session->getDateClose() ? $pos_session->getDateClose()->format('Y-m-d H:i:s') : null,
+                'date_add' => $pos_session->getDateAdd() ? $pos_session->getDateAdd()->format('Y-m-d H:i:s') : null,
+                'id_employee_open' => $pos_session->getIdEmployeeOpen(),
+                'id_employee_close' => $pos_session->getIdEmployeeClose(),
             ]);
         } else {
             return new JsonResponse(['status' => 'KO', 'message' => 'Point Of Sale Session not found']);
