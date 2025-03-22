@@ -14,9 +14,9 @@ class PsProductAttribute
     #[ORM\Column]
     private ?int $id_product_attribute = null;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(name:'id_product',nullable: false)]
-    private ?PsProduct $idProduct = null;
+    #[ORM\ManyToOne(targetEntity: PsProduct::class)]
+    #[ORM\JoinColumn(name: "id_product", referencedColumnName: "id_product", nullable: false)]
+    private ?PsProduct $idProduct = null;  
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $reference = null;

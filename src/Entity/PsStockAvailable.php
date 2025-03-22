@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use App\Entity\PsProduct;
+
 use App\Repository\PsStockAvailableRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -128,7 +130,7 @@ class PsStockAvailable
         return $this->id_product;
     }
 
-    public function setIdProduct(?PsProduct $id_product): static
+    public function setIdProduct(?PsProduct $id_product): self
     {
         $this->id_product = $id_product;
 
