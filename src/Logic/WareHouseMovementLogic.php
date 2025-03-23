@@ -245,8 +245,10 @@ class WareHouseMovementLogic
                         $stockOrigin->setQuantity($stockOrigin->getQuantity() - $sentQuantity);
                         $this->entityManagerInterface->persist($stockOrigin);
                         $this->logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
-                        $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($detail->getIdControlStock());
-                        if ($controlStock) {
+                        $controlStock = null;
+                        if($detail->getIdControlStock() != null)
+                            $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($detail->getIdControlStock());
+                        if ($controlStock != null) {
                             $controlStock->setActive(false);
                             $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
                             $this->entityManagerInterface->persist($controlStock);
