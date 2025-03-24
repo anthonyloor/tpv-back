@@ -325,50 +325,55 @@ class OrdersController
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        foreach ($data['shops'] as $shop) {
-            $dataMovement = [
-                'description' => 'Salida por la venta online del ticket #' . $data['id_order'],
-                'id_shop_origin' => $shop['id_shop'],
-                'type' => 'salida',
-                'id_employee' => $data['id_employee'],
-            ];
-            $lpWarehouseMovement = $this->wareHouseMovementLogic->generateWareHouseMovement($dataMovement);
-            foreach ($shop['products'] as $product) {
-                $dataMovementDetail = [
-                    'id_warehouse_movement' => $lpWarehouseMovement->getIdWarehouseMovement(),
-                    'sent_quantity' => $product['quantity'],
-                    'id_product' => $product['id_product'],
-                    'id_product_attribute' => $product['id_product_attribute'],
-                    'product_name' => $product['product_name'],
-                    'ean13' => $product['ean13']
+        try{
+            foreach ($data['shops'] as $shop) {
+                $dataMovement = [
+                    'description' => 'Salida por la venta online del ticket #' . $data['id_order'],
+                    'id_shop_origin' => $shop['id_shop'],
+                    'type' => 'salida',
+                    'id_employee' => $data['id_employee'],
                 ];
-                $this->wareHouseMovementLogic->generateWareHouseMovementDetail($dataMovementDetail, $lpWarehouseMovement);
+                $lpWarehouseMovement = $this->wareHouseMovementLogic->generateWareHouseMovement($dataMovement);
+                foreach ($shop['products'] as $product) {
+                    $dataMovementDetail = [
+                        'id_warehouse_movement' => $lpWarehouseMovement->getIdWarehouseMovement(),
+                        'sent_quantity' => $product['quantity'],
+                        'id_product' => $product['id_product'],
+                        'id_product_attribute' => $product['id_product_attribute'],
+                        'product_name' => $product['product_name'],
+                        'ean13' => $product['ean13']
+                    ];
+                    $this->wareHouseMovementLogic->generateWareHouseMovementDetail($dataMovementDetail, $lpWarehouseMovement);
+                }
+                $lpWarehouseMovement = $this->wareHouseMovementLogic->executeWareHouseMovement($lpWarehouseMovement);
+    
             }
-            $lpWarehouseMovement = $this->wareHouseMovementLogic->executeWareHouseMovement($lpWarehouseMovement);
-
-        }
-
-        switch ($data['origin']) {
-            case 'fajasmaylu':
-                $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($data['id_order']);
-                $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->emFajasMaylu->persist($order);
-                $this->emFajasMaylu->flush();
-                break;
-            case 'mayret':
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
-                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->entityManagerInterface->persist($order);
-                $this->entityManagerInterface->flush();
-                break;
-            default:
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
-                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->entityManagerInterface->persist($order);
-                $this->entityManagerInterface->flush();
+    
+            switch ($data['origin']) {
+                case 'fajasmaylu':
+                    $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($data['id_order']);
+                    $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($data['status']);
+                    $order->setCurrentState($orderState);
+                    $this->emFajasMaylu->persist($order);
+                    $this->emFajasMaylu->flush();
+                    break;
+                case 'mayret':
+                    $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
+                    $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
+                    $order->setCurrentState($orderState);
+                    $this->entityManagerInterface->persist($order);
+                    $this->entityManagerInterface->flush();
+                    break;
+                default:
+                    $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
+                    $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
+                    $order->setCurrentState($orderState);
+                    $this->entityManagerInterface->persist($order);
+                    $this->entityManagerInterface->flush();
+            }
+        }catch(\Exception $e){
+            $this->entityManagerInterface->rollback();
+            return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
 
 
