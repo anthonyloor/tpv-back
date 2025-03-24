@@ -6,6 +6,7 @@ use App\Entity\LpPosOrders;
 use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
 use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
 use App\EntityFajasMaylu\PsOrderState as PsOrderStateFajasMaylu;
+
 use App\Logic\CartRuleLogic;
 use App\Logic\StockControllLogic;
 use Symfony\Component\HttpFoundation\Response;
@@ -198,6 +199,7 @@ class OrdersController
         // Procesar los detalles de la orden
         foreach ($orderDetails as $detail) {
             $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
+
         }
 
         // Obtener el detalle de la orden que contiene el id de la orden original en el nombre
@@ -214,6 +216,7 @@ class OrdersController
 
                 foreach ($newOrderDetails as $newDetail) {
                     $newOrderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($newDetail, $newOrder->getOrigin());
+
                 }
 
                 $orderData['returns'][] = $newOrderData;
@@ -274,6 +277,7 @@ class OrdersController
 
             foreach ($orderDetails as $detail) {
                 $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
+
             }
             $responseData[] = $orderData;
         }
