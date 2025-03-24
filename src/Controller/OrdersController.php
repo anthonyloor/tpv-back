@@ -359,26 +359,25 @@ class OrdersController
                     $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($data['status']);
                     $order->setCurrentState($orderState);
                     $this->emFajasMaylu->persist($order);
-                    $this->emFajasMaylu->flush();
                     break;
                 case 'mayret':
                     $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
                     $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
                     $order->setCurrentState($orderState);
                     $this->entityManagerInterface->persist($order);
-                    $this->entityManagerInterface->flush();
                     break;
                 default:
                     $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
                     $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
                     $order->setCurrentState($orderState);
                     $this->entityManagerInterface->persist($order);
-                    $this->entityManagerInterface->flush();
             }
         }catch(\Exception $e){
             $this->entityManagerInterface->rollback();
             return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
+        $this->entityManagerInterface->flush();
+        $this->entityManagerInterface->flush();
 
 
         return new JsonResponse(['status' => 'OK', 'message' => 'Order updated with id #' . $data['id_order']]);
