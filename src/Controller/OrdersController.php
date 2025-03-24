@@ -5,14 +5,16 @@ namespace App\Controller;
 use App\Entity\LpPosOrders;
 use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
 use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
+use App\EntityFajasMaylu\PsOrderState as PsOrderStateFajasMaylu;
+
 use App\Logic\CartRuleLogic;
 use App\Logic\StockControllLogic;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Logic\WareHouseMovementLogic;
 
 use App\Entity\PsOrders;
 use App\Entity\PsOrderDetail;
@@ -22,6 +24,7 @@ use App\Entity\PsCartRule;
 use App\Entity\PsCartRuleLang;
 use App\Entity\PsOrderCartRule;
 use App\Entity\LpControlStock;
+use App\Entity\PsOrderState;
 
 class OrdersController
 {
@@ -29,16 +32,17 @@ class OrdersController
     private $emFajasMaylu;
     private OrdersLogic $ordersLogic;
     private CartRuleLogic $cartRuleLogic;
-
     private StockControllLogic $stockControllLogic;
+    private $wareHouseMovementLogic;
 
-    public function __construct(ManagerRegistry $doctrine, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic, StockControllLogic $stockControllLogic)
+    public function __construct(ManagerRegistry $doctrine, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic, StockControllLogic $stockControllLogic, WareHouseMovementLogic $wareHouseMovementLogic)
     {
         $this->entityManagerInterface = $doctrine->getManager('default');
         $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
         $this->ordersLogic = $ordersLogic;
         $this->cartRuleLogic = $cartRuleLogic;
         $this->stockControllLogic = $stockControllLogic;
+        $this->wareHouseMovementLogic = $wareHouseMovementLogic;
 
     }
 
@@ -194,7 +198,8 @@ class OrdersController
 
         // Procesar los detalles de la orden
         foreach ($orderDetails as $detail) {
-            $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail,$order->getOrigin());
+            $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
+
         }
 
         // Obtener el detalle de la orden que contiene el id de la orden original en el nombre
@@ -210,7 +215,8 @@ class OrdersController
                     ->findBy(['idOrder' => $newOrderId]);
 
                 foreach ($newOrderDetails as $newDetail) {
-                    $newOrderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($newDetail,$newOrder->getOrigin());
+                    $newOrderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($newDetail, $newOrder->getOrigin());
+
                 }
 
                 $orderData['returns'][] = $newOrderData;
@@ -229,7 +235,7 @@ class OrdersController
         if (!isset($data['id_shop'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
-        
+
         switch ($data['origin']) {
             case 'fajasmaylu':
                 $orders = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findOrdersByShop($data['id_shop']);
@@ -270,7 +276,8 @@ class OrdersController
 
 
             foreach ($orderDetails as $detail) {
-                $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail,$order->getOrigin());
+                $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
+
             }
             $responseData[] = $orderData;
         }
@@ -312,6 +319,64 @@ class OrdersController
 
         return new JsonResponse($responseData, JsonResponse::HTTP_OK);
 
+    }
+
+    #[Route('/update_online_orders', name: 'update_online_orders', methods: ['POST'])]
+    public function updateOnlineOrders(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        if (!isset($data['id_order'], $data['status'], $data['origin'])) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        foreach ($data['shops'] as $shop) {
+            $dataMovement = [
+                'description' => 'Salida por la venta online del ticket #' . $data['id_order'],
+                'id_shop_origin' => $shop['id_shop'],
+                'type' => 'salida',
+                'id_employee' => $data['id_employee'],
+            ];
+            $lpWarehouseMovement = $this->wareHouseMovementLogic->generateWareHouseMovement($dataMovement);
+            foreach ($shop['products'] as $product) {
+                $dataMovementDetail = [
+                    'id_warehouse_movement' => $lpWarehouseMovement->getIdWarehouseMovement(),
+                    'sent_quantity' => $product['quantity'],
+                    'id_product' => $product['id_product'],
+                    'id_product_attribute' => $product['id_product_attribute'],
+                    'product_name' => $product['product_name'],
+                    'ean13' => $product['ean13']
+                ];
+                $this->wareHouseMovementLogic->generateWareHouseMovementDetail($dataMovementDetail, $lpWarehouseMovement);
+            }
+            $lpWarehouseMovement = $this->wareHouseMovementLogic->executeWareHouseMovement($lpWarehouseMovement);
+
+        }
+
+        switch ($data['origin']) {
+            case 'fajasmaylu':
+                $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($data['id_order']);
+                $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($data['status']);
+                $order->setCurrentState($orderState);
+                $this->emFajasMaylu->persist($order);
+                $this->emFajasMaylu->flush();
+                break;
+            case 'mayret':
+                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
+                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
+                $order->setCurrentState($orderState);
+                $this->entityManagerInterface->persist($order);
+                $this->entityManagerInterface->flush();
+                break;
+            default:
+                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
+                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
+                $order->setCurrentState($orderState);
+                $this->entityManagerInterface->persist($order);
+                $this->entityManagerInterface->flush();
+        }
+
+
+        return new JsonResponse(['status' => 'OK', 'message' => 'Order updated with id #' . $data['id_order']]);
     }
 
 

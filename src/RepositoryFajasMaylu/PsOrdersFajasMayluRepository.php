@@ -29,4 +29,15 @@ class PsOrdersFajasMayluRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findById($idOrder): ?PsOrders
+    {
+        return $this->em->createQueryBuilder()
+            ->select('o')
+            ->from(PsOrders::class, 'o')
+            ->where('o.id_order = :id_order')
+            ->setParameter('id_order', $idOrder)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

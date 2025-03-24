@@ -10,8 +10,9 @@ class PsShopGroup
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name:'id_shop_group')]
-    private ?int $idShopGroup = null;
+    #[ORM\Column(name: 'id_shop_group', type: 'integer')]
+    private ?int $id_shop_group = null;
+
 
     #[ORM\Column(length: 64)]
     private ?string $name = null;
@@ -33,7 +34,7 @@ class PsShopGroup
 
     public function getIdShopGroup(): ?int
     {
-        return $this->idShopGroup;
+        return $this->id_shop_group;
     }
 
     public function getName(): ?string

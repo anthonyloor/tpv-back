@@ -13,9 +13,9 @@ class PsShop
     #[ORM\Column]
     private ?int $id_shop = null;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(name:'id_shop_group',nullable: false)]
-    private ?PsShopGroup $idShopGroup = null;
+    #[ORM\ManyToOne(targetEntity: PsShopGroup::class)]
+    #[ORM\JoinColumn(name: 'id_shop_group', referencedColumnName: 'id_shop_group', nullable: false)]
+    private ?PsShopGroup $shopGroup = null;
 
     #[ORM\Column(length: 64)]
     private ?string $name = null;
@@ -34,18 +34,16 @@ class PsShop
         return $this->id_shop;
     }
 
-    public function getIdShopGroup(): ?PsShopGroup
+    public function getShopGroup(): ?PsShopGroup
     {
-        return $this->idShopGroup;
+        return $this->shopGroup;
     }
-
-    public function setIdShopGroup(?PsShopGroup $idShopGroup): static
+    
+    public function setShopGroup(?PsShopGroup $shopGroup): static
     {
-        $this->idShopGroup = $idShopGroup;
-
+        $this->shopGroup = $shopGroup;
         return $this;
     }
-
     public function getName(): ?string
     {
         return $this->name;

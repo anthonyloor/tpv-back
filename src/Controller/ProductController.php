@@ -102,6 +102,7 @@ class ProductController extends AbstractController
       }else{
         $response = $this->controlStockLogic->generateControlStockJSON($lpControlStock);
         $lpControlStock->setPrinted(true);
+        $lpControlStock->setActive(true);
         $this->entityManagerInterface->persist($lpControlStock);
       }
     } else {
@@ -111,6 +112,8 @@ class ProductController extends AbstractController
         $response['tags'] = [];
         for ($i = 0; $i < $data['quantity_print']; $i++) {
           $lpControlStock = $this->controlStockLogic->createControlStock($data['id_product'], $data['id_product_attribute'], $data['id_shop'], $data['ean13'], true);
+          $this->controlStockLogic->createControlStockHistory($lpControlStock->getIdControlStock(),'Se añade seguimiento al reimprimir','Reimpresion',$data['id_shop']);
+
           $response['tags'][] = $this->controlStockLogic->generateControlStockJSON($lpControlStock);
           $this->entityManagerInterface->persist($lpControlStock);
         }
@@ -134,4 +137,14 @@ class ProductController extends AbstractController
     return new JsonResponse($productsJSON);
   }
 
+  #[Route('/generate_ean13', name: 'generate_ean13')]
+  public function generateEan13(Request $request):Response
+  {
+    $data = json_decode($request->getContent(), true);
+    if(!isset($data['products'])){
+      return new JsonResponse(['error' => 'Faltan parametros'], Response::HTTP_BAD_REQUEST);
+    }
+    $ean13List = $this->controlStockLogic->generateEan13List($data['products']);
+    return new JsonResponse(['ean13' => $ean13List]);
+  }
 }

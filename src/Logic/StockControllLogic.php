@@ -4,7 +4,11 @@ namespace App\Logic;
 
 use App\Entity\LpControlStock;
 use App\Entity\LpControlStockHistory;
+use App\Entity\PsProductAttribute;
 
+use App\Entity\PsProduct;
+use App\Entity\PsShop;
+use App\Entity\PsStockAvailable;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Utils\Logger\Logger;
 
@@ -80,6 +84,99 @@ class StockControllLogic
             return false;
         }
         return true;
+    }
+
+    public function generateEan13List($products): array
+    {
+        $shops = $this->entityManagerInterface->getRepository(PsShop::class)->findAll();
+        $ean13 = [];
+        foreach ($products as $product) {
+            if ($product['id_product_attribute'] != null) 
+            {
+                $productAttribute = $this->entityManagerInterface->getRepository(PsProductAttribute::class)
+                    ->findOneBy(['idProduct' => $product['id_product'], 'id_product_attribute' => $product['id_product_attribute']]);
+                $productAttribute->setEan13($this->generateEan13());
+                $this->entityManagerInterface->persist($productAttribute);
+            } else {
+                $product = $this->entityManagerInterface->getRepository(PsProduct::class)->findOneBy(['id_product' => $product['id_product']]);
+                $product->setEan13($this->generateEan13());
+                $this->entityManagerInterface->persist($product);
+            }
+
+            $this->entityManagerInterface->flush();
+            $ean13[] = [
+                'ean13' => $productAttribute ? $productAttribute->getEan13() : $product->getEan13(),
+                'id_product' => $product['id_product'],
+                'id_product_attribute' => $product['id_product_attribute'] ?? null
+            ];
+
+            foreach ($shops as $shop) 
+            {
+                $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+                    ->findOneBy([
+                        'id_product' => $product['id_product'],
+                        'id_product_attribute' => $product['id_product_attribute'],
+                        'id_shop' => $shop->getIdShop()
+                    ]);
+
+                if (!$stockAvailable) 
+                {
+                    $newStockAvailable = new PsStockAvailable();
+                    $productEntity = $this->entityManagerInterface->getRepository(PsProduct::class)->findOneById($product['id_product']);
+                    $newStockAvailable->setIdProduct($productEntity);
+                    $productAttribute = $this->entityManagerInterface->getRepository(PsProductAttribute::class)->findOneBy(['idProduct' => $product['id_product'], 'id_product_attribute' => $product['id_product_attribute']]);
+                    $newStockAvailable->setIdProductAttribute($productAttribute);
+                    $newStockAvailable->setIdShop($shop);
+                    $newStockAvailable->setQuantity(0); // Set initial quantity to 0 or any default value
+                    $newStockAvailable->setPhysicalQuantity(0);
+                    $newStockAvailable->setReservedQuantity(0);
+                    $newStockAvailable->setDependsOnStock(false); 
+                    $newStockAvailable->setOutOfStock(false);
+                    $newStockAvailable->setLocation(''); // Set location or any default value
+                    $this->entityManagerInterface->persist($newStockAvailable);
+                    $this->entityManagerInterface->flush();
+                }
+            }
+        }
+        return $ean13;
+    }
+
+    public function generateEan13(): string
+    {
+        do {
+            $ean13 = '';
+            for ($i = 0; $i < 13; $i++) {
+                $ean13 .= rand(0, 9);
+            }
+
+            $existsInProduct = $this->entityManagerInterface->getRepository(PsProduct::class)
+                ->findOneBy(['ean13' => $ean13]);
+
+            $existsInProductAttribute = $this->entityManagerInterface->getRepository(PsProductAttribute::class)
+                ->findOneBy(['ean13' => $ean13]);
+
+        } while ($existsInProduct || $existsInProductAttribute);
+
+        return $ean13;
+    }
+
+    public function updateProductsStock($products): void
+    {
+        foreach ($products as $product) {
+            $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+                ->findOneByProductAttributeShop(
+                    $product['id_product'],
+                    $product['id_product_attribute'],
+                    13
+                );
+
+            // Si existe, reducir el stock disponible en función de la cantidad de pedido
+            if ($stockAvailable) {
+                $newQuantity = $stockAvailable->getQuantity() - $product['quantity'];
+                $stockAvailable->setQuantity($newQuantity);
+                $this->entityManagerInterface->persist($stockAvailable); // Persistir los cambios
+            }
+        }
     }
 
 }
