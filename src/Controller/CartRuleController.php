@@ -87,7 +87,7 @@ class CartRuleController
         }
 
         $cartRules = [];
-        for ($i = 0; $i < $quantity; $i++) {
+        for ($i = 1; $i < $quantity; $i++) {
             $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($data);
             $this->entityManagerInterface->persist($newCartRule);
             $cartRules[] = $this->cartRuleLogic->generateCartRuleJSON($newCartRule);

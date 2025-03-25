@@ -227,6 +227,7 @@ class WareHouseMovementLogic
                         $stockDestiny->setQuantity($stockDestiny->getQuantity() + $recivedQuantity);
                         $this->entityManagerInterface->persist($stockDestiny);
                         $this->logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+                        
                         for ($i = 1; $i <= $recivedQuantity; $i++) {
                             $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny(),$detail->getEan13());
                             $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada',$movement->getIdShopDestiny());
