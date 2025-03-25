@@ -330,6 +330,8 @@ class OrdersController
         }
 
         try{
+            $this->entityManagerInterface->beginTransaction();
+            $this->emFajasMaylu->beginTransaction();
             foreach ($data['shops'] as $shop) {
                 $dataMovement = [
                     'description' => 'Salida por la venta online del ticket #' . $data['id_order'],
@@ -373,7 +375,8 @@ class OrdersController
                     $this->entityManagerInterface->persist($order);
             }
         }catch(\Exception $e){
-            $this->entityManagerInterface->rollback();
+            $this->entityManagerInterface->getConnection()->rollBack();
+            $this->emFajasMaylu->getConnection()->rollBack();
             return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
         $this->entityManagerInterface->flush();

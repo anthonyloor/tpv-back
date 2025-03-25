@@ -193,6 +193,7 @@ class OrdersLogic
             'total_paid' => $order->getTotalPaid(),
             'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
             'total_products' => $order->getTotalProducts(),
+            'total_shipping' => $order->getTotalShipping(),
             'current_state' => $order->getCurrentState()->getIdOrderState(),
             'current_state_name' => $order->getCurrentStateName(),
             'valid' => $order->getValid(),
