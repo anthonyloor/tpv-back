@@ -193,7 +193,7 @@ class WareHouseMovementLogic
         return $movement;
     }
 
-    public function executeWareHouseMovement($movement): LpWarehouseMovement
+    public function executeWareHouseMovement($movement): array
     {
         $this->entityManagerInterface->getConnection()->beginTransaction(); // Start transaction
         try {
@@ -219,7 +219,7 @@ class WareHouseMovementLogic
                     'id_product_attribute' => $idProductAttribute,
                     'id_shop' => $movement->getIdShopOrigin()
                 ]);
-
+                $ean13ControlStockArray[] = [];
                 if ($movementType === 'entrada') {
                     // Update stock for destination shop only
                     if ($stockDestiny) {
@@ -241,6 +241,12 @@ class WareHouseMovementLogic
                             . ' type ' . 'Entrada'
                             . ' date ' . (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s')
                         );
+
+                        $ean13ControlStockArray[] = [
+                            'ean13' => $controllStock->getEan13(),
+                            'control_stock' => $controllStock->getIdControlStock()
+                        ];
+
                         }
                     }
                 } elseif ($movementType === 'salida') {
@@ -294,6 +300,9 @@ class WareHouseMovementLogic
             $this->entityManagerInterface->getConnection()->rollBack(); // Rollback transaction
             throw $e;
         }
-        return $movement;
+        return [
+            'movement' => $movement,
+            'ean13_control_stock' => $ean13ControlStockArray ?? []
+        ];
     }
 }
