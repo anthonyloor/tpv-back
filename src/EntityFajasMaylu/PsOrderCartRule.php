@@ -2,10 +2,10 @@
 
 namespace App\EntityFajasMaylu;
 
-use App\RepositoryFajasMaylu\PsOrderCartRuleFajasMayluRepository;
+use App\RepositoryFajasMaylu\PsOrderCartRuleRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: PsOrderCartRuleFajasMayluRepository::class)]
+#[ORM\Entity(repositoryClass: PsOrderCartRuleRepository::class)]
 class PsOrderCartRule
 {
 
