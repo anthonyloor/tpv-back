@@ -6,6 +6,9 @@ use App\Entity\LpPosOrders;
 use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
 use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
 use App\EntityFajasMaylu\PsOrderState as PsOrderStateFajasMaylu;
+use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
+use App\EntityFajasMaylu\PsCartRule as PsCartRuleFajasMaylu;
+use App\EntityFajasMaylu\PsCartRuleLang as PsCartRuleLangFajasMaylu;
 
 use App\Logic\CartRuleLogic;
 use App\Logic\StockControllLogic;
@@ -181,12 +184,22 @@ class OrdersController
         switch ($origin) {
             case 'fajasmaylu':
                 $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($id_order);
+                // Obtener los cart rules de la orden
+                $orderCartRules = $this->emFajasMaylu->getRepository(PsOrderCartRuleFajasMaylu::class)
+                ->findBy(['id_order' => $id_order]);
+                // Obtener los detalles de la orden
+                $orderDetails = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
+                ->findBy(['idOrder' => $id_order]);
                 break;
             case 'mayret':
                 $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
+                // Obtener los cart rules de la orden
+                $orderCartRules = $this->entityManagerInterface->getRepository(PsOrderCartRule::class)
+                ->findBy(['id_order' => $id_order]);
+                // Obtener los detalles de la orden
+                $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                ->findBy(['idOrder' => $id_order]);
                 break;
-            default:
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
         }
         if (!$order) {
             return new JsonResponse(['status' => 'error', 'message' => 'Order not found'], JsonResponse::HTTP_OK);
@@ -194,17 +207,29 @@ class OrdersController
         // Construir la respuesta con la información de la orden
         $orderData = $this->ordersLogic->generateOrderJSON($order);
 
-        // Obtener los cart rules de la orden
-        $orderCartRules = $this->entityManagerInterface->getRepository(PsOrderCartRule::class)
-            ->findBy(['id_order' => $id_order]);
-
         // Procesar los cart rules de la orden
         foreach ($orderCartRules as $orderCartRule) {
-            $cartRule = $this->entityManagerInterface->getRepository(PsCartRule::class)
-                ->find($orderCartRule->getIdCartRule());
+            switch ($origin) {
+                case 'fajasmaylu':
+                    $cartRule = $this->emFajasMaylu->getRepository(PsCartRuleFajasMaylu::class)
+                        ->find($orderCartRule->getIdCartRule());
+                    break;
+                case 'mayret':
+                    $cartRule = $this->entityManagerInterface->getRepository(PsCartRule::class)
+                        ->find($orderCartRule->getIdCartRule());
+                    break;
+            }
             if ($cartRule) {
-                $cartRuleLang = $this->entityManagerInterface->getRepository(PsCartRuleLang::class)
-                    ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
+                switch($origin){
+                    case 'fajasmaylu':
+                        $cartRuleLang = $this->emFajasMaylu->getRepository(PsCartRuleLang::class)
+                            ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
+                        break;
+                    case 'mayret':
+                        $cartRuleLang = $this->entityManagerInterface->getRepository(PsCartRuleLangFajasMaylu::class)
+                            ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
+                        break;
+                }
                 $orderData['order_cart_rules'][] = [
                     'code' => $cartRule->getCode(),
                     'name' => $cartRuleLang ? $cartRuleLang->getName() : $orderCartRule->getName(),
@@ -213,9 +238,7 @@ class OrdersController
                 ];
             }
         }
-        // Obtener los detalles de la orden
-        $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-            ->findBy(['idOrder' => $id_order]);
+
 
         // Procesar los detalles de la orden
         foreach ($orderDetails as $detail) {
