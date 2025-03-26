@@ -14,6 +14,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Logic\WareHouseMovementLogic;
+use App\Utils\Constants\DatabaseManagers;
+use App\Utils\Constants\HttpMessages;
 
 use App\Entity\PsOrders;
 use App\Entity\PsOrderDetail;
@@ -36,8 +38,8 @@ class OrdersController
 
     public function __construct(ManagerRegistry $doctrine, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic, StockControllLogic $stockControllLogic, WareHouseMovementLogic $wareHouseMovementLogic)
     {
-        $this->entityManagerInterface = $doctrine->getManager('default');
-        $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
+        $this->entityManagerInterface = $doctrine->getManager(DatabaseManagers::MAYRET_MANAGER);
+        $this->emFajasMaylu = $doctrine->getManager(DatabaseManagers::FAJASMAYLU_MANAGER);
         $this->ordersLogic = $ordersLogic;
         $this->cartRuleLogic = $cartRuleLogic;
         $this->stockControllLogic = $stockControllLogic;
@@ -68,7 +70,7 @@ class OrdersController
             $data['total_discounts_tax_excl']
         )
         ) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         $newPsOrder = $this->ordersLogic->generateOrder($data);
@@ -119,7 +121,7 @@ class OrdersController
             foreach ($data['discounts'] as $discount) {
                 $cart_rule = $this->entityManagerInterface->getRepository(PsCartRule::class)->findOneBy(['code' => $discount['code'], 'active' => true]);
                 if (!$cart_rule) {
-                    return new JsonResponse(['status' => 'error', 'message' => 'Invalid or inactive voucher'], JsonResponse::HTTP_BAD_REQUEST);
+                    return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_VOUCHER], JsonResponse::HTTP_BAD_REQUEST);
                 }
                 $cart_rule->setQuantity($cart_rule->getQuantity() - 1);
                 $cart_rule->setActive(false);
@@ -146,7 +148,7 @@ class OrdersController
             }
             $response = [
                 'status' => 'OK',
-                'message' => 'Order created with id ' . $newPsOrder->getIdOrder()
+                'message' => HttpMessages::ORDER_CREATED . $newPsOrder->getIdOrder()
             ];
 
             if ($newCartRule) {
@@ -155,7 +157,7 @@ class OrdersController
 
             return new JsonResponse($response);
         }
-        return new JsonResponse(data: ['status' => 'OK', 'message' => 'Order created with id ' . $newPsOrder->getIdOrder()]);
+        return new JsonResponse(data: ['status' => 'OK', 'message' => HttpMessages::ORDER_CREATED . $newPsOrder->getIdOrder()]);
     }
 
     #[Route('/get_order', name: 'get_order', methods: ['GET'])]
@@ -322,7 +324,7 @@ class OrdersController
     {
         $data = json_decode($request->getContent(), true);
         if (!isset($data['id_order'], $data['status'], $data['origin'])) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         foreach ($data['shops'] as $shop) {
@@ -349,14 +351,14 @@ class OrdersController
         }
 
         switch ($data['origin']) {
-            case 'fajasmaylu':
+            case DatabaseManagers::FAJASMAYLU_MANAGER:
                 $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($data['id_order']);
                 $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($data['status']);
                 $order->setCurrentState($orderState);
                 $this->emFajasMaylu->persist($order);
                 $this->emFajasMaylu->flush();
                 break;
-            case 'mayret':
+            case DatabaseManagers::MAYRET_MANAGER:
                 $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
                 $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
                 $order->setCurrentState($orderState);
@@ -371,8 +373,7 @@ class OrdersController
                 $this->entityManagerInterface->flush();
         }
 
-
-        return new JsonResponse(['status' => 'OK', 'message' => 'Order updated with id #' . $data['id_order']]);
+        return new JsonResponse(['status' => 'OK', 'message' => HttpMessages::ORDER_UPDATED . $data['id_order']]);
     }
 
 
