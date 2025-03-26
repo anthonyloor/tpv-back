@@ -125,7 +125,7 @@ class OrdersController
                 foreach ($data['discounts'] as $discount) {
                     $cart_rule = $this->entityManagerInterface->getRepository(PsCartRule::class)->findOneBy(['code' => $discount['code'], 'active' => true]);
                     if (!$cart_rule) {
-                        return new JsonResponse(['status' => 'error', 'message' => 'Invalid or inactive voucher'], JsonResponse::HTTP_BAD_REQUEST);
+                        return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_VOUCHER], JsonResponse::HTTP_BAD_REQUEST);
                     }
                     $cart_rule->setQuantity($cart_rule->getQuantity() - 1);
                     $cart_rule->setActive(false);
@@ -169,7 +169,7 @@ class OrdersController
         }
     }
 
-    #[Route('/get_order', name: 'get_order', methods: ['GET'])]
+    #[Route('/get_order', name: 'get_order', methods: ['POST'])]
     public function getOrderByIdAndOrigin(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);

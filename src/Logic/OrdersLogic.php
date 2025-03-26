@@ -2,6 +2,7 @@
 
 namespace App\Logic;
 
+use App\Utils\Constants\Entity\PsOrderFields;
 use Doctrine\ORM\EntityManagerInterface;
 
 use App\Entity\PsOrders;
@@ -183,22 +184,22 @@ class OrdersLogic
         $customer = $order->getCustomer()->getIdCustomer() == 0 ? null : $order->getCustomer();
         $addressDelivery = $order->getAddressDelivery()->getIdAddress() == 0 ? null : $order->getAddressDelivery();
         $orderData = [
-            'id_order' => $order->getIdOrder(),
-            'id_shop' => $order->getIdShop(),
+            PsOrderFields::ID_ORDER => $order->getIdOrder(),
+            PsOrderFields::ID_SHOP => $order->getIdShop(),
             'id_customer' => $customer?->getIdCustomer(),
             'customer_name' => $customer?->getFirstname() . ' ' . $customer?->getLastname(),
             'id_employee' => $posOrder?->getIdEmployee(),
             'id_address_delivery' => $addressDelivery?->getIdAddress(),
             'address_delivery_name' => $addressDelivery?->getAddress1(),
-            'payment' => $order->getPayment(),
-            'total_paid' => $order->getTotalPaid(),
-            'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
-            'total_products' => $order->getTotalProducts(),
-            'total_shipping' => $order->getTotalShipping(),
-            'current_state' => $order->getCurrentState()->getIdOrderState(),
+            PsOrderFields::PAYMENT => $order->getPayment(),
+            PsOrderFields::TOTAL_PAID => $order->getTotalPaid(),
+            PsOrderFields::TOTAL_PAID_TAX_EXCL => $order->getTotalPaidTaxExcl(),
+            PsOrderFields::TOTAL_PRODUCTS => $order->getTotalProducts(),
+            PsOrderFields::TOTAL_SHIPPING => $order->getTotalShipping(),
+            PsOrderFields::CURRENT_STATE => $order->getCurrentState()->getIdOrderState(),
             'current_state_name' => $order->getCurrentStateName(),
-            'valid' => $order->getValid(),
-            'date_add' => $order->getDateAdd()->format('Y-m-d H:i:s'),
+            PsOrderFields::VALID => $order->getValid(),
+            PsOrderFields::DATE_ADD => $order->getDateAdd()->format('Y-m-d H:i:s'),
             'origin' => $order->getOrigin(),
             'order_details' => []
         ];

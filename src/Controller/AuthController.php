@@ -41,7 +41,7 @@ class AuthController extends AbstractController
         $user = $this->entityManagerInterface->getRepository(PsEmployee::class)->findOneBy(['id_employee' => $data['id_employee']]);
 
         if (!$user || !$this->passwordHasher->isPasswordValid($user, $data['password'])) {
-            throw new AuthenticationException(message: 'Invalid credentials.');
+            throw new AuthenticationException(message: HttpMessages::INVALID_CREDENTIALS);
         }
 
         // Generar el token JWT

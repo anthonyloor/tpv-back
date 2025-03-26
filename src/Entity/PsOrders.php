@@ -3,6 +3,7 @@
 namespace App\Entity;
 use App\Repository\PsOrdersRepository;
 use App\Entity\PsOrderState;
+use App\Utils\Constants\Entity\PsOrderFields;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -12,7 +13,7 @@ class PsOrders
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column (name: PsOrderFields::ID_ORDER)]
     private ?int $id_order = null;
 
     #[ORM\Column(length: 9)]

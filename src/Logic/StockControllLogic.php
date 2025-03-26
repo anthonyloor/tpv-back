@@ -146,7 +146,11 @@ class StockControllLogic
         do {
             $ean13 = '';
             for ($i = 0; $i < 13; $i++) {
-                $ean13 .= rand(0, 9);
+                if ($i === 0) {
+                    $ean13 .= rand(1, 9); // Ensure the first character is not 0
+                } else {
+                    $ean13 .= rand(0, 9);
+                }
             }
 
             $existsInProduct = $this->entityManagerInterface->getRepository(PsProduct::class)
