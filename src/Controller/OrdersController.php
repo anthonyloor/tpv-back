@@ -264,21 +264,7 @@ class OrdersController
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], Response::HTTP_BAD_REQUEST);
         }
 
-        switch ($data['origin']) {
-            case 'fajasmaylu':
-                $orders = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findOrdersByShop($data['id_shop']);
-                break;
-            case 'mayret':
-                $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
-                break;
-            case 'all':
-                $ordersMaylu = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findOrdersByShop($data['id_shop']);
-                $ordersMayret = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
-                $orders = array_merge($ordersMayret, $ordersMaylu);
-                break;
-            default:
-                $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
-        }
+        $orders = $this->ordersLogic->getOrdersByShopAndOrigin($data);
 
         if (!$orders) {
             return new JsonResponse(['status' => 'error', 'message' => 'No orders found'], Response::HTTP_OK);
@@ -288,24 +274,10 @@ class OrdersController
 
         foreach ($orders as $order) {
             $orderData = $this->ordersLogic->generateOrderJSON($order);
-            switch ($order->getOrigin()) {
-                case 'fajasmaylu':
-                    $orderDetails = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
-                        ->findByOrderId($order->getIdOrder());
-                    break;
-                case 'mayret':
-                    $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-                        ->findByOrderId($order->getIdOrder());
-                    break;
-                default:
-                    $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-                        ->findByOrderId($order->getIdOrder());
-            }
-
+            $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($order->getOrigin(),$order->getIdOrder());
 
             foreach ($orderDetails as $detail) {
                 $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
-
             }
             $responseData[] = $orderData;
         }

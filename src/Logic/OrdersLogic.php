@@ -383,4 +383,25 @@ class OrdersLogic
         }
         return $orderDetails;
     }
+
+    public function getOrdersByShopAndOrigin($data):array
+    {
+        $orders = null;
+        switch ($data['origin']) {
+            case 'fajasmaylu':
+                $orders = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findOrdersByShop($data['id_shop']);
+                break;
+            case 'mayret':
+                $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
+                break;
+            case 'all':
+                $ordersMaylu = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findOrdersByShop($data['id_shop']);
+                $ordersMayret = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
+                $orders = array_merge($ordersMayret, $ordersMaylu);
+                break;
+            default:
+                $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
+        }
+        return $orders;
+    }
 }
