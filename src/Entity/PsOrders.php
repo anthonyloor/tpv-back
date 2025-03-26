@@ -81,6 +81,9 @@ class PsOrders
     #[ORM\Column(type: "decimal", precision: 17, scale: 2)]
     private ?float $total_products = null;
 
+    #[ORM\Column(type: "decimal", precision: 17, scale: 2, nullable: true)]
+    private ?float $total_shipping = null;
+
     #[ORM\Column(type: "decimal", precision: 17, scale: 2)]
     private ?float $total_products_wt = null;
 
@@ -368,6 +371,17 @@ class PsOrders
     public function setTotalProducts(?float $total_products): self
     {
         $this->total_products = $total_products;
+        return $this;
+    }
+
+    public function getTotalShipping(): ?float
+    {
+        return $this->total_shipping;
+    }
+
+    public function setTotalShipping(?float $total_shipping): self
+    {
+        $this->total_shipping = $total_shipping;
         return $this;
     }
 

@@ -60,6 +60,7 @@ class OrdersLogic
         $newPsOrder->setTotalPaidTaxExcl($data['total_paid_tax_excl']);
         $newPsOrder->setTotalPaidReal($data['total_paid']);
         $newPsOrder->setTotalProducts($data['total_products']);
+        $newPsOrder->setTotalShipping(0);
         $newPsOrder->setTotalProductsWt($data['total_paid']);
         $newPsOrder->setInvoiceNumber(0);
         $newPsOrder->setInvoiceDate(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
@@ -193,6 +194,7 @@ class OrdersLogic
             'total_paid' => $order->getTotalPaid(),
             'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
             'total_products' => $order->getTotalProducts(),
+            'total_shipping' => $order->getTotalShipping(),
             'current_state' => $order->getCurrentState()->getIdOrderState(),
             'current_state_name' => $order->getCurrentStateName(),
             'valid' => $order->getValid(),

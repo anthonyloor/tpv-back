@@ -94,16 +94,21 @@ class WareHouseMovementLogic
 
     public function generateWareHouseMovementDetail($detail, $newWareHouseMovement): LpWarehouseMovementDetails
     {
-        $newWareHouseMovementDetail = new LpWarehouseMovementDetails();
-        $newWareHouseMovementDetail->setRecivedQuantity($detail['recived_quantity'] ?? null);
-        $newWareHouseMovementDetail->setSentQuantity($detail['sent_quantity'] ?? null);
-        $newWareHouseMovementDetail->setIdProduct($detail['id_product']);
-        $newWareHouseMovementDetail->setIdProductAttribute($detail['id_product_attribute']);
-        $newWareHouseMovementDetail->setProductName($detail['product_name']);
-        $newWareHouseMovementDetail->setEan13($detail['ean13']);
-        $newWareHouseMovementDetail->setIdControlStock($detail['id_control_stock']?? null);
-        $newWareHouseMovementDetail->setIdWarehouseMovement($newWareHouseMovement->getIdWarehouseMovement());
-        $this->entityManagerInterface->persist($newWareHouseMovementDetail);
+        try{
+            $newWareHouseMovementDetail = new LpWarehouseMovementDetails();
+            $newWareHouseMovementDetail->setRecivedQuantity($detail['recived_quantity'] ?? null);
+            $newWareHouseMovementDetail->setSentQuantity($detail['sent_quantity'] ?? null);
+            $newWareHouseMovementDetail->setIdProduct($detail['id_product']);
+            $newWareHouseMovementDetail->setIdProductAttribute($detail['id_product_attribute']);
+            $newWareHouseMovementDetail->setProductName($detail['product_name']);
+            $newWareHouseMovementDetail->setEan13($detail['ean13']);
+            $newWareHouseMovementDetail->setIdControlStock($detail['id_control_stock']?? null);
+            $newWareHouseMovementDetail->setIdWarehouseMovement($newWareHouseMovement->getIdWarehouseMovement());
+            $this->entityManagerInterface->persist($newWareHouseMovementDetail);
+        }catch(\Exception $e){
+            throw $e;
+        }
+
         $this->entityManagerInterface->flush();
         return $newWareHouseMovementDetail;
     }
@@ -188,7 +193,7 @@ class WareHouseMovementLogic
         return $movement;
     }
 
-    public function executeWareHouseMovement($movement): LpWarehouseMovement
+    public function executeWareHouseMovement($movement): array
     {
         $this->entityManagerInterface->getConnection()->beginTransaction(); // Start transaction
         try {
@@ -214,7 +219,7 @@ class WareHouseMovementLogic
                     'id_product_attribute' => $idProductAttribute,
                     'id_shop' => $movement->getIdShopOrigin()
                 ]);
-
+                $ean13ControlStockArray[] = [];
                 if ($movementType === 'entrada') {
                     // Update stock for destination shop only
                     if ($stockDestiny) {
@@ -222,6 +227,7 @@ class WareHouseMovementLogic
                         $stockDestiny->setQuantity($stockDestiny->getQuantity() + $recivedQuantity);
                         $this->entityManagerInterface->persist($stockDestiny);
                         $this->logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+                        
                         for ($i = 1; $i <= $recivedQuantity; $i++) {
                             $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny(),$detail->getEan13());
                             $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada',$movement->getIdShopDestiny());
@@ -235,6 +241,12 @@ class WareHouseMovementLogic
                             . ' type ' . 'Entrada'
                             . ' date ' . (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s')
                         );
+
+                        $ean13ControlStockArray[] = [
+                            'ean13' => $controllStock->getEan13(),
+                            'control_stock' => $controllStock->getIdControlStock()
+                        ];
+
                         }
                     }
                 } elseif ($movementType === 'salida') {
@@ -288,6 +300,9 @@ class WareHouseMovementLogic
             $this->entityManagerInterface->getConnection()->rollBack(); // Rollback transaction
             throw $e;
         }
-        return $movement;
+        return [
+            'movement' => $movement,
+            'ean13_control_stock' => $ean13ControlStockArray ?? []
+        ];
     }
 }

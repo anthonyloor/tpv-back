@@ -6,6 +6,7 @@ use App\Entity\LpPosOrders;
 use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
 use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
 use App\EntityFajasMaylu\PsOrderState as PsOrderStateFajasMaylu;
+
 use App\Logic\CartRuleLogic;
 use App\Logic\StockControllLogic;
 use Symfony\Component\HttpFoundation\Response;
@@ -73,101 +74,120 @@ class OrdersController
             return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $newPsOrder = $this->ordersLogic->generateOrder($data);
-        $this->entityManagerInterface->persist($newPsOrder);
-        $this->entityManagerInterface->flush();
-
-        $newPosOrder = $this->ordersLogic->generatePosOrder($data, $newPsOrder);
-        $this->entityManagerInterface->persist($newPosOrder);
-        $this->entityManagerInterface->flush();
-
-        $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
-            ->findOneActiveByLicense($data['license']);
-
-        $total_cash = $pos_session->getTotalCash() + $data['total_cash'];
-        $total_card = $pos_session->getTotalCard() + $data['total_card'];
-        $total_bizum = $pos_session->getTotalBizum() + $data['total_bizum'];
-
-        $pos_session->setTotalBizum($total_bizum);
-        $pos_session->setTotalCard($total_card);
-        $pos_session->setTotalCash($total_cash);
-        $this->entityManagerInterface->persist($pos_session);
-        $this->entityManagerInterface->flush();
-
-        $orderHistory = $this->ordersLogic->generateOrderHistory($newPsOrder, $data['id_employee']);
-        $this->ordersLogic->generateOrderPayments($newPsOrder, $data);
-
-        foreach ($data['order_details'] as $orderDetailData) {
-            $orderDetail = $this->ordersLogic->generateOrderDetail($data, $orderDetailData, $newPsOrder);
-            $this->entityManagerInterface->persist($orderDetail);
-            $this->ordersLogic->updateProductStock($orderDetailData); // Llamamos a la función de actualización de stock
-        }
-        if (isset($orderDetailData['id_control_stock'])) {
-            $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($orderDetailData['id_control_stock']);
-            if ($orderDetailData['product_quantity'] > 0) {
-                $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Venta de producto', 'Venta', $data['id_shop']);
-                $controlStock->setActive(active: false);
-            } else {
-                $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Devolución de producto', 'Devolución', $data['id_shop']);
-                $controlStock->setActive(active: true);
+        $this->entityManagerInterface->beginTransaction();
+        $this->emFajasMaylu->beginTransaction();
+        try{
+            $newPsOrder = $this->ordersLogic->generateOrder($data);
+            $this->entityManagerInterface->persist($newPsOrder);
+            $this->entityManagerInterface->flush();
+    
+            $newPosOrder = $this->ordersLogic->generatePosOrder($data, $newPsOrder);
+            $this->entityManagerInterface->persist($newPosOrder);
+            $this->entityManagerInterface->flush();
+    
+            $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
+                ->findOneActiveByLicense($data['license']);
+    
+            $total_cash = $pos_session->getTotalCash() + $data['total_cash'];
+            $total_card = $pos_session->getTotalCard() + $data['total_card'];
+            $total_bizum = $pos_session->getTotalBizum() + $data['total_bizum'];
+    
+            $pos_session->setTotalBizum($total_bizum);
+            $pos_session->setTotalCard($total_card);
+            $pos_session->setTotalCash($total_cash);
+            $this->entityManagerInterface->persist($pos_session);
+            $this->entityManagerInterface->flush();
+    
+            $orderHistory = $this->ordersLogic->generateOrderHistory($newPsOrder, $data['id_employee']);
+            $this->ordersLogic->generateOrderPayments($newPsOrder, $data);
+    
+            foreach ($data['order_details'] as $orderDetailData) {
+                $orderDetail = $this->ordersLogic->generateOrderDetail($data, $orderDetailData, $newPsOrder);
+                $this->entityManagerInterface->persist($orderDetail);
+                $this->ordersLogic->updateProductStock($orderDetailData); // Llamamos a la función de actualización de stock
             }
-            $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
-            $this->entityManagerInterface->persist($controlStock);
-        }
-        $this->entityManagerInterface->flush();
-
-        if (isset($data['discounts'])) {
-            $newCartRule = null;
-            foreach ($data['discounts'] as $discount) {
-                $cart_rule = $this->entityManagerInterface->getRepository(PsCartRule::class)->findOneBy(['code' => $discount['code'], 'active' => true]);
-                if (!$cart_rule) {
-                    return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_VOUCHER], JsonResponse::HTTP_BAD_REQUEST);
+            if (isset($orderDetailData['id_control_stock'])) {
+                $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($orderDetailData['id_control_stock']);
+                if ($orderDetailData['product_quantity'] > 0) {
+                    $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Venta de producto', 'Venta', $data['id_shop']);
+                    $controlStock->setActive(active: false);
+                } else {
+                    $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Devolución de producto', 'Devolución', $data['id_shop']);
+                    $controlStock->setActive(active: true);
                 }
-                $cart_rule->setQuantity($cart_rule->getQuantity() - 1);
-                $cart_rule->setActive(false);
-                $this->entityManagerInterface->persist($cart_rule);
-                $this->entityManagerInterface->flush();
-
-                $remainingAmount = $cart_rule->getReductionAmount() - $discount['amount'];
-
-                if ($remainingAmount > 0) {
-                    $newCartRuleData = [
-                        'code' => $this->cartRuleLogic->generateUniqueCartRuleCode(),
-                        'description' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder() . ' con vale descuento ' . $discount['code'],
-                        'name' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder(),
-                        'quantity' => 1,
-                        'reduction_amount' => $remainingAmount,
-                        'reduction_percent' => 0,
-                        'active' => true,
-                        'date_from' => (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s'),
-                        'date_to' => (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->modify('+6 months')->format('Y-m-d H:i:s'),
-                        'id_customer' => $data['id_customer'],
-                    ];
-                    $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($newCartRuleData);
+                $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+                $this->entityManagerInterface->persist($controlStock);
+            }
+            $this->entityManagerInterface->flush();
+    
+            if (isset($data['discounts'])) {
+                $newCartRule = null;
+                foreach ($data['discounts'] as $discount) {
+                    $cart_rule = $this->entityManagerInterface->getRepository(PsCartRule::class)->findOneBy(['code' => $discount['code'], 'active' => true]);
+                    if (!$cart_rule) {
+                        return new JsonResponse(['status' => 'error', 'message' => 'Invalid or inactive voucher'], JsonResponse::HTTP_BAD_REQUEST);
+                    }
+                    $cart_rule->setQuantity($cart_rule->getQuantity() - 1);
+                    $cart_rule->setActive(false);
+                    $this->entityManagerInterface->persist($cart_rule);
+                    $this->entityManagerInterface->flush();
+    
+                    $remainingAmount = $cart_rule->getReductionAmount() - $discount['amount'];
+    
+                    if ($remainingAmount > 0) {
+                        $newCartRuleData = [
+                            'code' => $this->cartRuleLogic->generateUniqueCartRuleCode(),
+                            'description' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder() . ' con vale descuento ' . $discount['code'],
+                            'name' => 'Vale descuento restante de la venta ' . $newPsOrder->getIdOrder(),
+                            'quantity' => 1,
+                            'reduction_amount' => $remainingAmount,
+                            'reduction_percent' => 0,
+                            'active' => true,
+                            'date_from' => (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s'),
+                            'date_to' => (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->modify('+6 months')->format('Y-m-d H:i:s'),
+                            'id_customer' => $data['id_customer'],
+                        ];
+                        $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($newCartRuleData);
+                    }
                 }
+                $response = [
+                    'status' => 'OK',
+                    'message' => 'Order created with id ' . $newPsOrder->getIdOrder()
+                ];
+    
+                if ($newCartRule) {
+                    $response['new_cart_rule_code'] = $newCartRule->getCode();
+                }
+    
+                return new JsonResponse($response);
             }
-            $response = [
-                'status' => 'OK',
-                'message' => HttpMessages::ORDER_CREATED . $newPsOrder->getIdOrder()
-            ];
-
-            if ($newCartRule) {
-                $response['new_cart_rule_code'] = $newCartRule->getCode();
-            }
-
-            return new JsonResponse($response);
+            return new JsonResponse(data: ['status' => 'OK', 'message' => 'Order created with id ' . $newPsOrder->getIdOrder()]);
+        }catch(\Exception $e){
+            $this->entityManagerInterface->getConnection()->rollBack();
+            $this->emFajasMaylu->getConnection()->rollBack();
+            return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
-        return new JsonResponse(data: ['status' => 'OK', 'message' => HttpMessages::ORDER_CREATED . $newPsOrder->getIdOrder()]);
     }
 
     #[Route('/get_order', name: 'get_order', methods: ['GET'])]
     public function getOrderByIdAndOrigin(Request $request): Response
     {
-        $id_order = $request->query->get('id_order');
-        if (!$id_order) {
+        $data = json_decode($request->getContent(), true);
+        if (!isset($data['id_order'], $data['origin'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
         }
-        $order = $this->entityManagerInterface->getRepository(PsOrders::class)->find($id_order);
+        $id_order = $data['id_order'];
+        $origin = $data['origin'];
+        switch ($origin) {
+            case 'fajasmaylu':
+                $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($id_order);
+                break;
+            case 'mayret':
+                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
+                break;
+            default:
+                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
+        }
         if (!$order) {
             return new JsonResponse(['status' => 'error', 'message' => 'Order not found'], JsonResponse::HTTP_OK);
         }
@@ -200,6 +220,7 @@ class OrdersController
         // Procesar los detalles de la orden
         foreach ($orderDetails as $detail) {
             $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
+
         }
 
         // Obtener el detalle de la orden que contiene el id de la orden original en el nombre
@@ -216,6 +237,7 @@ class OrdersController
 
                 foreach ($newOrderDetails as $newDetail) {
                     $newOrderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($newDetail, $newOrder->getOrigin());
+
                 }
 
                 $orderData['returns'][] = $newOrderData;
@@ -276,6 +298,7 @@ class OrdersController
 
             foreach ($orderDetails as $detail) {
                 $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
+
             }
             $responseData[] = $orderData;
         }
@@ -327,51 +350,58 @@ class OrdersController
             return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        foreach ($data['shops'] as $shop) {
-            $dataMovement = [
-                'description' => 'Salida por la venta online del ticket #' . $data['id_order'],
-                'id_shop_origin' => $shop['id_shop'],
-                'type' => 'salida',
-                'id_employee' => $data['id_employee'],
-            ];
-            $lpWarehouseMovement = $this->wareHouseMovementLogic->generateWareHouseMovement($dataMovement);
-            foreach ($shop['products'] as $product) {
-                $dataMovementDetail = [
-                    'id_warehouse_movement' => $lpWarehouseMovement->getIdWarehouseMovement(),
-                    'sent_quantity' => $product['quantity'],
-                    'id_product' => $product['id_product'],
-                    'id_product_attribute' => $product['id_product_attribute'],
-                    'product_name' => $product['product_name'],
-                    'ean13' => $product['ean13']
+        try{
+            $this->entityManagerInterface->beginTransaction();
+            $this->emFajasMaylu->beginTransaction();
+            foreach ($data['shops'] as $shop) {
+                $dataMovement = [
+                    'description' => 'Salida por la venta online del ticket #' . $data['id_order'],
+                    'id_shop_origin' => $shop['id_shop'],
+                    'type' => 'salida',
+                    'id_employee' => $data['id_employee'],
                 ];
-                $this->wareHouseMovementLogic->generateWareHouseMovementDetail($dataMovementDetail, $lpWarehouseMovement);
+                $lpWarehouseMovement = $this->wareHouseMovementLogic->generateWareHouseMovement($dataMovement);
+                foreach ($shop['products'] as $product) {
+                    $dataMovementDetail = [
+                        'id_warehouse_movement' => $lpWarehouseMovement->getIdWarehouseMovement(),
+                        'sent_quantity' => $product['quantity'],
+                        'id_product' => $product['id_product'],
+                        'id_product_attribute' => $product['id_product_attribute'],
+                        'product_name' => $product['product_name'],
+                        'ean13' => $product['ean13']
+                    ];
+                    $this->wareHouseMovementLogic->generateWareHouseMovementDetail($dataMovementDetail, $lpWarehouseMovement);
+                }
+                $lpWarehouseMovement = $this->wareHouseMovementLogic->executeWareHouseMovement($lpWarehouseMovement);
+    
             }
-            $lpWarehouseMovement = $this->wareHouseMovementLogic->executeWareHouseMovement($lpWarehouseMovement);
-
+    
+            switch ($data['origin']) {
+                case 'fajasmaylu':
+                    $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($data['id_order']);
+                    $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($data['status']);
+                    $order->setCurrentState($orderState);
+                    $this->emFajasMaylu->persist($order);
+                    break;
+                case 'mayret':
+                    $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
+                    $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
+                    $order->setCurrentState($orderState);
+                    $this->entityManagerInterface->persist($order);
+                    break;
+                default:
+                    $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
+                    $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
+                    $order->setCurrentState($orderState);
+                    $this->entityManagerInterface->persist($order);
+            }
+        }catch(\Exception $e){
+            $this->entityManagerInterface->getConnection()->rollBack();
+            $this->emFajasMaylu->getConnection()->rollBack();
+            return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        switch ($data['origin']) {
-            case DatabaseManagers::FAJASMAYLU_MANAGER:
-                $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($data['id_order']);
-                $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->emFajasMaylu->persist($order);
-                $this->emFajasMaylu->flush();
-                break;
-            case DatabaseManagers::MAYRET_MANAGER:
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
-                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->entityManagerInterface->persist($order);
-                $this->entityManagerInterface->flush();
-                break;
-            default:
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
-                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->entityManagerInterface->persist($order);
-                $this->entityManagerInterface->flush();
-        }
+        $this->entityManagerInterface->flush();
+        $this->entityManagerInterface->flush();
 
         return new JsonResponse(['status' => 'OK', 'message' => HttpMessages::ORDER_UPDATED . $data['id_order']]);
     }

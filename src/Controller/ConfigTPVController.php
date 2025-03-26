@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\PsEmployee;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
@@ -10,14 +11,20 @@ use Symfony\Component\HttpFoundation\Request;
 
 use App\Utils\Constants\HttpMessages;
 use App\Entity\LpConfigTpv;
+use App\Entity\LpPin;
+
+use App\Utils\Constants\ProfileLang;
+use App\Logic\EmployeesLogic;
 
 class ConfigTPVController
 {
     private $entityManagerInterface;
+    private $employeesLogic;
 
-    public function __construct(EntityManagerInterface $entityManagerInterface)
+    public function __construct(EntityManagerInterface $entityManagerInterface, EmployeesLogic $employeesLogic)
     {
         $this->entityManagerInterface = $entityManagerInterface;
+        $this->employeesLogic = $employeesLogic;
     }
 
     #[Route('/get_config_tpv', name: 'get_config_tpv')]
@@ -96,4 +103,87 @@ class ConfigTPVController
         return new JsonResponse(['status' => 'success', 'message' => 'TPV Config updated successfully'], JsonResponse::HTTP_OK);
     }
 
+    #[Route('/get_pin', name: 'get_pin', methods: ['GET'])]
+    public function getPin(Request $request):Response
+    {
+        $data = json_decode($request->getContent(), true);
+        if(!isset($data['id_employee_request']))
+        {
+            return new JsonResponse(['error' => 'Missing parameters'], 400);
+        }
+        $repository = $this->entityManagerInterface->getRepository(LpPin::class);
+        $pin = $repository->findOneBy(['active' => true]);
+        if($pin == null)
+        {
+            return new JsonResponse(['error' => 'Pin not found'], 404);
+        }
+
+        $employeeRepository = $this->entityManagerInterface->getRepository(PsEmployee::class);
+        $employee = $employeeRepository->find($data['id_employee_request']);
+
+        if (!$employee) {
+            return new JsonResponse(['error' => 'Employee not found'], 404);
+        }
+
+        if(!$this->employeesLogic->checkUserRol(ProfileLang::SUPER_ADMIN, $employee))
+        {
+            return new JsonResponse(['error' => 'Non administrators cannot request pins'], 400);
+        }
+
+        $pin->setIdEmployeeRequest($data['id_employee_request']);
+        $this->entityManagerInterface->persist($pin);
+        $this->entityManagerInterface->flush();
+
+        $pinJSON = [
+            'id_pin' => $pin->getIdPin(),
+            'pin' => $pin->getPin(),
+            'date_add' => $pin->getDateAdd()->format('Y-m-d H:i:s'),
+            'active' => $pin->isActive(),
+        ];
+        return new JsonResponse($pinJSON);
+    }
+
+    #[Route('/check_pin', name: 'check_pin', methods: ['GET'])]
+    public function checkPin(Request $request):Response
+    {
+        $data = json_decode($request->getContent(), true);
+        if(!isset($data['pin'], $data['id_employee_used'], $data['reason']))
+        {
+            return new JsonResponse(['error' => 'Missing parameters'], 400);
+        }
+        $repository = $this->entityManagerInterface->getRepository(LpPin::class);
+        $pin = $repository->findOneBy(['pin' => $data['pin'], 'active' => true]);
+        if($pin == null)
+        {
+            return new JsonResponse(['error' => 'Pin not found or already used'], 404);
+        }
+
+        $pinJSON = [
+            'usable' => true
+        ];
+
+        $pin->setActive(false);
+        $pin->setIdEmployeeUsed($data['id_employee_used']);
+        $pin->setReason($data['reason']);
+        $pin->setDateUsed(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $this->entityManagerInterface->persist($pin);
+
+        $newPin = new LpPin();
+        do {
+            $randomPin = mt_rand(1000, 9999); // Generate a random 6-digit pin
+            $existingPin = $this->entityManagerInterface->getRepository(LpPin::class)
+            ->findOneBy(['pin' => $randomPin]);
+        } while ($existingPin !== null);
+
+        $newPin->setPin($randomPin);
+        $newPin->setActive(true);
+        $newPin->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+        $this->entityManagerInterface->persist($newPin);
+
+        $this->entityManagerInterface->flush();
+
+
+
+        return new JsonResponse($pinJSON);
+    }
 }
