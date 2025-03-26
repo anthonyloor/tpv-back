@@ -48,12 +48,12 @@ class CustomerController
     
         if (isset($data['id_customer'])) {
             switch ($data['origin']) {
-                case DatabaseManagers::FAJASMAYLU_MANAGER:
+                case 'fajasmaylu':
                     $customers = $emFajasMaylu
                         ->getRepository(PsCustomerMaylu::class)
                         ->findByCustomerById($data['id_customer']);
                     break;
-                case DatabaseManagers::MAYRET_MANAGER:
+                case 'mayret':
                     $customers = $emMayret
                         ->getRepository(PsCustomer::class)
                         ->findByCustomerById($data['id_customer']);
@@ -70,12 +70,12 @@ class CustomerController
             }
         } elseif (isset($data['filter'])) {
             switch ($data['origin']) {
-                case DatabaseManagers::FAJASMAYLU_MANAGER:
+                case 'fajasmaylu':
                     $customers = $emFajasMaylu
                         ->getRepository(PsCustomerMaylu::class)
                         ->findAllByFullNameOrPhone($data['filter']);
                     break;
-                case DatabaseManagers::MAYRET_MANAGER:
+                case 'mayret':
                     $customers = $emMayret
                         ->getRepository(PsCustomer::class)
                         ->findAllByFullNameOrPhone($data['filter']);
