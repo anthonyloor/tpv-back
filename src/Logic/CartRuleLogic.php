@@ -3,18 +3,23 @@
 namespace App\Logic;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 
 use App\Entity\PsCartRuleLang;
 use App\Entity\PsCartRule;
 use App\Entity\PsOrderCartRule;
 
+use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
+
 class CartRuleLogic
 {
     private $entityManagerInterface;
+    private $emFajasMaylu;
 
-    public function __construct(EntityManagerInterface $entityManagerInterface)
+    public function __construct(ManagerRegistry $doctrine)
     {
-        $this->entityManagerInterface = $entityManagerInterface;
+        $this->entityManagerInterface = $doctrine->getManager('default');
+        $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
     }
 
     public function generateCartRuleJSON($cartRule)
@@ -149,5 +154,23 @@ class CartRuleLogic
         $this->entityManagerInterface->flush();
 
         return $orderCartRule;
+    }
+
+    public function getCartRulesByOrderIdAndOrigin($id_order, $origin): array
+    {
+        $orderCartRules = null;
+        switch ($origin) {
+            case 'fajasmaylu':
+                // Obtener los cart rules de la orden
+                $orderCartRules = $this->emFajasMaylu->getRepository(PsOrderCartRuleFajasMaylu::class)
+                ->findBy(['id_order' => $id_order]);
+                break;
+            case 'mayret':
+                // Obtener los cart rules de la orden
+                $orderCartRules = $this->entityManagerInterface->getRepository(PsOrderCartRule::class)
+                ->findBy(['id_order' => $id_order]);
+                break;
+        }
+        return $orderCartRules;
     }
 }

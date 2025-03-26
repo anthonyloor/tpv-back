@@ -74,7 +74,7 @@ class OrdersController
             $data['total_discounts_tax_excl']
         )
         ) {
-            return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], Response::HTTP_BAD_REQUEST);
         }
 
         $this->entityManagerInterface->beginTransaction();
@@ -128,7 +128,7 @@ class OrdersController
                 foreach ($data['discounts'] as $discount) {
                     $cart_rule = $this->entityManagerInterface->getRepository(PsCartRule::class)->findOneBy(['code' => $discount['code'], 'active' => true]);
                     if (!$cart_rule) {
-                        return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_VOUCHER], JsonResponse::HTTP_BAD_REQUEST);
+                        return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_VOUCHER], Response::HTTP_BAD_REQUEST);
                     }
                     $cart_rule->setQuantity($cart_rule->getQuantity() - 1);
                     $cart_rule->setActive(false);
@@ -168,7 +168,7 @@ class OrdersController
         }catch(\Exception $e){
             $this->entityManagerInterface->getConnection()->rollBack();
             $this->emFajasMaylu->getConnection()->rollBack();
-            return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -177,32 +177,16 @@ class OrdersController
     {
         $data = json_decode($request->getContent(), true);
         if (!isset($data['id_order'], $data['origin'])) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], Response::HTTP_BAD_REQUEST);
         }
         $id_order = $data['id_order'];
         $origin = $data['origin'];
-        switch ($origin) {
-            case 'fajasmaylu':
-                $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($id_order);
-                // Obtener los cart rules de la orden
-                $orderCartRules = $this->emFajasMaylu->getRepository(PsOrderCartRuleFajasMaylu::class)
-                ->findBy(['id_order' => $id_order]);
-                // Obtener los detalles de la orden
-                $orderDetails = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
-                ->findBy(['idOrder' => $id_order]);
-                break;
-            case 'mayret':
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
-                // Obtener los cart rules de la orden
-                $orderCartRules = $this->entityManagerInterface->getRepository(PsOrderCartRule::class)
-                ->findBy(['id_order' => $id_order]);
-                // Obtener los detalles de la orden
-                $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-                ->findBy(['idOrder' => $id_order]);
-                break;
-        }
+
+        $order = $this->ordersLogic->getOrderByIdAndOrigin($id_order, $origin);
+        $orderCartRules = $this->cartRuleLogic->getCartRulesByOrderIdAndOrigin($id_order, $origin);
+        $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($id_order, $origin);
         if (!$order) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Order not found'], JsonResponse::HTTP_OK);
+            return new JsonResponse(['status' => 'error', 'message' => 'Order not found'], Response::HTTP_OK);
         }
         // Construir la respuesta con la información de la orden
         $orderData = $this->ordersLogic->generateOrderJSON($order);
@@ -270,14 +254,14 @@ class OrdersController
         $orderData['payment_amounts'] = $this->ordersLogic->generateJSONOrderPayments($id_order);
 
         // Devolver la respuesta como JSON
-        return new JsonResponse($orderData, JsonResponse::HTTP_OK);
+        return new JsonResponse($orderData, Response::HTTP_OK);
     }
     #[Route('/get_shop_orders', name: 'get_shop_orders', methods: ['POST'])]
     public function getOrdersByShop(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
         if (!isset($data['id_shop'])) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], Response::HTTP_BAD_REQUEST);
         }
 
         switch ($data['origin']) {
@@ -297,7 +281,7 @@ class OrdersController
         }
 
         if (!$orders) {
-            return new JsonResponse(['status' => 'error', 'message' => 'No orders found'], JsonResponse::HTTP_OK);
+            return new JsonResponse(['status' => 'error', 'message' => 'No orders found'], Response::HTTP_OK);
         }
 
         $responseData = [];
@@ -327,7 +311,7 @@ class OrdersController
         }
 
         // Devolver la respuesta con las órdenes como JSON
-        return new JsonResponse($responseData, JsonResponse::HTTP_OK);
+        return new JsonResponse($responseData, Response::HTTP_OK);
     }
 
     #[Route('/get_sale_report_orders', name: 'get_sale_report_orders', methods: ['POST'])]
@@ -361,7 +345,7 @@ class OrdersController
             $responseData[] = $orderData;
         }
 
-        return new JsonResponse($responseData, JsonResponse::HTTP_OK);
+        return new JsonResponse($responseData, Response::HTTP_OK);
 
     }
 
@@ -370,7 +354,7 @@ class OrdersController
     {
         $data = json_decode($request->getContent(), true);
         if (!isset($data['id_order'], $data['status'], $data['origin'])) {
-            return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], Response::HTTP_BAD_REQUEST);
         }
 
         try{
@@ -421,7 +405,7 @@ class OrdersController
         }catch(\Exception $e){
             $this->entityManagerInterface->getConnection()->rollBack();
             $this->emFajasMaylu->getConnection()->rollBack();
-            return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
         $this->entityManagerInterface->flush();
         $this->entityManagerInterface->flush();

@@ -15,6 +15,11 @@ use App\Entity\PsOrderPayment;
 use App\Entity\PsOrderState;
 use App\Entity\PsCustomer;
 use App\Entity\PsAddress;
+use App\Entity\PsOrderCartRule;
+
+use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
+use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
+use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
 
 use App\EntityFajasMaylu\PsStockAvailable as PsStockAvailableFajasMaylu;
 use Doctrine\Persistence\ManagerRegistry;
@@ -345,5 +350,37 @@ class OrdersLogic
                 $this->createOrderPayment($psOrder, $method, $amount);
             }
         }
+    }
+
+    public function getOrderbyIdAndOrigin($origin, $id_order)
+    {
+        $order = null;
+        switch ($origin) {
+            case 'fajasmaylu':
+                $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($id_order);
+
+                break;
+            case 'mayret':
+                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
+
+                break;
+        }
+        return $order;
+    }
+    public function getOrderDetailsByOrderIdAndOrigin($origin, $id_order)
+    {
+        $orderDetails = null;
+        switch ($origin) {
+            case 'fajasmaylu':
+                // Obtener los detalles de la orden
+                $orderDetails = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
+                ->findBy(['idOrder' => $id_order]);
+                break;
+            case 'mayret':
+                // Obtener los detalles de la orden
+                $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                ->findBy(['idOrder' => $id_order]);
+        }
+        return $orderDetails;
     }
 }
