@@ -13,7 +13,7 @@ class PsOrders
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column (name: PsOrderFields::ID_ORDER)]
+    #[ORM\Column]
     private ?int $id_order = null;
 
     #[ORM\Column(length: 9)]
