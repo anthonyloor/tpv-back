@@ -176,9 +176,9 @@ class OrdersController
         $id_order = $data['id_order'];
         $origin = $data['origin'];
 
-        $order = $this->ordersLogic->getOrderByIdAndOrigin($id_order, $origin);
+        $order = $this->ordersLogic->getOrderByIdAndOrigin($origin, $id_order);
         $orderCartRules = $this->cartRuleLogic->getCartRulesByOrderIdAndOrigin($id_order, $origin);
-        $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($id_order, $origin);
+        $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($origin, $id_order);
         if (!$order) {
             return new JsonResponse(['status' => 'error', 'message' => 'Order not found'], Response::HTTP_OK);
         }

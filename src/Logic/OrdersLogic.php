@@ -358,11 +358,9 @@ class OrdersLogic
         switch ($origin) {
             case 'fajasmaylu':
                 $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($id_order);
-
                 break;
             case 'mayret':
                 $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
-
                 break;
         }
         return $order;
