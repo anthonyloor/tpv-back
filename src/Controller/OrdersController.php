@@ -77,9 +77,7 @@ class OrdersController
             return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->entityManagerInterface->beginTransaction();
-        $this->emFajasMaylu->beginTransaction();
-        try{
+
             $newPsOrder = $this->ordersLogic->generateOrder($data);
             $this->entityManagerInterface->persist($newPsOrder);
             $this->entityManagerInterface->flush();
@@ -165,11 +163,7 @@ class OrdersController
                 return new JsonResponse($response);
             }
             return new JsonResponse(data: ['status' => 'OK', 'message' => 'Order created with id ' . $newPsOrder->getIdOrder()]);
-        }catch(\Exception $e){
-            $this->entityManagerInterface->getConnection()->rollBack();
-            $this->emFajasMaylu->getConnection()->rollBack();
-            return new JsonResponse(['status' => 'error', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+ 
     }
 
     #[Route('/get_order', name: 'get_order', methods: ['POST'])]
