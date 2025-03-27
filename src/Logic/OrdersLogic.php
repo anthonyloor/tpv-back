@@ -372,12 +372,12 @@ class OrdersLogic
             case 'fajasmaylu':
                 // Obtener los detalles de la orden
                 $orderDetails = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
-                ->findBy(['idOrder' => $id_order]);
+                ->findByOrderId($id_order);
                 break;
             case 'mayret':
                 // Obtener los detalles de la orden
                 $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-                ->findBy(['idOrder' => $id_order]);
+                ->findByOrderId($id_order);
         }
         return $orderDetails;
     }
