@@ -229,19 +229,31 @@ class OrdersController
 
         foreach ($orderDetailsWithOriginalId as $detail) {
             $newOrderId = $detail->getOrder()->getIdOrder();
-            $newOrder = $this->entityManagerInterface->getRepository(PsOrders::class)->find($newOrderId);
+
+            switch ($origin) {
+            case 'fajasmaylu':
+                $newOrder = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->find($newOrderId);
+                $newOrderDetails = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
+                ->findByOrderId($newOrderId);
+                break;
+            case 'mayret':
+                $newOrder = $this->entityManagerInterface->getRepository(PsOrders::class)->find($newOrderId);
+                $newOrderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                ->findByOrderId($newOrderId);
+                break;
+            default:
+                $newOrder = null;
+                $newOrderDetails = [];
+            }
 
             if ($newOrder) {
-                $newOrderData = $this->ordersLogic->generateOrderJSON($newOrder);
-                $newOrderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-                    ->findBy(['idOrder' => $newOrderId]);
+            $newOrderData = $this->ordersLogic->generateOrderJSON($newOrder);
 
-                foreach ($newOrderDetails as $newDetail) {
-                    $newOrderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($newDetail, $newOrder->getOrigin());
+            foreach ($newOrderDetails as $newDetail) {
+                $newOrderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($newDetail, $newOrder->getOrigin());
+            }
 
-                }
-
-                $orderData['returns'][] = $newOrderData;
+            $orderData['returns'][] = $newOrderData;
             }
         }
 
