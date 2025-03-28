@@ -273,17 +273,20 @@ class OrdersLogic
         return $orderDetail;
     }
 
-    public function getOrderDetailsWithOriginalId($id_order)
+    public function getOrderDetailsWithOriginalId($id_order,$origin)
     {
-        $oneYearAgo = (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->modify('-1 year');
+        if($origin == "mayret"){
+            $oneYearAgo = (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->modify('-1 year');
 
-        return $this->entityManagerInterface->createQueryBuilder()
-            ->select('od')
-            ->from(PsOrderDetail::class, 'od')
-            ->where('od.product_name LIKE :id_order')
-            ->setParameter('id_order', '%' . $id_order . '%')
-            ->getQuery()
-            ->getResult();
+            return $this->entityManagerInterface->createQueryBuilder()
+                ->select('od')
+                ->from(PsOrderDetail::class, 'od')
+                ->where('od.product_name LIKE :id_order')
+                ->setParameter('id_order', '%' . $id_order . '%')
+                ->getQuery()
+                ->getResult();
+        }
+        return null;
     }
 
     public function generateJSONOrderPayments($idOrder): array

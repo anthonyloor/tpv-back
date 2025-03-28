@@ -225,35 +225,26 @@ class OrdersController
         }
 
         // Obtener el detalle de la orden que contiene el id de la orden original en el nombre
-        $orderDetailsWithOriginalId = $this->ordersLogic->getOrderDetailsWithOriginalId($id_order);
+        $orderDetailsWithOriginalId = $this->ordersLogic->getOrderDetailsWithOriginalId($id_order,$origin);
 
-        foreach ($orderDetailsWithOriginalId as $detail) {
-            $newOrderId = $detail->getOrder()->getIdOrder();
-
-            switch ($origin) {
-            case 'fajasmaylu':
-                $newOrder = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->find($newOrderId);
-                $newOrderDetails = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
-                ->findByOrderId($newOrderId);
-                break;
-            case 'mayret':
+        if($orderDetailsWithOriginalId != null)
+        {
+            foreach ($orderDetailsWithOriginalId as $detail) {
+                $newOrderId = $detail->getOrder()->getIdOrder();
                 $newOrder = $this->entityManagerInterface->getRepository(PsOrders::class)->find($newOrderId);
-                $newOrderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-                ->findByOrderId($newOrderId);
-                break;
-            default:
-                $newOrder = null;
-                $newOrderDetails = [];
-            }
-
-            if ($newOrder) {
-            $newOrderData = $this->ordersLogic->generateOrderJSON($newOrder);
-
-            foreach ($newOrderDetails as $newDetail) {
-                $newOrderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($newDetail, $newOrder->getOrigin());
-            }
-
-            $orderData['returns'][] = $newOrderData;
+    
+                if ($newOrder) {
+                    $newOrderData = $this->ordersLogic->generateOrderJSON($newOrder);
+                    $newOrderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                        ->findByOrderId($newOrderId);
+    
+                    foreach ($newOrderDetails as $newDetail) {
+                        $newOrderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($newDetail, $newOrder->getOrigin());
+    
+                    }
+    
+                    $orderData['returns'][] = $newOrderData;
+                }
             }
         }
 
