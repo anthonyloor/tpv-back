@@ -2,6 +2,7 @@
 
 namespace App\Logic;
 
+use App\Utils\Constants\Entity\PsOrderFields;
 use Doctrine\ORM\EntityManagerInterface;
 
 use App\Entity\PsOrders;
@@ -14,6 +15,11 @@ use App\Entity\PsOrderPayment;
 use App\Entity\PsOrderState;
 use App\Entity\PsCustomer;
 use App\Entity\PsAddress;
+use App\Entity\PsOrderCartRule;
+
+use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
+use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
+use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
 
 use App\EntityFajasMaylu\PsStockAvailable as PsStockAvailableFajasMaylu;
 use Doctrine\Persistence\ManagerRegistry;
@@ -183,22 +189,22 @@ class OrdersLogic
         $customer = $order->getCustomer()->getIdCustomer() == 0 ? null : $order->getCustomer();
         $addressDelivery = $order->getAddressDelivery()->getIdAddress() == 0 ? null : $order->getAddressDelivery();
         $orderData = [
-            'id_order' => $order->getIdOrder(),
-            'id_shop' => $order->getIdShop(),
+            PsOrderFields::ID_ORDER => $order->getIdOrder(),
+            PsOrderFields::ID_SHOP => $order->getIdShop(),
             'id_customer' => $customer?->getIdCustomer(),
             'customer_name' => $customer?->getFirstname() . ' ' . $customer?->getLastname(),
             'id_employee' => $posOrder?->getIdEmployee(),
             'id_address_delivery' => $addressDelivery?->getIdAddress(),
             'address_delivery_name' => $addressDelivery?->getAddress1(),
-            'payment' => $order->getPayment(),
-            'total_paid' => $order->getTotalPaid(),
-            'total_paid_tax_excl' => $order->getTotalPaidTaxExcl(),
-            'total_products' => $order->getTotalProducts(),
-            'total_shipping' => $order->getTotalShipping(),
-            'current_state' => $order->getCurrentState()->getIdOrderState(),
+            PsOrderFields::PAYMENT => $order->getPayment(),
+            PsOrderFields::TOTAL_PAID => $order->getTotalPaid(),
+            PsOrderFields::TOTAL_PAID_TAX_EXCL => $order->getTotalPaidTaxExcl(),
+            PsOrderFields::TOTAL_PRODUCTS => $order->getTotalProducts(),
+            PsOrderFields::TOTAL_SHIPPING => $order->getTotalShipping(),
+            PsOrderFields::CURRENT_STATE => $order->getCurrentState()->getIdOrderState(),
             'current_state_name' => $order->getCurrentStateName(),
-            'valid' => $order->getValid(),
-            'date_add' => $order->getDateAdd()->format('Y-m-d H:i:s'),
+            PsOrderFields::VALID => $order->getValid(),
+            PsOrderFields::DATE_ADD => $order->getDateAdd()->format('Y-m-d H:i:s'),
             'origin' => $order->getOrigin(),
             'order_details' => []
         ];
@@ -344,5 +350,56 @@ class OrdersLogic
                 $this->createOrderPayment($psOrder, $method, $amount);
             }
         }
+    }
+
+    public function getOrderbyIdAndOrigin($origin, $id_order)
+    {
+        $order = null;
+        switch ($origin) {
+            case 'fajasmaylu':
+                $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($id_order);
+                break;
+            case 'mayret':
+                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
+                break;
+        }
+        return $order;
+    }
+    public function getOrderDetailsByOrderIdAndOrigin($origin, $id_order)
+    {
+        $orderDetails = null;
+        switch ($origin) {
+            case 'fajasmaylu':
+                // Obtener los detalles de la orden
+                $orderDetails = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
+                ->findByOrderId($id_order);
+                break;
+            case 'mayret':
+                // Obtener los detalles de la orden
+                $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                ->findByOrderId($id_order);
+        }
+        return $orderDetails;
+    }
+
+    public function getOrdersByShopAndOrigin($data):array
+    {
+        $orders = null;
+        switch ($data['origin']) {
+            case 'fajasmaylu':
+                $orders = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findOrdersByShop($data['id_shop']);
+                break;
+            case 'mayret':
+                $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
+                break;
+            case 'all':
+                $ordersMaylu = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findOrdersByShop($data['id_shop']);
+                $ordersMayret = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
+                $orders = array_merge($ordersMayret, $ordersMaylu);
+                break;
+            default:
+                $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
+        }
+        return $orders;
     }
 }

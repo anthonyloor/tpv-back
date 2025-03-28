@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
+use App\Utils\Constants\HttpMessages;
 use App\Entity\LpConfigTpv;
 use App\Entity\LpPin;
 
@@ -65,7 +66,7 @@ class ConfigTPVController
             $data['id_address_delivery_default']
         )
         ) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         $newTPVConfig = $this->entityManagerInterface->getRepository(LpConfigTpv::class)

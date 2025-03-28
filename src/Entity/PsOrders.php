@@ -3,6 +3,7 @@
 namespace App\Entity;
 use App\Repository\PsOrdersRepository;
 use App\Entity\PsOrderState;
+use App\Utils\Constants\Entity\PsOrderFields;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;

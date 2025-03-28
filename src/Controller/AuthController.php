@@ -10,8 +10,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
-use Doctrine\ORM\EntityManagerInterface; // Asegúrate de que esta clase está importada
 use Doctrine\Persistence\ManagerRegistry;
+
+use App\Utils\Constants\HttpMessages;
 
 
 class AuthController extends AbstractController
@@ -33,14 +34,14 @@ class AuthController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['id_employee']) || !isset($data['password'])) {
-            return new JsonResponse(['error' => 'Invalid input'], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['error' => HttpMessages::INVALID_INPUT], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         // Cambiar 'email' a 'passwd' si es necesario
         $user = $this->entityManagerInterface->getRepository(PsEmployee::class)->findOneBy(['id_employee' => $data['id_employee']]);
 
         if (!$user || !$this->passwordHasher->isPasswordValid($user, $data['password'])) {
-            throw new AuthenticationException(message: 'Invalid credentials.');
+            throw new AuthenticationException(message: HttpMessages::INVALID_CREDENTIALS);
         }
 
         // Generar el token JWT

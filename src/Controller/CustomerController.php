@@ -16,6 +16,9 @@ use App\Entity\PsGroup;
 use App\Entity\PsGroupLang;
 use App\Logic\CustomerLogic;
 
+use App\Utils\Constants\HttpMessages;
+use App\Utils\Constants\DatabaseManagers;
+
 
 class CustomerController
 {
@@ -24,8 +27,8 @@ class CustomerController
     private $customerLogic;
     public function __construct(ManagerRegistry $doctrine, CustomerLogic $customerLogic)
     {
-        $this->entityManagerInterface = $doctrine->getManager('default');
-        $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
+        $this->entityManagerInterface = $doctrine->getManager(DatabaseManagers::MAYRET_MANAGER);
+        $this->emFajasMaylu = $doctrine->getManager(DatabaseManagers::FAJASMAYLU_MANAGER);
         $this->customerLogic = $customerLogic;
     }
 
@@ -35,7 +38,7 @@ class CustomerController
         $data = json_decode($request->getContent(), true);
     
         if (!isset($data['origin'])) {
-            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
+            return new Response(HttpMessages::INVALID_INPUT, Response::HTTP_BAD_REQUEST);
         }
     
         $customers = [];
@@ -88,7 +91,7 @@ class CustomerController
                     break;
             }
         } else {
-            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
+            return new Response(HttpMessages::INVALID_INPUT, Response::HTTP_BAD_REQUEST);
         }
     
         if (empty($customers)) {
@@ -126,7 +129,7 @@ class CustomerController
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['id_customer'], $data['origin'])) {
-            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
+            return new Response(HttpMessages::INVALID_INPUT, Response::HTTP_BAD_REQUEST);
         }
 
         switch ($data['origin']) {
@@ -183,7 +186,7 @@ class CustomerController
         $data = json_decode($request->getContent(), true);
 
         if (empty($data['firstname']) || empty($data['lastname'])) {
-            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
+            return new Response(HttpMessages::INVALID_INPUT, Response::HTTP_BAD_REQUEST);
         }
 
         $customer = $this->customerLogic->createCustomer($data);
@@ -237,7 +240,7 @@ class CustomerController
         $data = json_decode($request->getContent(), true);
 
         if (empty($data['id_address']) || empty($data['id_customer']) || empty($data['id_country']) || empty($data['id_state']) || empty($data['alias']) || empty($data['lastname']) || empty($data['firstname']) || empty($data['address1']) || empty($data['postcode']) || empty($data['city'])) {
-            return new Response('Invalid input', Response::HTTP_BAD_REQUEST);
+            return new Response(HttpMessages::INVALID_INPUT, Response::HTTP_BAD_REQUEST);
         }
 
         $address = $this->entityManagerInterface->getRepository(PsAddress::class)->find($data['id_address']);
