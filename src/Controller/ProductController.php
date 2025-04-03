@@ -2,7 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\PsCategoryProduct;
 use App\Entity\PsProduct;
+use App\Entity\PsSpecificPriceRule;
+use App\Entity\PsSpecificPriceRuleCondition;
+use App\Entity\PsSpecificPriceRuleConditionGroup;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -40,9 +44,31 @@ class ProductController extends AbstractController
 
   //TODO: Revisar precios para las tallas grandes
   #[Route('/product_search', name: 'product_search')]
-  public function productSearch(): Response
+  public function productSearch(Request $request): Response
   {
-    $b = $_GET['b'];
+    $data = json_decode($request->getContent(), true);
+    $b = $data['search_term'];
+    //SE SACA EL DEFAULT GROUP DEL PARAMETRO, SE RELACIONA CON PS_SPECIFIC_PRICE_RULE PARA RECOGER
+    //NOMBRE, CANTIDAD DE REUDCION Y TIPO DE REDUCCION
+    //ENLZAMOS CON PS_SPECIFIC_PRICE_RULE_CONDITION_GROUP CON ID_SPECIFIC_PRICE_RULE Y RECOGEMOS EL ID_SPECIFIC_PRICE_RULE_CONDITION
+    //ENLZAMOS CON PS_SPECIFIC_PRICE_RULE_CONDITION CON ID_SPECIFIC_PRICE_RULE_CONDITION_GROUP PARA RECOGER TIPO Y CATEGORIA
+
+    $specificPriceRule = $this->entityManagerInterface->getRepository(PsSpecificPriceRule::class)->findOneBy(['id_group' => $data['id_default_group']]);
+    $nombreDescuento = $specificPriceRule->getName();
+    $reduction = $specificPriceRule->getReduction();
+    $reductionType = $specificPriceRule->getReductionType();
+
+    $specificPriceRuleConditionGroup = $this->entityManagerInterface->getRepository(PsSpecificPriceRuleConditionGroup::class)->findOneBy(['id_specific_price_rule' => $specificPriceRule->getIdSpecificPriceRule()]);
+    $specificPriceRuleCondition = $this->entityManagerInterface->getRepository(PsSpecificPriceRuleCondition::class)->findOneBy(['id_specific_price_rule_condition_group' => $specificPriceRuleConditionGroup->getIdSpecificPriceRuleConditionGroup()]);
+    $category = $specificPriceRuleCondition->getValue();
+    $type = $specificPriceRuleCondition->getType();
+
+    // dump("Categoria: ".$category);
+    // dump("Tipo: ".$type);
+    // dump("Nombre Descuento: ".$nombreDescuento);
+    // dump("Tipo de Descuento: ".$reductionType);
+    // dump("Valor Descuento: ".$reduction);
+    // dump("ID Grupo: ".$data['id_default_group']);
 
     $qb = $this->entityManagerInterface->createQueryBuilder();
 
@@ -55,6 +81,7 @@ class ProductController extends AbstractController
     GROUP_CONCAT(DISTINCT al.name ORDER BY al.idAttribute SEPARATOR ' - ') AS combination_name,
     p.reference AS reference_combination,
     cl.name AS name_category,
+    cl.id_category AS id_category,
     pa.ean13 AS ean13_combination,
     NULLIF(p.ean13, :empty) AS ean13_combination_0,
     sa.price AS price,
@@ -83,6 +110,17 @@ class ProductController extends AbstractController
     $resultado = $qb->getQuery()->getResult();
 
     foreach ($resultado as &$row) {
+      $categories = $this->entityManagerInterface->getRepository(PsCategoryProduct::class)->findBy(['id_product' => $row['id_product']]);
+      foreach ($categories as $cat) {
+        //dump($cat->getIdCategory()->getIdCategory());
+        if ($cat->getIdCategory()->getIdCategory() == $category) {
+          if ($reductionType === 'percentage') {
+        $row['price'] = (float) number_format((float) $row['price'] * (1 - ($reduction / 100)), 2, '.', '');
+          } elseif ($reductionType === 'amount') {
+        $row['price'] = (float) number_format((float) $row['price'] - $reduction, 2, '.', '');
+        }
+      }
+      }
       $row['price'] = (float) number_format((float) $row['price'] * 1.21, 2, '.', '');
     }
 

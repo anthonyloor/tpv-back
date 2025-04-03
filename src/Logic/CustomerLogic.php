@@ -105,6 +105,7 @@ class CustomerLogic
                 'email' => $customer->getEmail(),
                 'phone' => $finalPhone,
                 'date_add' => $customer->getDateAdd()->format('Y-m-d H:i:s'),
+                'id_default_group' => $customer->getIdDefaultGroup(),
                 'origin' => $customer->getOrigin(),
             ];
         }
