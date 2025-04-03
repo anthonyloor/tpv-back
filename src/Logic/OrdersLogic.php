@@ -158,26 +158,27 @@ class OrdersLogic
         }
     }
 
-    public function generatePosOrder($data, $psOrder): LpPosOrders
+    public function generatePosOrder($id_shop, $license, $id_employee, $total_paid, $total_cash, $total_card, $total_bizum, $id_order): LpPosOrders
     {
-        $license_param = $data['license'];
+        $license_param = $license;
         $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
             ->findOneActiveByLicense($license_param);
 
         $newPosOrder = new LpPosOrders();
 
-        $newPosOrder->setIdOrder($psOrder->getIdOrder());
+        $newPosOrder->setIdOrder($id_order);
         $newPosOrder->setIdPosSession($pos_session->getIdPosSessions());
-        $newPosOrder->setIdShop($data['id_shop']);
-        $newPosOrder->setLicense($data['license']);
-        $newPosOrder->setIdEmployee($data['id_employee']);
-        $newPosOrder->setTotalAmount($data['total_paid']);
-        $newPosOrder->setTotalCash($data['total_cash']);
-        $newPosOrder->setTotalCard($data['total_card']);
-        $newPosOrder->setTotalBizum($data['total_bizum']);
+        $newPosOrder->setIdShop($id_shop);
+        $newPosOrder->setLicense($license);
+        $newPosOrder->setIdEmployee($id_employee);
+        $newPosOrder->setTotalAmount($total_paid);
+        $newPosOrder->setTotalCash($total_cash);
+        $newPosOrder->setTotalCard($total_card);
+        $newPosOrder->setTotalBizum($total_bizum);
 
         $newPosOrder->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
-
+        $this->entityManagerInterface->persist($newPosOrder); 
+        $this->entityManagerInterface->flush(); 
         return $newPosOrder;
     }
 
@@ -273,17 +274,20 @@ class OrdersLogic
         return $orderDetail;
     }
 
-    public function getOrderDetailsWithOriginalId($id_order)
+    public function getOrderDetailsWithOriginalId($id_order,$origin)
     {
-        $oneYearAgo = (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->modify('-1 year');
+        if($origin == "mayret"){
+            $oneYearAgo = (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->modify('-1 year');
 
-        return $this->entityManagerInterface->createQueryBuilder()
-            ->select('od')
-            ->from(PsOrderDetail::class, 'od')
-            ->where('od.product_name LIKE :id_order')
-            ->setParameter('id_order', '%' . $id_order . '%')
-            ->getQuery()
-            ->getResult();
+            return $this->entityManagerInterface->createQueryBuilder()
+                ->select('od')
+                ->from(PsOrderDetail::class, 'od')
+                ->where('od.product_name LIKE :id_order')
+                ->setParameter('id_order', '%' . $id_order . '%')
+                ->getQuery()
+                ->getResult();
+        }
+        return null;
     }
 
     public function generateJSONOrderPayments($idOrder): array
