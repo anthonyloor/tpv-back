@@ -54,14 +54,18 @@ class ProductController extends AbstractController
     //ENLZAMOS CON PS_SPECIFIC_PRICE_RULE_CONDITION CON ID_SPECIFIC_PRICE_RULE_CONDITION_GROUP PARA RECOGER TIPO Y CATEGORIA
 
     $specificPriceRule = $this->entityManagerInterface->getRepository(PsSpecificPriceRule::class)->findOneBy(['id_group' => $data['id_default_group']]);
-    $nombreDescuento = $specificPriceRule->getName();
-    $reduction = $specificPriceRule->getReduction();
-    $reductionType = $specificPriceRule->getReductionType();
+    
+    if($specificPriceRule) {
+      $nombreDescuento = $specificPriceRule->getName();
+      $reduction = $specificPriceRule->getReduction();
+      $reductionType = $specificPriceRule->getReductionType();
+  
+      $specificPriceRuleConditionGroup = $this->entityManagerInterface->getRepository(PsSpecificPriceRuleConditionGroup::class)->findOneBy(['id_specific_price_rule' => $specificPriceRule->getIdSpecificPriceRule()]);
+      $specificPriceRuleCondition = $this->entityManagerInterface->getRepository(PsSpecificPriceRuleCondition::class)->findOneBy(['id_specific_price_rule_condition_group' => $specificPriceRuleConditionGroup->getIdSpecificPriceRuleConditionGroup()]);
+      $category = $specificPriceRuleCondition->getValue();
+      $type = $specificPriceRuleCondition->getType();
+    }
 
-    $specificPriceRuleConditionGroup = $this->entityManagerInterface->getRepository(PsSpecificPriceRuleConditionGroup::class)->findOneBy(['id_specific_price_rule' => $specificPriceRule->getIdSpecificPriceRule()]);
-    $specificPriceRuleCondition = $this->entityManagerInterface->getRepository(PsSpecificPriceRuleCondition::class)->findOneBy(['id_specific_price_rule_condition_group' => $specificPriceRuleConditionGroup->getIdSpecificPriceRuleConditionGroup()]);
-    $category = $specificPriceRuleCondition->getValue();
-    $type = $specificPriceRuleCondition->getType();
 
     // dump("Categoria: ".$category);
     // dump("Tipo: ".$type);
@@ -87,7 +91,8 @@ class ProductController extends AbstractController
     sa.price AS price,
     sav.quantity AS quantity,
     shop.name AS shop_name,
-    pl.linkRewrite AS link_rewrite
+    pl.linkRewrite AS link_rewrite,
+    pa.price AS impact_price
 	")
       ->from(PsStockAvailable::class, 'sav')
       ->innerJoin('sav.id_product', 'p')
@@ -110,16 +115,22 @@ class ProductController extends AbstractController
     $resultado = $qb->getQuery()->getResult();
 
     foreach ($resultado as &$row) {
-      $categories = $this->entityManagerInterface->getRepository(PsCategoryProduct::class)->findBy(['id_product' => $row['id_product']]);
-      foreach ($categories as $cat) {
-        //dump($cat->getIdCategory()->getIdCategory());
-        if ($cat->getIdCategory()->getIdCategory() == $category) {
-          if ($reductionType === 'percentage') {
-        $row['price'] = (float) number_format((float) $row['price'] * (1 - ($reduction / 100)), 2, '.', '');
-          } elseif ($reductionType === 'amount') {
-        $row['price'] = (float) number_format((float) $row['price'] - $reduction, 2, '.', '');
+      if($specificPriceRule){
+        $categories = $this->entityManagerInterface->getRepository(PsCategoryProduct::class)->findBy(['id_product' => $row['id_product']]);
+        foreach ($categories as $cat) {
+          //dump($cat->getIdCategory()->getIdCategory());
+          if ($cat->getIdCategory()->getIdCategory() == $category) {
+            if ($reductionType === 'percentage') {
+          $row['price'] = (float) number_format((float) $row['price'] * (1 - ($reduction / 100)), 2, '.', '');
+            } elseif ($reductionType === 'amount') {
+          $row['price'] = (float) number_format((float) $row['price'] - $reduction, 2, '.', '');
+          }
         }
       }
+
+      }
+      if (isset($row['impact_price']) && $row['impact_price'] !== null) {
+        $row['price'] += (float) $row['impact_price'];
       }
       $row['price'] = (float) number_format((float) $row['price'] * 1.21, 2, '.', '');
     }
