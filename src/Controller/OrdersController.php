@@ -82,9 +82,9 @@ class OrdersController
         $this->entityManagerInterface->persist($newPsOrder);
         $this->entityManagerInterface->flush();
 
-        $newPosOrder = $this->ordersLogic->generatePosOrder($data, $newPsOrder);
-        $this->entityManagerInterface->persist($newPosOrder);
-        $this->entityManagerInterface->flush();
+        $newPosOrder = $this->ordersLogic->generatePosOrder(
+            $data['id_shop'],$data['license'],$data['id_employee'], $data['total_paid'],$data['total_cash'],
+            $data['total_card'],$data['total_bizum'], $newPsOrder->getIdOrder());
 
         $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
             ->findOneActiveByLicense($data['license']);
@@ -283,6 +283,7 @@ class OrdersController
         return new JsonResponse($responseData, Response::HTTP_OK);
     }
 
+    //TODO: Reformular endpoint para añadir reporte de ventas por tienda
     #[Route('/get_sale_report_orders', name: 'get_sale_report_orders', methods: ['POST'])]
     public function getSaleReportOrders(Request $request): Response
     {
@@ -318,6 +319,7 @@ class OrdersController
 
     }
 
+    //TODO: Añadir venta a la tabla LpPosOrders
     #[Route('/update_online_orders', name: 'update_online_orders', methods: ['POST'])]
     public function updateOnlineOrders(Request $request): Response
     {
@@ -325,6 +327,10 @@ class OrdersController
         if (!isset($data['id_order'], $data['status'], $data['origin'])) {
             return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], Response::HTTP_BAD_REQUEST);
         }
+
+        $newPosOrder = $this->ordersLogic->generatePosOrder(
+            $data['id_shop'],$data['license'],$data['id_employee'], $data['total_paid'],$data['total_cash'],
+            $data['total_card'],$data['total_bizum'], $data['id_order']);
 
         foreach ($data['shops'] as $shop) {
             $dataMovement = [
@@ -369,7 +375,7 @@ class OrdersController
                 $this->entityManagerInterface->persist($order);
         }
         $this->entityManagerInterface->flush();
-        $this->entityManagerInterface->flush();
+        $this->emFajasMaylu->flush();
 
         return new JsonResponse(['status' => 'OK', 'message' => HttpMessages::ORDER_UPDATED . $data['id_order']]);
     }

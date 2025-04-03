@@ -38,6 +38,7 @@ class ProductController extends AbstractController
     $this->controlStockLogic = $controlStockLogic;
   }
 
+  //TODO: Revisar precios para las tallas grandes
   #[Route('/product_search', name: 'product_search')]
   public function productSearch(): Response
   {
