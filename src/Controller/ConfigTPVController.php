@@ -103,7 +103,7 @@ class ConfigTPVController
         return new JsonResponse(['status' => 'success', 'message' => 'TPV Config updated successfully'], JsonResponse::HTTP_OK);
     }
 
-    #[Route('/get_pin', name: 'get_pin', methods: ['GET'])]
+    #[Route('/get_pin', name: 'get_pin', methods: ['POST'])]
     public function getPin(Request $request):Response
     {
         $data = json_decode($request->getContent(), true);
@@ -143,7 +143,7 @@ class ConfigTPVController
         return new JsonResponse($pinJSON);
     }
 
-    #[Route('/check_pin', name: 'check_pin', methods: ['GET'])]
+    #[Route('/check_pin', name: 'check_pin', methods: ['POST'])]
     public function checkPin(Request $request):Response
     {
         $data = json_decode($request->getContent(), true);
