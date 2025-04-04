@@ -386,6 +386,11 @@ class OrdersLogic
                 // Obtener los detalles de la orden
                 $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
                 ->findByOrderId($id_order);
+            default:
+                // Obtener los detalles de la orden
+                $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                ->findByOrderId($id_order);
+                break;
         }
         return $orderDetails;
     }
