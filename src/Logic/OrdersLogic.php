@@ -158,7 +158,7 @@ class OrdersLogic
         }
     }
 
-    public function generatePosOrder($id_shop, $license, $id_employee, $total_paid, $total_cash, $total_card, $total_bizum, $id_order): LpPosOrders
+    public function generatePosOrder($id_shop, $license, $id_employee, $total_paid, $total_cash, $total_card, $total_bizum, $id_order, string $origin = "mayret"): LpPosOrders
     {
         $license_param = $license;
         $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
@@ -175,6 +175,7 @@ class OrdersLogic
         $newPosOrder->setTotalCash($total_cash);
         $newPosOrder->setTotalCard($total_card);
         $newPosOrder->setTotalBizum($total_bizum);
+        $newPosOrder->setOrigin($origin);
 
         $newPosOrder->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $this->entityManagerInterface->persist($newPosOrder); 
