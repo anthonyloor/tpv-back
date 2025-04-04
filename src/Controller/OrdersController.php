@@ -288,7 +288,7 @@ class OrdersController
     public function getSaleReportOrders(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
-        if (!isset($data['license'], $data['date2'])) {
+        if (!isset($data['license'], $data['date2'], $data['origin'])) {
             return new JsonResponse(
                 ['status' => 'error', 'message' => 'Invalid data provided']
             );
@@ -304,10 +304,9 @@ class OrdersController
             ->getAllByLicenseAndDate($data['license'], $data['date1'], $data['date2']);
         $responseData = [];
         foreach ($posOrders as $posOrder) {
-            $order = $this->entityManagerInterface->getRepository(PsOrders::class)->find($posOrder->getIdOrder());
+            $order = $this->ordersLogic->getOrderByIdAndOrigin($data['origin'], $posOrder->getIdOrder());
             $orderData = $this->ordersLogic->generateSaleReportOrderJSON($order, $posOrder);
-            $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-                ->findBy(['idOrder' => $order->getIdOrder()]);
+            $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($data['origin'], $posOrder->getIdOrder());
 
             foreach ($orderDetails as $detail) {
                 $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
