@@ -288,7 +288,7 @@ class OrdersController
     public function getSaleReportOrders(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
-        if (!isset($data['license'], $data['date2'])) {
+        if (!isset($data['licenses'], $data['date2'])) {
             return new JsonResponse(
                 ['status' => 'error', 'message' => 'Invalid data provided']
             );
