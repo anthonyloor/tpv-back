@@ -283,7 +283,6 @@ class OrdersController
         return new JsonResponse($responseData, Response::HTTP_OK);
     }
 
-    //TODO: Reformular endpoint para añadir reporte de ventas por tienda
     #[Route('/get_sale_report_orders', name: 'get_sale_report_orders', methods: ['POST'])]
     public function getSaleReportOrders(Request $request): Response
     {
@@ -294,16 +293,17 @@ class OrdersController
             );
         }
 
-        if ($data['date1'] == null) {
-            $posSessions = $this->entityManagerInterface->getRepository(LpPosSessions::class)
-                ->findOneActiveByLicense($data['license']);
-            $data['date1'] = $posSessions->getDateAdd()->format('Y-m-d');
-        }
-
-        $posOrders = $this->entityManagerInterface->getRepository(LpPosOrders::class)
-            ->getAllByLicenseAndDate($data['license'], $data['date1'], $data['date2']);
         $responseData = [];
-        foreach ($posOrders as $posOrder) {
+        foreach ($data['licenses'] as $license) {
+            if ($data['date1'] == null) {
+            $posSessions = $this->entityManagerInterface->getRepository(LpPosSessions::class)
+                ->findOneActiveByLicense($license);
+            $data['date1'] = $posSessions->getDateAdd()->format('Y-m-d');
+            }
+
+            $posOrders = $this->entityManagerInterface->getRepository(LpPosOrders::class)
+            ->getAllByLicenseAndDate($license, $data['date1'], $data['date2']);
+            foreach ($posOrders as $posOrder) {
             $order = $this->ordersLogic->getOrderByIdAndOrigin($posOrder->getOrigin(), $posOrder->getIdOrder());
             $orderData = $this->ordersLogic->generateSaleReportOrderJSON($order, $posOrder);
             $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($posOrder->getOrigin(), $posOrder->getIdOrder());
@@ -312,6 +312,7 @@ class OrdersController
                 $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
             }
             $responseData[] = $orderData;
+            }
         }
 
         return new JsonResponse($responseData, Response::HTTP_OK);
