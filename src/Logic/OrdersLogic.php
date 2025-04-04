@@ -367,6 +367,9 @@ class OrdersLogic
             case 'mayret':
                 $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
                 break;
+            default:
+                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
+                break;
         }
         return $order;
     }
