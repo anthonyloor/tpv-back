@@ -42,7 +42,8 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "src/"
+            "App\\": "src/",
+            "App\\Redsys\\": "src/Redsys/"
         }
     },
     "autoload-dev": {
