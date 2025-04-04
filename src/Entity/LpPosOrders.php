@@ -43,6 +43,20 @@ class LpPosOrders{
     #[ORM\Column(type: "datetime", nullable: true)]
     private ?\DateTimeInterface $date_add = null;
 
+    #[ORM\Column(type: "string", length: 36)]
+    private ?string $origin = null;
+
+    public function getOrigin(): ?string
+    {
+        return $this->origin;
+    }
+
+    public function setOrigin(?string $origin): self
+    {
+        $this->origin = $origin;
+        return $this;
+    }
+
     public function getIdOrder(): ?int
     {
         return $this->id_order;
