@@ -9,10 +9,6 @@ services:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         public: false       # Default to false to enforce encapsulation
-    App\Redsys\RedsysService:
-        arguments:
-            $merchantCode: 'your_actual_merchant_code'
-            $merchantKey: 'your_actual_merchant_key'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
