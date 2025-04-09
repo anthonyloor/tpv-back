@@ -210,7 +210,7 @@ class CartRuleLogic
     {
         // Procesar los cart rules de la orden
         foreach ($orderCartRules as $orderCartRule) {
-            $cartRule = $this->getCartRuleByIdAndOrigin($orderCartRule->getIdCartRule(), $origin);
+            $cartRule = $this->getCartRuleByIdAndOrigin($orderCartRule, $origin);
             if ($cartRule) {
                 $cartRuleLang = $this->getCartRuleLangByCartRuleIdAndOrigin($cartRule, $origin);
                 $orderData['order_cart_rules'][] = [
