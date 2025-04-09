@@ -264,9 +264,13 @@ class OrdersController
                 $order = $this->ordersLogic->getOrderByIdAndOrigin($posOrder->getOrigin(), $posOrder->getIdOrder());
                 $orderData = $this->ordersLogic->generateSaleReportOrderJSON($order, $posOrder);
                 $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($posOrder->getOrigin(), $posOrder->getIdOrder());
-                
+
                 $orderCartRules = $this->cartRuleLogic->getCartRulesByOrderIdAndOrigin($posOrder->getIdOrder(), $posOrder->getOrigin());
-                $orderData = $this->cartRuleLogic->generateCartRulesJSON($orderCartRules, $orderData, $posOrder->getOrigin());
+                if($orderCartRules != null)
+                {
+                    $orderData = $this->cartRuleLogic->generateCartRulesJSON($orderCartRules, $orderData, $posOrder->getOrigin());
+                }
+
 
                 foreach ($orderDetails as $detail) {
                     $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
