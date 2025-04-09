@@ -121,6 +121,7 @@ class OrdersController
                 $cart_rule->setQuantity($cart_rule->getQuantity() - 1);
                 $cart_rule->setActive(false);
                 $this->entityManagerInterface->persist($cart_rule);
+                $this->cartRuleLogic->generateOrderCartRule($newPsOrder, $cart_rule, $discount);
                 $this->entityManagerInterface->flush();
 
                 $remainingAmount = $cart_rule->getReductionAmount() - $discount['amount'];
