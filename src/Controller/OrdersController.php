@@ -174,39 +174,7 @@ class OrdersController
         }
         // Construir la respuesta con la información de la orden
         $orderData = $this->ordersLogic->generateOrderJSON($order);
-
-        // Procesar los cart rules de la orden
-        foreach ($orderCartRules as $orderCartRule) {
-            switch ($origin) {
-                case 'fajasmaylu':
-                    $cartRule = $this->emFajasMaylu->getRepository(PsCartRuleFajasMaylu::class)
-                        ->find($orderCartRule->getIdCartRule());
-                    break;
-                case 'mayret':
-                    $cartRule = $this->entityManagerInterface->getRepository(PsCartRule::class)
-                        ->find($orderCartRule->getIdCartRule());
-                    break;
-            }
-            if ($cartRule) {
-                switch ($origin) {
-                    case 'fajasmaylu':
-                        $cartRuleLang = $this->emFajasMaylu->getRepository(PsCartRuleLang::class)
-                            ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
-                        break;
-                    case 'mayret':
-                        $cartRuleLang = $this->entityManagerInterface->getRepository(PsCartRuleLangFajasMaylu::class)
-                            ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
-                        break;
-                }
-                $orderData['order_cart_rules'][] = [
-                    'code' => $cartRule->getCode(),
-                    'name' => $cartRuleLang ? $cartRuleLang->getName() : $orderCartRule->getName(),
-                    'value' => $orderCartRule->getValue(),
-                    'description' => $cartRule ? $cartRule->getDescription() : $cartRule->getDescription(),
-                ];
-            }
-        }
-
+        $orderData = $this->cartRuleLogic->generateCartRulesJSON($orderCartRules, $orderData, $origin);
 
         // Procesar los detalles de la orden
         foreach ($orderDetails as $detail) {
@@ -293,14 +261,17 @@ class OrdersController
             $posOrders = $this->entityManagerInterface->getRepository(LpPosOrders::class)
             ->getAllByLicenseAndDate($license, $data['date1'], $data['date2']);
             foreach ($posOrders as $posOrder) {
-            $order = $this->ordersLogic->getOrderByIdAndOrigin($posOrder->getOrigin(), $posOrder->getIdOrder());
-            $orderData = $this->ordersLogic->generateSaleReportOrderJSON($order, $posOrder);
-            $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($posOrder->getOrigin(), $posOrder->getIdOrder());
+                $order = $this->ordersLogic->getOrderByIdAndOrigin($posOrder->getOrigin(), $posOrder->getIdOrder());
+                $orderData = $this->ordersLogic->generateSaleReportOrderJSON($order, $posOrder);
+                $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($posOrder->getOrigin(), $posOrder->getIdOrder());
+                
+                $orderCartRules = $this->cartRuleLogic->getCartRulesByOrderIdAndOrigin($posOrder->getIdOrder(), $posOrder->getOrigin());
+                $orderData = $this->cartRuleLogic->generateCartRulesJSON($orderCartRules, $orderData, $posOrder->getOrigin());
 
-            foreach ($orderDetails as $detail) {
-                $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
-            }
-            $responseData[] = $orderData;
+                foreach ($orderDetails as $detail) {
+                    $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
+                }
+                $responseData[] = $orderData;
             }
         }
 

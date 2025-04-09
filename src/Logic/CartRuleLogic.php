@@ -2,14 +2,14 @@
 
 namespace App\Logic;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 use App\Entity\PsCartRuleLang;
 use App\Entity\PsCartRule;
 use App\Entity\PsOrderCartRule;
-
+use App\EntityFajasMaylu\PsCartRule as PsCartRuleFajasMaylu;
 use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
+use App\EntityFajasMaylu\PsCartRuleLang as PsCartRuleLangFajasMaylu;
 
 class CartRuleLogic
 {
@@ -172,5 +172,55 @@ class CartRuleLogic
                 break;
         }
         return $orderCartRules;
+    }
+
+    public function getCartRuleByIdAndOrigin($orderCartRule,$origin)
+    {
+        $cartRule = null;
+        switch ($origin) {
+            case 'fajasmaylu':
+                $cartRule = $this->emFajasMaylu->getRepository(PsCartRuleFajasMaylu::class)
+                    ->find($orderCartRule->getIdCartRule());
+                break;
+            case 'mayret':
+                $cartRule = $this->entityManagerInterface->getRepository(PsCartRule::class)
+                    ->find($orderCartRule->getIdCartRule());
+                break;
+        }
+        return $cartRule;
+    }
+
+    public function getCartRuleLangByCartRuleIdAndOrigin($cartRule, $origin)
+    {
+        $cartRuleLang = null;
+        switch ($origin) {
+            case 'fajasmaylu':
+                $cartRuleLang = $this->emFajasMaylu->getRepository(PsCartRuleLang::class)
+                    ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
+                break;
+            case 'mayret':
+                $cartRuleLang = $this->entityManagerInterface->getRepository(PsCartRuleLangFajasMaylu::class)
+                    ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
+                break;
+        }
+        return $cartRuleLang;
+    }
+
+    public function generateCartRulesJSON($orderData, $orderCartRules, $origin)
+    {
+        // Procesar los cart rules de la orden
+        foreach ($orderCartRules as $orderCartRule) {
+            $cartRule = $this->getCartRuleByIdAndOrigin($orderCartRule->getIdCartRule(), $origin);
+            if ($cartRule) {
+                $cartRuleLang = $this->getCartRuleLangByCartRuleIdAndOrigin($cartRule, $origin);
+                $orderData['order_cart_rules'][] = [
+                    'code' => $cartRule->getCode(),
+                    'name' => $cartRuleLang ? $cartRuleLang->getName() : $orderCartRule->getName(),
+                    'value' => $orderCartRule->getValue(),
+                    'description' => $cartRule ? $cartRule->getDescription() : $cartRule->getDescription(),
+                ];
+            }
+        }
+        return $orderData;
     }
 }
