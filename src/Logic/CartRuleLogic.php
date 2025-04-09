@@ -145,7 +145,7 @@ class CartRuleLogic
         $orderCartRule = new PsOrderCartRule();
         $orderCartRule->setIdOrder($newPsOrder->getIdOrder());
         $orderCartRule->setIdCartRule($cart_rule->getIdCartRule());
-        $orderCartRule->setName($cart_rule->getDescription());
+        $orderCartRule->setName($cart_rule->getName());
         $orderCartRule->setValue($discount['amount']);
         $orderCartRule->setValueTaxExcl($cart_rule->getReductionAmount() / (1 + $cart_rule->getReductionTax() / 100));
         $orderCartRule->setFreeShipping(0);
@@ -180,11 +180,11 @@ class CartRuleLogic
         switch ($origin) {
             case 'fajasmaylu':
                 $cartRule = $this->emFajasMaylu->getRepository(PsCartRuleFajasMaylu::class)
-                    ->find($orderCartRule->getIdCartRule());
+                    ->findByIdCartRule($orderCartRule->getIdCartRule());
                 break;
             case 'mayret':
                 $cartRule = $this->entityManagerInterface->getRepository(PsCartRule::class)
-                    ->find($orderCartRule->getIdCartRule());
+                    ->findByIdCartRule($orderCartRule->getIdCartRule());
                 break;
         }
         return $cartRule;
