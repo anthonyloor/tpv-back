@@ -3,13 +3,13 @@
 namespace App\RepositoryFajasMaylu;
 use App\EntityFajasMaylu\PsCartRule;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 class PsCartRuleFajasMayluRepository extends ServiceEntityRepository
 {
-    private EntityManager $em;
-    public function __construct(ManagerRegistry $registry, EntityManager $em)
+    private EntityManagerInterface $em;
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $em)
     {
         $this->em = $em;
         parent::__construct($registry, PsCartRule::class);
