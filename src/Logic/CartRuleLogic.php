@@ -163,12 +163,12 @@ class CartRuleLogic
             case 'fajasmaylu':
                 // Obtener los cart rules de la orden
                 $orderCartRules = $this->emFajasMaylu->getRepository(PsOrderCartRuleFajasMaylu::class)
-                ->findBy(['id_order' => $id_order]);
+                ->findByIdOrder($id_order);
                 break;
             case 'mayret':
                 // Obtener los cart rules de la orden
                 $orderCartRules = $this->entityManagerInterface->getRepository(PsOrderCartRule::class)
-                ->findBy(['id_order' => $id_order]);
+                ->findByIdOrder($id_order);
                 break;
         }
         return $orderCartRules;

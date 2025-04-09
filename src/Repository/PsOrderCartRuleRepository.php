@@ -14,4 +14,15 @@ class PsOrderCartRuleRepository extends ServiceEntityRepository
         parent::__construct($registry, PsOrderCartRule::class);
     }
 
+    public function findByIdOrder(int $id)
+    {
+        $qb = $this->em->createQueryBuilder();
+        $qb->select('o')
+            ->from(PsOrderCartRule::class, 'o')
+            ->where('o.id_order = :id')
+            ->setParameter('id', $id);
+
+        return $qb->getQuery()->getOneOrNullResult();
+    }
+
 }
