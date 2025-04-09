@@ -86,18 +86,7 @@ class OrdersController
             $data['id_shop'],$data['license'],$data['id_employee'], $data['total_paid'],$data['total_cash'],
             $data['total_card'],$data['total_bizum'], $newPsOrder->getIdOrder());
 
-        $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
-            ->findOneActiveByLicense($data['license']);
-
-        $total_cash = $pos_session->getTotalCash() + $data['total_cash'];
-        $total_card = $pos_session->getTotalCard() + $data['total_card'];
-        $total_bizum = $pos_session->getTotalBizum() + $data['total_bizum'];
-
-        $pos_session->setTotalBizum($total_bizum);
-        $pos_session->setTotalCard($total_card);
-        $pos_session->setTotalCash($total_cash);
-        $this->entityManagerInterface->persist($pos_session);
-        $this->entityManagerInterface->flush();
+        $this->ordersLogic->updatePosSessionsTotalPayments($data);
 
         $orderHistory = $this->ordersLogic->generateOrderHistory($newPsOrder, $data['id_employee']);
         $this->ordersLogic->generateOrderPayments($newPsOrder, $data);
@@ -354,6 +343,8 @@ class OrdersController
             $lpWarehouseMovement = $this->wareHouseMovementLogic->executeWareHouseMovement($lpWarehouseMovement);
 
         }
+
+        $this->ordersLogic->updatePosSessionsTotalPayments($data);
 
         switch ($data['origin']) {
             case 'fajasmaylu':

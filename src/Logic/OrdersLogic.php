@@ -284,7 +284,7 @@ class OrdersLogic
                 ->select('od')
                 ->from(PsOrderDetail::class, 'od')
                 ->where('od.product_name LIKE :id_order')
-                ->setParameter('id_order', '%' . $id_order . '%')
+                ->setParameter('id_order', '%#' . $id_order . '%')
                 ->getQuery()
                 ->getResult();
         }
@@ -414,5 +414,21 @@ class OrdersLogic
                 $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
         }
         return $orders;
+    }
+
+    public function updatePosSessionsTotalPayments($data)
+    {
+        $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
+        ->findOneActiveByLicense($data['license']);
+
+        $total_cash = $pos_session->getTotalCash() + $data['total_cash'];
+        $total_card = $pos_session->getTotalCard() + $data['total_card'];
+        $total_bizum = $pos_session->getTotalBizum() + $data['total_bizum'];
+
+        $pos_session->setTotalBizum($total_bizum);
+        $pos_session->setTotalCard($total_card);
+        $pos_session->setTotalCash($total_cash);
+        $this->entityManagerInterface->persist($pos_session);
+        $this->entityManagerInterface->flush();
     }
 }
