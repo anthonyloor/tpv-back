@@ -156,7 +156,7 @@ class CartRuleLogic
         return $orderCartRule;
     }
 
-    public function getCartRulesByOrderIdAndOrigin($id_order, $origin): array
+    public function getCartRulesByOrderIdAndOrigin($id_order, $origin)
     {
         $orderCartRules = null;
         switch ($origin) {

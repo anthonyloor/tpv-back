@@ -174,7 +174,10 @@ class OrdersController
         }
         // Construir la respuesta con la información de la orden
         $orderData = $this->ordersLogic->generateOrderJSON($order);
-        $orderData = $this->cartRuleLogic->generateCartRulesJSON($orderCartRules, $orderData, $origin);
+        if($orderCartRules != null)
+        {
+            $orderData = $this->cartRuleLogic->generateCartRulesJSON($orderCartRules, $orderData, $id_order);
+        }
 
         // Procesar los detalles de la orden
         foreach ($orderDetails as $detail) {
