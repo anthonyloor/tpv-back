@@ -271,7 +271,7 @@ class OrdersController
                 $orderCartRules = $this->cartRuleLogic->getCartRulesByOrderIdAndOrigin($posOrder->getIdOrder(), $posOrder->getOrigin());
                 if($orderCartRules != null)
                 {
-                    $orderData = $this->cartRuleLogic->generateCartRulesJSON($orderCartRules, $orderData, $posOrder->getOrigin());
+                    $orderData = $this->cartRuleLogic->generateCartRulesJSON($orderData, $orderCartRules, $posOrder->getOrigin());
                 }
 
 
