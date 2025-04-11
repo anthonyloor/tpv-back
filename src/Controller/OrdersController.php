@@ -93,7 +93,6 @@ class OrdersController
 
         foreach ($data['order_details'] as $orderDetailData) {
             $orderDetail = $this->ordersLogic->generateOrderDetail($data, $orderDetailData, $newPsOrder);
-            $this->entityManagerInterface->persist($orderDetail);
             $this->ordersLogic->updateProductStock($orderDetailData); // Llamamos a la función de actualización de stock
             if (isset($orderDetailData['id_control_stock'])) {
                 $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($orderDetailData['id_control_stock']);

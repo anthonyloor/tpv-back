@@ -118,6 +118,8 @@ class OrdersLogic
             $orderDetail->setProductQuantityInStock(0); // Si no se encuentra, asigna 0
         }
 
+        $this->entityManagerInterface->persist($orderDetail);
+        $this->entityManagerInterface->flush(); // Guardar el detalle del pedido
         return $orderDetail;
     }
     public function generateUniqueOrderReference(): string
