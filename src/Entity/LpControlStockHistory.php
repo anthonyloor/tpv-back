@@ -27,7 +27,7 @@ class LpControlStockHistory
     #[ORM\Column(type: 'datetime')]
     private \DateTimeInterface $date;
 
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(type: 'integer',nullable: true)]
     private int $id_transaction_id;
 
     // Getters and setters for each property
