@@ -177,7 +177,7 @@ class OrdersController
         $orderData = $this->ordersLogic->generateOrderJSON($order);
         if($orderCartRules != null)
         {
-            $orderData = $this->cartRuleLogic->generateCartRulesJSON($orderCartRules, $orderData, $id_order);
+            $orderData  = $this->cartRuleLogic->generateCartRulesJSON($orderData, $orderCartRules, $origin);
         }
 
         // Procesar los detalles de la orden

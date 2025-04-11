@@ -28,7 +28,7 @@ class PsOrderCartRuleRepository extends ServiceEntityRepository
             ->where('o.id_order = :id')
             ->setParameter('id', $id);
 
-        return $qb->getQuery()->getOneOrNullResult();
-    }
+            return $qb->getQuery()->getResult();
+        }
 
 }

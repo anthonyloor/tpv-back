@@ -143,9 +143,12 @@ class CartRuleLogic
     public function generateOrderCartRule($newPsOrder, $cart_rule, $discount)
     {
         $orderCartRule = new PsOrderCartRule();
+
+        $cart_rule_lang = $this->getCartRuleLangByCartRuleIdAndOrigin($cart_rule, 'mayret');
+
         $orderCartRule->setIdOrder($newPsOrder->getIdOrder());
         $orderCartRule->setIdCartRule($cart_rule->getIdCartRule());
-        $orderCartRule->setName($cart_rule->getName());
+        $orderCartRule->setName($cart_rule_lang->getName());
         $orderCartRule->setValue($discount['amount']);
         $orderCartRule->setValueTaxExcl($cart_rule->getReductionAmount() / (1 + $cart_rule->getReductionTax() / 100));
         $orderCartRule->setFreeShipping(0);
@@ -206,7 +209,7 @@ class CartRuleLogic
         return $cartRuleLang;
     }
 
-    public function generateCartRulesJSON($orderData, $orderCartRules, $origin)
+    public function generateCartRulesJSON($orderData, $orderCartRules, $origin): array
     {
         // Procesar los cart rules de la orden
         foreach ($orderCartRules as $orderCartRule) {
