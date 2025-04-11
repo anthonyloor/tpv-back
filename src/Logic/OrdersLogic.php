@@ -21,6 +21,7 @@ use App\Entity\LpControlStockHistory;
 use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
 use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
 use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
+use App\EntityFajasMaylu\PsOrderState as PsOrderStateFajasMaylu;
 
 use App\EntityFajasMaylu\PsStockAvailable as PsStockAvailableFajasMaylu;
 use Doctrine\Persistence\ManagerRegistry;
@@ -261,6 +262,7 @@ class OrdersLogic
             ->findOneBy(['id_transaction_detail' => $detail->getIdOrderDetail()]);
 
         $orderDetail = [
+            'id_order_detail' => $detail->getIdOrderDetail(),
             'product_id' => $detail->getProductId(),
             'product_attribute_id' => $detail->getProductAttributeId(),
             'stock_available_id' => $stock_available_id,
@@ -436,5 +438,21 @@ class OrdersLogic
         $pos_session->setTotalCash($total_cash);
         $this->entityManagerInterface->persist($pos_session);
         $this->entityManagerInterface->flush();
+    }
+
+    public function getOrderStateByIdAndOrigin ($id_order_state,$origin)
+    {
+        $orderState = null;
+        switch ($origin) {
+            case 'fajasmaylu':
+                $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($id_order_state);
+                break;
+            case 'mayret':
+                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($id_order_state);
+                break;
+            default:
+                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($id_order_state);
+        }
+        return $orderState;
     }
 }
