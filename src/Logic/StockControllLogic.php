@@ -54,7 +54,7 @@ class StockControllLogic
             $controlStockHistory->setReason($reason);
             $controlStockHistory->setType($type);
             $controlStockHistory->setDate(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
-            $controlStockHistory->setIdTransactionId($transaction_id);
+            $controlStockHistory->setIdTransactionDetail($transaction_id);
             $this->entityManagerInterface->persist($controlStockHistory);
             $this->entityManagerInterface->flush();
             $this->logger->log('Control stock history created with id_control_stock_history '. $controlStockHistory->getIdControlStockHistory());
