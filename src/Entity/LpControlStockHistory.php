@@ -92,14 +92,14 @@ class LpControlStockHistory
         return $this;
     }
 
-    public function getIdTransactionId(): ?int
+    public function getIdTransactionDetail(): ?int
     {
         return $this->id_transaction_detail;
     }
 
-    public function setIdTransactionId(?int $id_transaction_detail): self
+    public function setIdTransactionDetail(?int $id_transaction_detail): self
     {
-        $this?->id_transaction_detail = $id_transaction_detail;
+        $this->id_transaction_detail = $id_transaction_detail;
         return $this;
     }
 }
