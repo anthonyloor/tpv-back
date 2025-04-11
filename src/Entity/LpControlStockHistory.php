@@ -28,7 +28,7 @@ class LpControlStockHistory
     private \DateTimeInterface $date;
 
     #[ORM\Column(type: 'integer',nullable: true)]
-    private int $id_transaction_id;
+    private int $id_transaction_detail;
 
     // Getters and setters for each property
 
@@ -94,12 +94,12 @@ class LpControlStockHistory
 
     public function getIdTransactionId(): ?int
     {
-        return $this->id_transaction_id;
+        return $this->id_transaction_detail;
     }
 
-    public function setIdTransactionId(?int $id_transaction_id): self
+    public function setIdTransactionId(?int $id_transaction_detail): self
     {
-        $this->id_transaction_id = $id_transaction_id;
+        $this?->id_transaction_detail = $id_transaction_detail;
         return $this;
     }
 }
