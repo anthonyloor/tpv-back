@@ -316,6 +316,15 @@ class OrdersController
                     'ean13' => $product['ean13']
                 ];
                 $this->wareHouseMovementLogic->generateWareHouseMovementDetail($dataMovementDetail, $lpWarehouseMovement);
+                if($product['id_control_stock'] != null)
+                {
+                    $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($product['id_control_stock']);
+                    $this->stockControllLogic->createControlStockHistory($product['id_control_stock'], 'Venta de producto online', 'Venta', $shop['id_shop'],$product['id_order_detail']);
+                    $controlStock->setActive(active: false);
+                    $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+                    $this->entityManagerInterface->persist($controlStock);
+                    $this->entityManagerInterface->flush();
+                }
             }
             $lpWarehouseMovement = $this->wareHouseMovementLogic->executeWareHouseMovement($lpWarehouseMovement);
 
