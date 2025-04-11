@@ -97,7 +97,7 @@ class LpControlStockHistory
         return $this->id_transaction_id;
     }
 
-    public function setIdTransactionId(int $id_transaction_id): self
+    public function setIdTransactionId(?int $id_transaction_id): self
     {
         $this->id_transaction_id = $id_transaction_id;
         return $this;
