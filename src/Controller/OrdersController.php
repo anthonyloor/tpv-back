@@ -98,10 +98,10 @@ class OrdersController
             if (isset($orderDetailData['id_control_stock'])) {
                 $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($orderDetailData['id_control_stock']);
                 if ($orderDetailData['product_quantity'] > 0) {
-                    $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Venta de producto', 'Venta', $data['id_shop']);
+                    $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Venta de producto', 'Venta', $data['id_shop'],$orderDetail->getIdOrderDetail());
                     $controlStock->setActive(active: false);
                 } else {
-                    $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Devolución de producto', 'Devolución', $data['id_shop']);
+                    $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Devolución de producto', 'Devolución', $data['id_shop'],$orderDetail->getIdOrderDetail());
                     $controlStock->setActive(active: true);
                 }
                 $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));

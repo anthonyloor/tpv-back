@@ -16,6 +16,7 @@ use App\Entity\PsOrderState;
 use App\Entity\PsCustomer;
 use App\Entity\PsAddress;
 use App\Entity\PsOrderCartRule;
+use App\Entity\LpControlStockHistory;
 
 use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
 use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
@@ -254,6 +255,8 @@ class OrdersLogic
         }
 
         $stock_available_id = $stockAvailable ? $stockAvailable->getIdStockAvailable() : null;
+        $controlStockHistory = $this->entityManagerInterface->getRepository(LpControlStockHistory::class)
+            ->findOneBy(['id_transaction_detail' => $detail->getIdOrderDetail()]);
 
         $orderDetail = [
             'product_id' => $detail->getProductId(),
@@ -269,7 +272,8 @@ class OrdersLogic
             'unit_price_tax_incl' => $detail->getUnitPriceTaxIncl(),
             'unit_price_tax_excl' => $detail->getUnitPriceTaxExcl(),
             'reduction_amount_tax_incl' => $detail->getReductionAmountTaxIncl(),
-            'id_shop' => $detail->getIdShop()
+            'id_shop' => $detail->getIdShop(),
+            'id_control_stock' => $controlStockHistory ? $controlStockHistory->getIdControlStock() : null,
         ];
 
         return $orderDetail;
