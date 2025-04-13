@@ -320,7 +320,7 @@ class OrdersController
                 {
                     $controlStock = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($product['id_control_stock']);
                     $this->stockControllLogic->createControlStockHistory($product['id_control_stock'], 'Venta de producto online', 'Venta', $shop['id_shop'],$product['id_order_detail']);
-                    $controlStock->setActive(active: false);
+                    $controlStock->setActive( false);
                     $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
                     $this->entityManagerInterface->persist($controlStock);
                     $this->entityManagerInterface->flush();
@@ -332,10 +332,25 @@ class OrdersController
 
         $this->ordersLogic->updatePosSessionsTotalPayments($data);
 
-        $orderState = $this->ordersLogic->getOrderStateByIdAndOrigin($data['status'], $data['origin']);
-        $order = $this->ordersLogic->getOrderbyIdAndOrigin($data['origin'], $data['id_order']);
-        $order->setCurrentState($orderState);
-        $this->entityManagerInterface->persist($order);
+        switch ($data['origin']) {
+            case 'fajasmaylu':
+                $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($data['id_order']);
+                $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($data['status']);
+                $order->setCurrentState($orderState);
+                $this->emFajasMaylu->persist($order);
+                break;
+            case 'mayret':
+                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
+                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
+                $order->setCurrentState($orderState);
+                $this->entityManagerInterface->persist($order);
+                break;
+            default:
+                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
+                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
+                $order->setCurrentState($orderState);
+                $this->entityManagerInterface->persist($order);
+        }
         $this->entityManagerInterface->flush();
         $this->emFajasMaylu->flush();
 
