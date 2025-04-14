@@ -102,6 +102,7 @@ class OrdersController
                 } else {
                     $this->stockControllLogic->createControlStockHistory($orderDetailData['id_control_stock'], 'Devolución de producto', 'Devolución', $data['id_shop'],$orderDetail->getIdOrderDetail());
                     $controlStock->setActive(active: true);
+                    $controlStock->setIdShop($data['id_shop']);
                 }
                 $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
                 $this->entityManagerInterface->persist($controlStock);
