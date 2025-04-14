@@ -313,7 +313,8 @@ class OrdersController
                     'id_product' => $product['id_product'],
                     'id_product_attribute' => $product['id_product_attribute'],
                     'product_name' => $product['product_name'],
-                    'ean13' => $product['ean13']
+                    'ean13' => $product['ean13'],
+                    'id_control_stock' => $product['id_control_stock'],
                 ];
                 $this->wareHouseMovementLogic->generateWareHouseMovementDetail($dataMovementDetail, $lpWarehouseMovement);
                 if($product['id_control_stock'] != null)
@@ -355,6 +356,35 @@ class OrdersController
         $this->emFajasMaylu->flush();
 
         return new JsonResponse(['status' => 'OK', 'message' => HttpMessages::ORDER_UPDATED . $data['id_order']]);
+    }
+
+    #[Route('/get_pos_session_sale_report_orders', name: 'get_pos_session_sale_report_orders', methods: ['POST'])]
+    public function getPosSessionSaleReportOrder(Request $request): Response
+    {
+        $data = json_decode($request->getContent(),true);
+        if (!isset($data['id_pos_session'])) {
+            return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], Response::HTTP_BAD_REQUEST);
+        }
+        $posSession = $this->entityManagerInterface->getRepository(LpPosSessions::class)->find($data['id_pos_session']);
+        $posOrders = $this->entityManagerInterface->getRepository(LpPosOrders::class)->findBy(['id_pos_session' => $posSession->getIdPosSessions()]);
+        foreach ($posOrders as $posOrder) {
+            $order = $this->ordersLogic->getOrderByIdAndOrigin($posOrder->getOrigin(), $posOrder->getIdOrder());
+            $orderData = $this->ordersLogic->generateSaleReportOrderJSON($order, $posOrder);
+            $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($posOrder->getOrigin(), $posOrder->getIdOrder());
+
+            $orderCartRules = $this->cartRuleLogic->getCartRulesByOrderIdAndOrigin($posOrder->getIdOrder(), $posOrder->getOrigin());
+            if($orderCartRules != null)
+            {
+                $orderData = $this->cartRuleLogic->generateCartRulesJSON($orderData, $orderCartRules, $posOrder->getOrigin());
+            }
+
+
+            foreach ($orderDetails as $detail) {
+                $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
+            }
+            $responseData[] = $orderData;
+        }
+        return new JsonResponse($responseData, Response::HTTP_OK);
     }
 
 
