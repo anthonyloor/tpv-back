@@ -230,7 +230,7 @@ class WareHouseMovementLogic
                         
                         for ($i = 1; $i <= $recivedQuantity; $i++) {
                             $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny(),$detail->getEan13());
-                            $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada',$movement->getIdShopDestiny());
+                            $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada',$movement->getIdShopDestiny(),$detail->getIdWarehouseMovementDetail());
                             $this->logger->log(
                             ' id_control_stock ' . $controllStock->getIdControlStock()
                             . ' id_product ' . $controllStock->getIdProduct()
@@ -264,7 +264,7 @@ class WareHouseMovementLogic
                             $controlStock->setActive(false);
                             $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
                             $this->entityManagerInterface->persist($controlStock);
-                            $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Salida de producto','Salida', $movement->getIdShopOrigin());
+                            $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Salida de producto','Salida', $movement->getIdShopOrigin(),$detail->getIdWarehouseMovementDetail());
                         }
                     }
                 } elseif ($movementType === 'traspaso') {
@@ -288,7 +288,7 @@ class WareHouseMovementLogic
                             $controlStock->setIdShop($movement->getIdShopDestiny());
                             $controlStock->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
                             $this->entityManagerInterface->persist($controlStock);
-                            $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Traspaso de producto','Traspaso',$movement->getIdShopDestiny());
+                            $this->stockControllLogic->createControlStockHistory($detail->getIdControlStock(),'Traspaso de producto','Traspaso',$movement->getIdShopDestiny(),$detail->getIdWarehouseMovementDetail());
                         }
                     }
                 }

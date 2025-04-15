@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Repository;
-use App\Entity\PsCartRule;
+namespace App\RepositoryFajasMaylu;
+use App\EntityFajasMaylu\PsCartRule;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
-class PsCartRuleRepository extends ServiceEntityRepository
+class PsCartRuleFajasMayluRepository extends ServiceEntityRepository
 {
     private EntityManagerInterface $em;
     public function __construct(ManagerRegistry $registry, EntityManagerInterface $em)
@@ -14,6 +14,7 @@ class PsCartRuleRepository extends ServiceEntityRepository
         $this->em = $em;
         parent::__construct($registry, PsCartRule::class);
     }
+
     public function findByIdCartRule(int $id)
     {
         $qb = $this->em->createQueryBuilder();
@@ -24,4 +25,5 @@ class PsCartRuleRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getOneOrNullResult();
     }
+
 }

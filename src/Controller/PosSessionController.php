@@ -115,7 +115,31 @@ class PosSessionController
             return new JsonResponse(['status' => 'KO', 'message' => 'Point Of Sale Session not found']);
         }
     }
+    #[Route('/get_pos_sessions', name: 'get_pos_sessions')]
+    public function getPosSessions():Response
+    {
+        $pos_sessions = $this->entityManagerInterface->getRepository(LpPosSessions::class)
+            ->findBy([], ['id_pos_sessions' => 'DESC']);
 
+        $data = [];
+        foreach ($pos_sessions as $pos_session) {
+            $data[] = [
+                'id_pos_session' => $pos_session->getIdPosSessions(),
+                'id_shop' => $pos_session->getIdShop(),
+                'id_employee_open' => $pos_session->getIdEmployeeOpen(),
+                'id_employee_close' => $pos_session->getIdEmployeeClose(),
+                'date_add' => $pos_session->getDateAdd() ? $pos_session->getDateAdd()->format('Y-m-d H:i:s') : null,
+                'date_close' => $pos_session->getDateClose() ? $pos_session->getDateClose()->format('Y-m-d H:i:s') : null,
+                'init_cash' => $pos_session->getInitCash(),
+                'total_cash' => $pos_session->getTotalCash(),
+                'total_card' => $pos_session->getTotalCard(),
+                'total_bizum' => $pos_session->getTotalBizum(),
+                'active' => $pos_session->isActive(),
+                'license' => $pos_session->getLicense()->getLicense(),
+            ];
+        }
+        return new JsonResponse($data);
+    }
     private function getActiveSessionByLicense($license_param)
     {
         return $this->entityManagerInterface->getRepository(LpPosSessions::class)

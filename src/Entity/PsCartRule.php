@@ -5,7 +5,9 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
 
-#[ORM\Entity]
+use App\Repository\PsCartRuleRepository;
+
+#[ORM\Entity(repositoryClass: PsCartRuleRepository::class)]
 class PsCartRule
 {
     #[ORM\Id]

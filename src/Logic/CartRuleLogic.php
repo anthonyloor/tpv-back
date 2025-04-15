@@ -2,14 +2,14 @@
 
 namespace App\Logic;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 use App\Entity\PsCartRuleLang;
 use App\Entity\PsCartRule;
 use App\Entity\PsOrderCartRule;
-
+use App\EntityFajasMaylu\PsCartRule as PsCartRuleFajasMaylu;
 use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
+use App\EntityFajasMaylu\PsCartRuleLang as PsCartRuleLangFajasMaylu;
 
 class CartRuleLogic
 {
@@ -143,9 +143,12 @@ class CartRuleLogic
     public function generateOrderCartRule($newPsOrder, $cart_rule, $discount)
     {
         $orderCartRule = new PsOrderCartRule();
+
+        $cart_rule_lang = $this->getCartRuleLangByCartRuleIdAndOrigin($cart_rule, 'mayret');
+
         $orderCartRule->setIdOrder($newPsOrder->getIdOrder());
         $orderCartRule->setIdCartRule($cart_rule->getIdCartRule());
-        $orderCartRule->setName($cart_rule->getDescription());
+        $orderCartRule->setName($cart_rule_lang->getName());
         $orderCartRule->setValue($discount['amount']);
         $orderCartRule->setValueTaxExcl($cart_rule->getReductionAmount() / (1 + $cart_rule->getReductionTax() / 100));
         $orderCartRule->setFreeShipping(0);
@@ -156,21 +159,71 @@ class CartRuleLogic
         return $orderCartRule;
     }
 
-    public function getCartRulesByOrderIdAndOrigin($id_order, $origin): array
+    public function getCartRulesByOrderIdAndOrigin($id_order, $origin)
     {
         $orderCartRules = null;
         switch ($origin) {
             case 'fajasmaylu':
                 // Obtener los cart rules de la orden
                 $orderCartRules = $this->emFajasMaylu->getRepository(PsOrderCartRuleFajasMaylu::class)
-                ->findBy(['id_order' => $id_order]);
+                ->findByIdOrder($id_order);
                 break;
             case 'mayret':
                 // Obtener los cart rules de la orden
                 $orderCartRules = $this->entityManagerInterface->getRepository(PsOrderCartRule::class)
-                ->findBy(['id_order' => $id_order]);
+                ->findByIdOrder($id_order);
                 break;
         }
         return $orderCartRules;
+    }
+
+    public function getCartRuleByIdAndOrigin($orderCartRule,$origin)
+    {
+        $cartRule = null;
+        switch ($origin) {
+            case 'fajasmaylu':
+                $cartRule = $this->emFajasMaylu->getRepository(PsCartRuleFajasMaylu::class)
+                    ->findByIdCartRule($orderCartRule->getIdCartRule());
+                break;
+            case 'mayret':
+                $cartRule = $this->entityManagerInterface->getRepository(PsCartRule::class)
+                    ->findByIdCartRule($orderCartRule->getIdCartRule());
+                break;
+        }
+        return $cartRule;
+    }
+
+    public function getCartRuleLangByCartRuleIdAndOrigin($cartRule, $origin)
+    {
+        $cartRuleLang = null;
+        switch ($origin) {
+            case 'fajasmaylu':
+                $cartRuleLang = $this->emFajasMaylu->getRepository(PsCartRuleLang::class)
+                    ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
+                break;
+            case 'mayret':
+                $cartRuleLang = $this->entityManagerInterface->getRepository(PsCartRuleLangFajasMaylu::class)
+                    ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
+                break;
+        }
+        return $cartRuleLang;
+    }
+
+    public function generateCartRulesJSON($orderData, $orderCartRules, $origin): array
+    {
+        // Procesar los cart rules de la orden
+        foreach ($orderCartRules as $orderCartRule) {
+            $cartRule = $this->getCartRuleByIdAndOrigin($orderCartRule, $origin);
+            if ($cartRule) {
+                $cartRuleLang = $this->getCartRuleLangByCartRuleIdAndOrigin($cartRule, $origin);
+                $orderData['order_cart_rules'][] = [
+                    'code' => $cartRule->getCode(),
+                    'name' => $cartRuleLang ? $cartRuleLang->getName() : $orderCartRule->getName(),
+                    'value' => $orderCartRule->getValue(),
+                    'description' => $cartRule ? $cartRule->getDescription() : $cartRule->getDescription(),
+                ];
+            }
+        }
+        return $orderData;
     }
 }

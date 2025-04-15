@@ -111,7 +111,7 @@ class PsOrders
 
     private string $origin = 'mayret';
 
-    #[ORM\ManyToOne(targetEntity: PsOrderState::class)]
+    #[ORM\ManyToOne(targetEntity: PsOrderState::class, cascade: ["persist"])]
     #[ORM\JoinColumn(name: "current_state", referencedColumnName: "id_order_state", nullable: true)]
     private ?PsOrderState $currentState = null;
 

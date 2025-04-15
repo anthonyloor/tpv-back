@@ -16,10 +16,12 @@ use App\Entity\PsOrderState;
 use App\Entity\PsCustomer;
 use App\Entity\PsAddress;
 use App\Entity\PsOrderCartRule;
+use App\Entity\LpControlStockHistory;
 
 use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
 use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
 use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
+use App\EntityFajasMaylu\PsOrderState as PsOrderStateFajasMaylu;
 
 use App\EntityFajasMaylu\PsStockAvailable as PsStockAvailableFajasMaylu;
 use Doctrine\Persistence\ManagerRegistry;
@@ -117,6 +119,8 @@ class OrdersLogic
             $orderDetail->setProductQuantityInStock(0); // Si no se encuentra, asigna 0
         }
 
+        $this->entityManagerInterface->persist($orderDetail);
+        $this->entityManagerInterface->flush(); // Guardar el detalle del pedido
         return $orderDetail;
     }
     public function generateUniqueOrderReference(): string
@@ -158,7 +162,7 @@ class OrdersLogic
         }
     }
 
-    public function generatePosOrder($id_shop, $license, $id_employee, $total_paid, $total_cash, $total_card, $total_bizum, $id_order): LpPosOrders
+    public function generatePosOrder($id_shop, $license, $id_employee, $total_paid, $total_cash, $total_card, $total_bizum, $id_order, string $origin = "mayret"): LpPosOrders
     {
         $license_param = $license;
         $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
@@ -175,6 +179,7 @@ class OrdersLogic
         $newPosOrder->setTotalCash($total_cash);
         $newPosOrder->setTotalCard($total_card);
         $newPosOrder->setTotalBizum($total_bizum);
+        $newPosOrder->setOrigin($origin);
 
         $newPosOrder->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $this->entityManagerInterface->persist($newPosOrder); 
@@ -253,8 +258,11 @@ class OrdersLogic
         }
 
         $stock_available_id = $stockAvailable ? $stockAvailable->getIdStockAvailable() : null;
+        $controlStockHistory = $this->entityManagerInterface->getRepository(LpControlStockHistory::class)
+            ->findOneBy(['id_transaction_detail' => $detail->getIdOrderDetail()]);
 
         $orderDetail = [
+            'id_order_detail' => $detail->getIdOrderDetail(),
             'product_id' => $detail->getProductId(),
             'product_attribute_id' => $detail->getProductAttributeId(),
             'stock_available_id' => $stock_available_id,
@@ -268,7 +276,8 @@ class OrdersLogic
             'unit_price_tax_incl' => $detail->getUnitPriceTaxIncl(),
             'unit_price_tax_excl' => $detail->getUnitPriceTaxExcl(),
             'reduction_amount_tax_incl' => $detail->getReductionAmountTaxIncl(),
-            'id_shop' => $detail->getIdShop()
+            'id_shop' => $detail->getIdShop(),
+            'id_control_stock' => $controlStockHistory ? $controlStockHistory->getIdControlStock() : null,
         ];
 
         return $orderDetail;
@@ -283,7 +292,7 @@ class OrdersLogic
                 ->select('od')
                 ->from(PsOrderDetail::class, 'od')
                 ->where('od.product_name LIKE :id_order')
-                ->setParameter('id_order', '%' . $id_order . '%')
+                ->setParameter('id_order', '%#' . $id_order . '%')
                 ->getQuery()
                 ->getResult();
         }
@@ -366,6 +375,9 @@ class OrdersLogic
             case 'mayret':
                 $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
                 break;
+            default:
+                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
+                break;
         }
         return $order;
     }
@@ -382,6 +394,11 @@ class OrdersLogic
                 // Obtener los detalles de la orden
                 $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
                 ->findByOrderId($id_order);
+            default:
+                // Obtener los detalles de la orden
+                $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+                ->findByOrderId($id_order);
+                break;
         }
         return $orderDetails;
     }
@@ -405,5 +422,37 @@ class OrdersLogic
                 $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
         }
         return $orders;
+    }
+
+    public function updatePosSessionsTotalPayments($data)
+    {
+        $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
+        ->findOneActiveByLicense($data['license']);
+
+        $total_cash = $pos_session->getTotalCash() + $data['total_cash'];
+        $total_card = $pos_session->getTotalCard() + $data['total_card'];
+        $total_bizum = $pos_session->getTotalBizum() + $data['total_bizum'];
+
+        $pos_session->setTotalBizum($total_bizum);
+        $pos_session->setTotalCard($total_card);
+        $pos_session->setTotalCash($total_cash);
+        $this->entityManagerInterface->persist($pos_session);
+        $this->entityManagerInterface->flush();
+    }
+
+    public function getOrderStateByIdAndOrigin ($id_order_state,$origin)
+    {
+        $orderState = null;
+        switch ($origin) {
+            case 'fajasmaylu':
+                $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($id_order_state);
+                break;
+            case 'mayret':
+                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($id_order_state);
+                break;
+            default:
+                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($id_order_state);
+        }
+        return $orderState;
     }
 }
