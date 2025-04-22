@@ -39,6 +39,14 @@ class LpWarehouseMovementDetails
 
     #[ORM\Column(type: "integer", nullable: true)]
     private ?int $id_control_stock = null;
+
+    #[ORM\Column(type: "integer", nullable: true)]
+    private ?int $stock_origin = null;
+
+    #[ORM\Column(type: "integer", nullable: true)]
+    private ?int $stock_destiny = null;
+
+
     // Getters y Setters
     public function getIdControlStock(): ?int
     {
@@ -141,6 +149,25 @@ class LpWarehouseMovementDetails
     public function setStatus(string $status): self
     {
         $this->status = $status;
+        return $this;
+    }
+
+    public function getStockOrigin(): ?int
+    {
+        return $this->stock_origin;
+    }
+    public function setStockOrigin(?int $stock_origin): self
+    {
+        $this->stock_origin = $stock_origin;
+        return $this;
+    }
+    public function getStockDestiny(): ?int
+    {
+        return $this->stock_destiny;
+    }
+    public function setStockDestiny(?int $stock_destiny): self
+    {
+        $this->stock_destiny = $stock_destiny;
         return $this;
     }
 }

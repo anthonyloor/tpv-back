@@ -70,6 +70,8 @@ class WareHouseMovementLogic
                 'status' => $detail->getStatus(),
                 'movement_incidents' => $movementIncidentJSONComplete,
                 'id_control_stock' => $detail->getIdControlStock(),
+                'stock_origin' => $detail->getStockOrigin(),
+                'stock_destiny' => $detail->getStockDestiny()
             ];
             $movementDetailsJSONComplete[] = $movementDetailsJSON;
         }
@@ -104,6 +106,8 @@ class WareHouseMovementLogic
             $newWareHouseMovementDetail->setEan13($detail['ean13']);
             $newWareHouseMovementDetail->setIdControlStock($detail['id_control_stock']?? null);
             $newWareHouseMovementDetail->setIdWarehouseMovement($newWareHouseMovement->getIdWarehouseMovement());
+            $newWareHouseMovementDetail->setStockDestiny($detail['stock_destiny'] ?? null);
+            $newWareHouseMovementDetail->setStockOrigin($detail['stock_origin'] ?? null);
             $newWareHouseMovementDetail->setStatus('creado');
             $this->entityManagerInterface->persist($newWareHouseMovementDetail);
         }catch(\Exception $e){
@@ -158,6 +162,12 @@ class WareHouseMovementLogic
                     }
                     if(isset($detail['id_control_stock'])) {
                         $movementDetail->setIdControlStock($detail['id_control_stock']);
+                    }
+                    if(isset($detail['stock_origin'])) {
+                        $movementDetail->setStockOrigin($detail['stock_origin']);
+                    }
+                    if(isset($detail['stock_destiny'])) {
+                        $movementDetail->setStockDestiny($detail['stock_destiny']);
                     }
                     $movementDetail->setIdProduct($detail['id_product']);
                     $movementDetail->setIdProductAttribute($detail['id_product_attribute']);
