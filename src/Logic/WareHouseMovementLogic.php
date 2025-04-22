@@ -235,6 +235,7 @@ class WareHouseMovementLogic
                             $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny(),$detail->getEan13());
                             $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada',$movement->getIdShopDestiny(),$detail->getIdWarehouseMovementDetail());
                             $detail->setIdControlStock($controllStock->getIdControlStock());
+                            $this->entityManagerInterface->persist($detail);
                             $this->logger->log(
                             ' id_control_stock ' . $controllStock->getIdControlStock()
                             . ' id_product ' . $controllStock->getIdProduct()
