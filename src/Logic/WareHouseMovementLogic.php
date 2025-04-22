@@ -40,6 +40,7 @@ class WareHouseMovementLogic
             'type' => $movement->getType(),
             'modify_reason' => $movement->getModifyReason(),
             'employee' => $movement->getIdEmployee(),
+            'total_quantity' => $movement->getTotalQuantity(),
         ];
         return $movementsJSON;
     }
@@ -320,5 +321,27 @@ class WareHouseMovementLogic
             'movement' => $movement,
             'ean13_control_stock' => $ean13ControlStockArray ?? []
         ];
+    }
+
+    public function sumTotalQuantity($type ,$detail ,$total_quantity):int
+    {
+        if ($type == 'entrada') {
+            if ($detail['recived_quantity'] != null) {
+                $total_quantity = $detail['recived_quantity'];
+            }
+        } elseif ($type == 'salida' || $type == 'traspaso') {
+            if ($detail['sent_quantity'] != null) {
+                $total_quantity = $detail['sent_quantity'];
+            }
+        }
+
+        return $total_quantity;
+    }
+
+    public function setTotalQuantity($movement,$total_quantity)
+    {
+        $movement->setTotalQuantity($total_quantity);
+        $this->entityManagerInterface->persist($movement);
+        $this->entityManagerInterface->flush();
     }
 }

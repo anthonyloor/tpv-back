@@ -46,6 +46,9 @@ class LpWarehouseMovement
     #[ORM\Column(type: "string", length: 255)]
     private ?string $modify_reason = null;
 
+    #[ORM\Column(type: "integer")]
+    private ?int $total_quantity = null;
+
     // Getters y Setters
 
     public function getIdWarehouseMovement(): ?int
@@ -171,6 +174,17 @@ class LpWarehouseMovement
     public function setModifyReason(?string $modify_reason): self
     {
         $this->modify_reason = $modify_reason;
+        return $this;
+    }
+
+    public function getTotalQuantity(): ?int
+    {
+        return $this->total_quantity;
+    }
+
+    public function setTotalQuantity(?int $total_quantity): self
+    {
+        $this->total_quantity = $total_quantity;
         return $this;
     }
 }
