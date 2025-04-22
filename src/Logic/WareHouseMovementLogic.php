@@ -182,11 +182,10 @@ class WareHouseMovementLogic
             $movement->setDateModified(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
             $movement->setModifyReason($data['modify_reason']);
             foreach ($data['movement_details'] as $detail) {
-
                 $movementDetail = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->find($detail['id_warehouse_movement_detail']);
 
                 //Sobre escribir el movimiento detail
-                $movementDetail->setRecivedQuantity($detail['recived_quantity']);
+                $movementDetail->setRecivedQuantity($detail['recived_quantity']?? null);
                 $movementDetail->setStatus($detail['status']);
 
                 $this->entityManagerInterface->persist($movementDetail);
