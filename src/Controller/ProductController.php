@@ -161,7 +161,7 @@ class ProductController extends AbstractController
       }else{
         $response['tags'] = [];
         for ($i = 0; $i < $data['quantity_print']; $i++) {
-          $lpControlStock = $this->controlStockLogic->createControlStock($data['id_product'], $data['id_product_attribute'], $data['id_shop'], $data['ean13'], true);
+          $lpControlStock = $this->controlStockLogic->createControlStock($data['id_product'], $data['id_product_attribute'], $data['id_shop'], $data['ean13'], true, $data['product_name']);
           $this->controlStockLogic->createControlStockHistory($lpControlStock->getIdControlStock(),'Se añade seguimiento al reimprimir','Reimpresion',$data['id_shop']);
 
           $response['tags'][] = $this->controlStockLogic->generateControlStockJSON($lpControlStock);

@@ -25,7 +25,7 @@ class StockControllLogic
         $this->logger = $logger;
     }
 
-    public function createControlStock($idProduct, $idProductAttribute, $idShop, $ean13,$printed = false): LpControlStock
+    public function createControlStock($idProduct, $idProductAttribute, $idShop, $ean13,$printed = false, $productName): LpControlStock
     {
         $controlStock = new LpControlStock();
         $controlStock->setIdProduct($idProduct);
@@ -36,6 +36,7 @@ class StockControllLogic
         $controlStock->setActive(true);
         $controlStock->setPrinted($printed);
         $controlStock->setEan13($ean13);
+        $controlStock->setProductName($productName);
         $this->entityManagerInterface->persist($controlStock);
         $this->entityManagerInterface->flush();
         $this->logger->log('Control stock created with id_control_stock ' . $controlStock->getIdControlStock()
@@ -184,6 +185,38 @@ class StockControllLogic
                 $this->entityManagerInterface->persist($stockAvailable); // Persistir los cambios
             }
         }
+    }
+
+    public function generateControlStockJSONComplete($controlStock): array
+    {
+        $orderData = [
+            'id_control_stock' => $controlStock->getIdControlStock(),
+            'id_product' => $controlStock->getIdProduct(),
+            'id_product_attribute' => $controlStock->getIdProductAtributte(),
+            'id_shop' => $controlStock->getIdShop(),
+            'date_add' => $controlStock->getDateAdd()->format('Y-m-d H:i:s'),
+            'ean13' => $controlStock->getEan13(),
+            'active' => $controlStock->getActive(),
+            'printed' => $controlStock->getPrinted(),
+            'product_name' => $controlStock->getProductName()
+        ];
+        return $orderData;
+    }
+
+    public function generateControlStockHistoryJSON($controlStock): array
+    {
+        $history = $this->entityManagerInterface->getRepository(LpControlStockHistory::class)->findBy(['id_control_stock' => $controlStock->getIdControlStock()]);
+        $historyJSON = [];
+        foreach ($history as $h) {
+            $historyJSON[] = [
+                'id_control_stock_history' => $h->getIdControlStockHistory(),
+                'id_control_stock' => $h->getIdControlStock(),
+                'reason' => $h->getReason(),
+                'type' => $h->getType(),
+                'date' => $h->getDate()->format('Y-m-d H:i:s')
+            ];
+        }
+        return $historyJSON;
     }
 
 }
