@@ -162,6 +162,7 @@ class WareHouseMovementLogic
                     $movementDetail->setIdProductAttribute($detail['id_product_attribute']);
                     $movementDetail->setProductName($detail['product_name']);
                     $movementDetail->setEan13($detail['ean13']);
+                    $movementDetail->setStatus($detail['status']);
 
                     $this->entityManagerInterface->persist($movementDetail);
                     $this->entityManagerInterface->flush();
@@ -309,13 +310,5 @@ class WareHouseMovementLogic
             'movement' => $movement,
             'ean13_control_stock' => $ean13ControlStockArray ?? []
         ];
-    }
-
-    public function updateWareHouseMovementDetailStatus($data, $detail): LpWarehouseMovementDetails
-    {
-        $detail->setStatus($data['status']);
-        $this->entityManagerInterface->persist($detail);
-        $this->entityManagerInterface->flush();
-        return $detail;
     }
 }
