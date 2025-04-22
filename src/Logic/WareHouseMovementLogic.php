@@ -155,6 +155,9 @@ class WareHouseMovementLogic
                     if (isset($detail['recived_quantity'])) {
                         $movementDetail->setRecivedQuantity($detail['recived_quantity']);
                     }
+                    if(isset($detail['id_control_stock'])) {
+                        $movementDetail->setIdControlStock($detail['id_control_stock']);
+                    }
                     $movementDetail->setIdProduct($detail['id_product']);
                     $movementDetail->setIdProductAttribute($detail['id_product_attribute']);
                     $movementDetail->setProductName($detail['product_name']);
