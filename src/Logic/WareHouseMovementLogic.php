@@ -104,6 +104,7 @@ class WareHouseMovementLogic
             $newWareHouseMovementDetail->setEan13($detail['ean13']);
             $newWareHouseMovementDetail->setIdControlStock($detail['id_control_stock']?? null);
             $newWareHouseMovementDetail->setIdWarehouseMovement($newWareHouseMovement->getIdWarehouseMovement());
+            $newWareHouseMovementDetail->setStatus('creado');
             $this->entityManagerInterface->persist($newWareHouseMovementDetail);
         }catch(\Exception $e){
             throw $e;
