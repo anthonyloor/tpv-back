@@ -234,6 +234,7 @@ class WareHouseMovementLogic
                         for ($i = 1; $i <= $recivedQuantity; $i++) {
                             $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny(),$detail->getEan13());
                             $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada',$movement->getIdShopDestiny(),$detail->getIdWarehouseMovementDetail());
+                            $detail->setIdControlStock($controllStock->getIdControlStock());
                             $this->logger->log(
                             ' id_control_stock ' . $controllStock->getIdControlStock()
                             . ' id_product ' . $controllStock->getIdProduct()
@@ -307,5 +308,13 @@ class WareHouseMovementLogic
             'movement' => $movement,
             'ean13_control_stock' => $ean13ControlStockArray ?? []
         ];
+    }
+
+    public function updateWareHouseMovementDetailStatus($data, $detail): LpWarehouseMovementDetails
+    {
+        $detail->setStatus($data['status']);
+        $this->entityManagerInterface->persist($detail);
+        $this->entityManagerInterface->flush();
+        return $detail;
     }
 }
