@@ -212,6 +212,7 @@ class WareHouseMovementLogic
     {
         $this->entityManagerInterface->getConnection()->beginTransaction(); // Start transaction
         try {
+            $total_quantity = 0;
             $movement->setStatus('Ejecutado');
             $movement->setDateExcute(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
             $this->entityManagerInterface->persist($movement);
@@ -219,6 +220,7 @@ class WareHouseMovementLogic
             $movementDetails = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->findBy(['id_warehouse_movement' => $movement->getIdWarehouseMovement()]);
             $this->logger->log('Executing warehouse movement'.' movement_id: '. $movement->getIdWarehouseMovement());
             foreach ($movementDetails as $detail) {
+                $total_quantity += $this->sumTotalQuantity($movement->getType(),$detail,$total_quantity);
                 $idProduct = $detail->getIdProduct();
                 $idProductAttribute = $detail->getIdProductAttribute();
                 $sentQuantity = $detail->getSentQuantity();
