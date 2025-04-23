@@ -132,6 +132,7 @@ class WareHouseMovementLogic
     public function updateWareHouseMovement($data, $movement): LpWarehouseMovement
     {
         $status = $movement->getStatus();
+        $total_quantity = 0;
 
         if ($status == "En creacion") {
             //Se puede modificar cualquier cosa
@@ -146,6 +147,7 @@ class WareHouseMovementLogic
             if (!empty($data['movement_details'])) {
                 foreach ($data['movement_details'] as $detail) {
                     $movementDetail = null;
+                    $total_quantity += $this->sumTotalQuantity($movement->getType(),$detail,$total_quantity);
                     if (!empty($detail['id_warehouse_movement_detail'])) {
                         $movementDetail = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->find($detail['id_warehouse_movement_detail']);
                     }
@@ -179,6 +181,8 @@ class WareHouseMovementLogic
                     $this->entityManagerInterface->persist($movementDetail);
                     $this->entityManagerInterface->flush();
                 }
+                $this->setTotalQuantity($movement, $total_quantity);
+
             }
         }
         if ($status == "Enviado" || $status == "Recibido") {
@@ -212,14 +216,13 @@ class WareHouseMovementLogic
     {
         $this->entityManagerInterface->getConnection()->beginTransaction(); // Start transaction
         try {
-            $total_quantity = 0;
             $movement->setStatus('Ejecutado');
             $movement->setDateExcute(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+            $this->entityManagerInterface->persist($movement);
             $movementType = $movement->getType();
             $movementDetails = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->findBy(['id_warehouse_movement' => $movement->getIdWarehouseMovement()]);
             $this->logger->log('Executing warehouse movement'.' movement_id: '. $movement->getIdWarehouseMovement());
             foreach ($movementDetails as $detail) {
-                $total_quantity += $this->sumTotalQuantityFromEntity($movement->getType(),$detail,$total_quantity);
                 $idProduct = $detail->getIdProduct();
                 $idProductAttribute = $detail->getIdProductAttribute();
                 $sentQuantity = $detail->getSentQuantity();
@@ -311,8 +314,6 @@ class WareHouseMovementLogic
                     }
                 }
             }
-            $movement->setTotalQuantity($movement, $total_quantity);
-            $this->entityManagerInterface->persist($movement);
 
             $this->entityManagerInterface->flush();
             $this->entityManagerInterface->getConnection()->commit(); // Commit transaction
@@ -336,17 +337,6 @@ class WareHouseMovementLogic
             if ($detail['sent_quantity'] != null) {
                 $total_quantity = $detail['sent_quantity'];
             }
-        }
-
-        return $total_quantity;
-    }
-
-    public function sumTotalQuantityFromEntity($type ,$detail ,$total_quantity):int
-    {
-        if ($type == 'entrada') {
-            $total_quantity = $detail->getRecivedQuantity();
-        } elseif ($type == 'salida' || $type == 'traspaso') {
-            $total_quantity = $detail->getSentQuantity();
         }
 
         return $total_quantity;
