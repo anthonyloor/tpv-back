@@ -33,7 +33,7 @@ class WarehouseMovementController extends AbstractController
             $movements = $repository->findByDateRange(new \DateTime($data['data1']), new \DateTime($data['data2']));
         else
         {
-            $movements = $repository->findBy([], ['id_warehouse_movement' => 'DESC'], 50);
+            $movements = $repository->findBy([], ['id_warehouse_movement' => 'DESC'], 200);
         }
         $movementsJSONComplete = [];
         foreach($movements as $movement)
@@ -51,8 +51,8 @@ class WarehouseMovementController extends AbstractController
 
         $repository = $this->entityManagerInterface->getRepository(LpWarehouseMovement::class);
         $movement = $repository->find($id);
-        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movement);
         $movementDetails = $this->wareHouseMovementLogic->generateWareHouseMovementDetailJSON($movement);
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movement);
         $movementsJSON['movement_details'] = $movementDetails;
         return new JsonResponse($movementsJSON);
     }
@@ -66,14 +66,16 @@ class WarehouseMovementController extends AbstractController
             return new JsonResponse(['error' => 'Missing parameters'], 400);
         }
         $newWareHouseMovement = $this->wareHouseMovementLogic->generateWareHouseMovement($data);
+        $total_quantity = 0;
         if($data['movements_details'] != null){
             foreach($data['movements_details'] as $detail)
             {
                 $this->wareHouseMovementLogic->generateWareHouseMovementDetail($detail, $newWareHouseMovement);
+                $total_quantity += $this->wareHouseMovementLogic->sumTotalQuantity($newWareHouseMovement->getType(),$detail,$total_quantity);
             }
         }
-
-        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($newWareHouseMovement);
+        $this->wareHouseMovementLogic->setTotalQuantity($newWareHouseMovement, $total_quantity);
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($newWareHouseMovement,);
 
         return new JsonResponse($movementsJSON);
     }
@@ -112,9 +114,13 @@ class WarehouseMovementController extends AbstractController
         {
             return new JsonResponse(['error' => 'Movement not found'], 404);
         }
-        $this->wareHouseMovementLogic->executeWareHouseMovement($movement);
+        $jsonControlStocks = $this->wareHouseMovementLogic->executeWareHouseMovement($movement);
         $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movement);
-        return new JsonResponse($movementsJSON);
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movement);
+        return new JsonResponse([
+            'movement' => $movementsJSON,
+            'control_stocks' => $jsonControlStocks
+        ]);
     }
 
     #[Route('/delete_warehouse_movement', name: 'delete_warehouse_movement')]

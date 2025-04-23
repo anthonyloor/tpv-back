@@ -36,6 +36,9 @@ class LpControlStock
     #[ORM\Column(type: "boolean")]
     private ?bool $printed = null;
 
+    #[ORM\Column(type: "string", length: 50)]
+    private ?string $product_name = null;
+
     //getters and setters
 
     public function getPrinted(): ?bool
@@ -133,6 +136,17 @@ class LpControlStock
     public function setIdShop(?int $id_shop): self
     {
         $this->id_shop = $id_shop;
+        return $this;
+    }
+
+    public function getProductName(): ?string
+    {
+        return $this->product_name;
+    }
+
+    public function setProductName(?string $product_name): self
+    {
+        $this->product_name = $product_name;
         return $this;
     }
 }
