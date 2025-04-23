@@ -114,9 +114,13 @@ class WarehouseMovementController extends AbstractController
         {
             return new JsonResponse(['error' => 'Movement not found'], 404);
         }
-        $this->wareHouseMovementLogic->executeWareHouseMovement($movement);
+        $jsonControlStocks = $this->wareHouseMovementLogic->executeWareHouseMovement($movement);
         $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movement);
-        return new JsonResponse($movementsJSON);
+        $movementsJSON = $this->wareHouseMovementLogic->generateWareHouseMovementJSON($movement);
+        return new JsonResponse([
+            'movement' => $movementsJSON,
+            'control_stocks' => $jsonControlStocks
+        ]);
     }
 
     #[Route('/delete_warehouse_movement', name: 'delete_warehouse_movement')]

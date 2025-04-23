@@ -2,6 +2,7 @@
 
 namespace App\Logic;
 
+use App\Entity\LpControlStockHistory;
 use App\Entity\LpWarehouseMovement;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\LpWarehouseMovementDetails;
@@ -72,8 +73,21 @@ class WareHouseMovementLogic
                 'movement_incidents' => $movementIncidentJSONComplete,
                 'id_control_stock' => $detail->getIdControlStock(),
                 'stock_origin' => $detail->getStockOrigin(),
-                'stock_destiny' => $detail->getStockDestiny()
+                'stock_destiny' => $detail->getStockDestiny(),
+                'control_stocks' => [],
             ];
+            if($movement->getType() == 'entrada')
+            {
+                $controlStocks = $this->entityManagerInterface->getRepository(LpControlStockHistory::class)->findByTransactionId($detail->getIdWarehouseMovementDetail());
+                foreach ($controlStocks as $controlStock) {
+                    $controlStockEntity = $this->entityManagerInterface->getRepository(LpControlStock::class)->find($controlStock['id_control_stock']);
+                    $movementDetailsJSON['control_stocks'][] = [
+                        'ean13' => $controlStockEntity->getEan13(),
+                        'id_control_stock' => $controlStockEntity->getIdControlStock()
+                    ];
+                }
+            }
+
             $movementDetailsJSONComplete[] = $movementDetailsJSON;
         }
         return $movementDetailsJSONComplete;
@@ -238,7 +252,7 @@ class WareHouseMovementLogic
                     'id_product_attribute' => $idProductAttribute,
                     'id_shop' => $movement->getIdShopOrigin()
                 ]);
-                $ean13ControlStockArray[] = [];
+                $ean13ControlStockArray = [];
                 if ($movementType === 'entrada') {
                     // Update stock for destination shop only
                     if ($stockDestiny) {
@@ -250,7 +264,6 @@ class WareHouseMovementLogic
                         for ($i = 1; $i <= $recivedQuantity; $i++) {
                             $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny(),$detail->getEan13(),false,$detail->getProductName());
                             $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada',$movement->getIdShopDestiny(),$detail->getIdWarehouseMovementDetail());
-                            $detail->setIdControlStock($controllStock->getIdControlStock());
                             $this->entityManagerInterface->persist($detail);
                             $this->logger->log(
                             ' id_control_stock ' . $controllStock->getIdControlStock()
@@ -321,10 +334,7 @@ class WareHouseMovementLogic
             $this->entityManagerInterface->getConnection()->rollBack(); // Rollback transaction
             throw $e;
         }
-        return [
-            'movement' => $movement,
-            'ean13_control_stock' => $ean13ControlStockArray ?? []
-        ];
+        return $ean13ControlStockArray ?? [];
     }
 
     public function sumTotalQuantity($type ,$detail ,$total_quantity):int
@@ -347,5 +357,14 @@ class WareHouseMovementLogic
         $movement->setTotalQuantity($total_quantity);
         $this->entityManagerInterface->persist($movement);
         $this->entityManagerInterface->flush();
+    }
+
+    
+    public function generateControlStockJSON($movement): array
+    {
+        $controlStocks = $this->entityManagerInterface->getRepository(LpControlStockHistory::class)
+        ->findByTransactionId($movement->getIdWarehouseMovement());
+        //dump($controlStocks);
+        return $controlStocks;
     }
 }

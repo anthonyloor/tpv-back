@@ -13,4 +13,14 @@ class LpControlStockHistoryRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, LpControlStockHistory::class);
     }
+
+    public function findByTransactionId($transactionId): array
+    {
+        return $this->createQueryBuilder('l')
+            ->select('l.id_control_stock')
+            ->where('l.id_transaction_detail = :transactionId')
+            ->setParameter('transactionId', $transactionId)
+            ->getQuery()
+            ->getResult();
+    }
 }
