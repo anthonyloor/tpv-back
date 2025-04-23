@@ -358,13 +358,4 @@ class WareHouseMovementLogic
         $this->entityManagerInterface->persist($movement);
         $this->entityManagerInterface->flush();
     }
-
-    
-    public function generateControlStockJSON($movement): array
-    {
-        $controlStocks = $this->entityManagerInterface->getRepository(LpControlStockHistory::class)
-        ->findByTransactionId($movement->getIdWarehouseMovement());
-        //dump($controlStocks);
-        return $controlStocks;
-    }
 }
