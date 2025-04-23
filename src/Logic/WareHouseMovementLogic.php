@@ -215,7 +215,6 @@ class WareHouseMovementLogic
             $total_quantity = 0;
             $movement->setStatus('Ejecutado');
             $movement->setDateExcute(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
-            $this->entityManagerInterface->persist($movement);
             $movementType = $movement->getType();
             $movementDetails = $this->entityManagerInterface->getRepository(LpWarehouseMovementDetails::class)->findBy(['id_warehouse_movement' => $movement->getIdWarehouseMovement()]);
             $this->logger->log('Executing warehouse movement'.' movement_id: '. $movement->getIdWarehouseMovement());
@@ -312,6 +311,8 @@ class WareHouseMovementLogic
                     }
                 }
             }
+            $movement->setTotalQuantity($movement, $total_quantity);
+            $this->entityManagerInterface->persist($movement);
 
             $this->entityManagerInterface->flush();
             $this->entityManagerInterface->getConnection()->commit(); // Commit transaction
