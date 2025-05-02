@@ -1,0 +1,11 @@
+webauthn:
+  creation_profiles:
+    default:
+      rp:
+        name: 'MiApp'
+        id: 'localhost'  # o tu dominio real
+      public_key_credential_parameters:
+        - -7  # ES256
+      authenticator_selection_criteria:
+        user_verification: required
+      attestation_conveyance: none

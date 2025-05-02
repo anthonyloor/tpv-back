@@ -30,7 +30,8 @@
         "symfony/serializer": "7.0.*",
         "symfony/twig-bundle": "7.0.*",
         "symfony/validator": "7.0.*",
-        "symfony/yaml": "7.0.*"
+        "symfony/yaml": "7.0.*",
+        "web-auth/webauthn-symfony-bundle": "^5.2"
     },
     "config": {
         "allow-plugins": {
