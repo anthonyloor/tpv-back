@@ -151,8 +151,13 @@ class OrdersLogic
     public function updateProductStock($orderDetailData)
     {
         // Buscar el registro de stock para el producto
+        // $productStock = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+        //     ->findOneBy(['id_stock_available' => $orderDetailData['stock_available_id']]);
+
         $productStock = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-            ->findOneBy(['id_stock_available' => $orderDetailData['stock_available_id']]);
+            ->findOneBy(['id_product' => $orderDetailData['product_id'],
+            'id_product_attribute' => $orderDetailData['product_attribute_id'],
+            'id_shop' => $orderDetailData['id_shop']]);
 
         // Si existe, reducir el stock disponible en función de la cantidad de pedido
         if ($productStock) {
