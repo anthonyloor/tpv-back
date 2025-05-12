@@ -12,6 +12,7 @@ use App\EntityFajasMaylu\PsCartRuleLang as PsCartRuleLangFajasMaylu;
 
 use App\Logic\CartRuleLogic;
 use App\Logic\StockControllLogic;
+use App\Utils\Logger\Logger;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -39,8 +40,9 @@ class OrdersController
     private CartRuleLogic $cartRuleLogic;
     private StockControllLogic $stockControllLogic;
     private $wareHouseMovementLogic;
+    private $logger;
 
-    public function __construct(ManagerRegistry $doctrine, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic, StockControllLogic $stockControllLogic, WareHouseMovementLogic $wareHouseMovementLogic)
+    public function __construct(ManagerRegistry $doctrine, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic, StockControllLogic $stockControllLogic, WareHouseMovementLogic $wareHouseMovementLogic, Logger $logger)
     {
         $this->entityManagerInterface = $doctrine->getManager(DatabaseManagers::MAYRET_MANAGER);
         $this->emFajasMaylu = $doctrine->getManager(DatabaseManagers::FAJASMAYLU_MANAGER);
@@ -48,7 +50,7 @@ class OrdersController
         $this->cartRuleLogic = $cartRuleLogic;
         $this->stockControllLogic = $stockControllLogic;
         $this->wareHouseMovementLogic = $wareHouseMovementLogic;
-
+        $this->logger = $logger;
     }
 
     #[Route('/create_order', name: 'create_order', methods: ['POST'])]
@@ -153,6 +155,7 @@ class OrdersController
 
             return new JsonResponse($response);
         }
+        $this->logger->log('-------------------------------FIN---------------------------------------');
         return new JsonResponse(data: ['status' => 'OK', 'message' => 'Order created with id ' . $newPsOrder->getIdOrder()]);
 
     }

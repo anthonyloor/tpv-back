@@ -155,6 +155,7 @@ class OrdersLogic
     public function updateProductStock($orderDetailData)
     {
         $this->logger->log('-------------------------------INICIO---------------------------------------');
+        $this->logger->log("Devolucion de producto: " . json_encode($orderDetailData));
 
         if($orderDetailData['product_quantity'] < 0)
         {
@@ -162,12 +163,10 @@ class OrdersLogic
                 ->findOneBy(['id_product' => $orderDetailData['product_id'],
                 'id_product_attribute' => $orderDetailData['product_attribute_id'],
                 'id_shop' => $orderDetailData['id_shop']]);
-                $this->logger->log("Devolucion de producto: ".$orderDetailData);
         }else{
             // Buscar el registro de stock para el producto
             $productStock = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
                 ->findOneBy(['id_stock_available' => $orderDetailData['stock_available_id']]);
-                $this->logger->log("Venta de producto: ".$orderDetailData);
         }
 
         // Si existe, reducir el stock disponible en función de la cantidad de pedido
@@ -178,7 +177,6 @@ class OrdersLogic
             $this->logger->log("Cantidad despues de venta: ".$newQuantity);
             $productStock->setQuantity($newQuantity);
             $this->entityManagerInterface->persist($productStock); // Persistir los cambios
-            $this->logger->log('-------------------------------FIN---------------------------------------');
         }
     }
 
