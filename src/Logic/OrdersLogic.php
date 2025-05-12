@@ -154,7 +154,6 @@ class OrdersLogic
 
     public function updateProductStock($orderDetailData)
     {
-        $this->logger->log('-------------------------------INICIO---------------------------------------');
 
         if($orderDetailData['product_quantity'] < 0)
         {

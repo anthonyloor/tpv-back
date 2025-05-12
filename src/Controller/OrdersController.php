@@ -79,6 +79,7 @@ class OrdersController
             return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], Response::HTTP_BAD_REQUEST);
         }
 
+        $this->logger->log('-------------------------------INICIO---------------------------------------');
 
         $newPsOrder = $this->ordersLogic->generateOrder($data);
         $this->entityManagerInterface->persist($newPsOrder);
