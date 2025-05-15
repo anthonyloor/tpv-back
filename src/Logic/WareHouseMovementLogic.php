@@ -265,6 +265,7 @@ class WareHouseMovementLogic
                             $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny(),$detail->getEan13(),false,$detail->getProductName());
                             $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada',$movement->getIdShopDestiny(),$detail->getIdWarehouseMovementDetail());
                             $this->entityManagerInterface->persist($detail);
+                            $this->logger->log('-------------------------------INICIO---------------------------------------');
                             $this->logger->log(
                             ' id_control_stock ' . $controllStock->getIdControlStock()
                             . ' id_product ' . $controllStock->getIdProduct()
@@ -274,15 +275,15 @@ class WareHouseMovementLogic
                             . ' reason ' . 'Entrada de producto'
                             . ' type ' . 'Entrada'
                             . ' date ' . (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s')
-                        );
-
-                        $ean13ControlStockArray[] = [
-                            'ean13' => $controllStock->getEan13(),
-                            'control_stock' => $controllStock->getIdControlStock()
+                            );
+                            $this->logger->log('-------------------------------------FIN---------------------------------');
+                            $ean13ControlStockArray[] = [
+                                'ean13' => $controllStock->getEan13(),
+                                'control_stock' => $controllStock->getIdControlStock()
                         ];
 
-                        }
                     }
+                }
                 } elseif ($movementType === 'salida') {
                     // Update stock for origin shop only
 
@@ -304,16 +305,20 @@ class WareHouseMovementLogic
                 } elseif ($movementType === 'traspaso') {
                     // Update stock for both origin and destination shops
                     if ($stockOrigin) {
+                        $this->logger->log('-------------------------------INICIO---------------------------------------');
                         $this->logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
                         $stockOrigin->setQuantity($stockOrigin->getQuantity() - $sentQuantity);
                         $this->entityManagerInterface->persist($stockOrigin);
                         $this->logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopOrigin().' stock in origin: '.$stockOrigin->getQuantity());
+                        $this->logger->log('-------------------------------------FIN---------------------------------');
                     }
                     if ($stockDestiny) {
+                        $this->logger->log('-------------------------------INICIO---------------------------------------');
                         $this->logger->log('Before updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
                         $stockDestiny->setQuantity($stockDestiny->getQuantity() + $sentQuantity);
                         $this->entityManagerInterface->persist($stockDestiny);
                         $this->logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
+                        $this->logger->log('-------------------------------------FIN---------------------------------');
                     }
                     if($detail->getIdControlStock() != null)
                     {
