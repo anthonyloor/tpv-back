@@ -49,4 +49,20 @@ class StockControlController extends AbstractController
         return new JsonResponse($controll_stockJSON);
 
     }
+
+    #[Route('/get_controll_stock_filtered', name: 'get_controll_stock_filtered')]
+    public function getControllStockFiltered(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        $controll_stocks = $this->entityManager->getRepository(LpControlStock::class)->findBy(['ean13' => $data['ean13']]);
+        if (!$controll_stocks){
+            return new JsonResponse(['error' => 'Control stock not found'], Response::HTTP_NOT_FOUND);
+        }
+        $controll_stockJSON = [];
+        foreach ($controll_stocks as $controll_stock) {
+            $controll_stockJSON[] = $this->stockControllLogic->generateControlStockJSONComplete($controll_stock);
+        }
+        return new JsonResponse($controll_stockJSON);
+
+    }
 }

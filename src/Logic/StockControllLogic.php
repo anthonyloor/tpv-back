@@ -213,7 +213,8 @@ class StockControllLogic
                 'id_control_stock' => $h->getIdControlStock(),
                 'reason' => $h->getReason(),
                 'type' => $h->getType(),
-                'date' => $h->getDate()->format('Y-m-d H:i:s')
+                'date' => $h->getDate()->format('Y-m-d H:i:s'),
+                'id_transaction_detail' => $h->getIdTransactionDetail(),
             ];
         }
         return $historyJSON;
