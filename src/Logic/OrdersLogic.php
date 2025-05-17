@@ -19,6 +19,8 @@ use App\Entity\PsOrderCartRule;
 use App\Entity\LpControlStockHistory;
 use App\Entity\PsProduct;
 use App\Entity\PsProductAttribute;
+use App\Entity\PsShop;
+
 
 use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
 use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
@@ -185,11 +187,12 @@ class OrdersLogic
             if ($productStockOnline) {
                 $this->logger->log("Se ha encontrado el stock padre");
                 $productStock = new PsStockAvailable();
+                $shop = $this->entityManagerInterface->getRepository(PsShop::class)->find($orderDetailData['id_shop']);
                 $productEntity = $this->entityManagerInterface->getRepository(PsProduct::class)->findOneById($orderDetailData['product_id']);
                 $productStock->setIdProduct($productEntity);
                 $productAttribute = $this->entityManagerInterface->getRepository(PsProductAttribute::class)->findOneBy(['idProduct' => $orderDetailData['product_id'], 'id_product_attribute' => $orderDetailData['product_attribute_id']]);
                 $productStock->setIdProductAttribute($productAttribute);
-                $productStock->setIdShop($orderDetailData['id_shop']);
+                $productStock->setIdShop($shop);
                 $productStock->setQuantity(0); // Set initial quantity to 0 or any default value
                 $productStock->setPhysicalQuantity(0);
                 $productStock->setReservedQuantity(0);
