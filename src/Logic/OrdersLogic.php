@@ -17,6 +17,8 @@ use App\Entity\PsCustomer;
 use App\Entity\PsAddress;
 use App\Entity\PsOrderCartRule;
 use App\Entity\LpControlStockHistory;
+use App\Entity\PsProduct;
+use App\Entity\PsProductAttribute;
 
 use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
 use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
@@ -155,28 +157,58 @@ class OrdersLogic
     public function updateProductStock($orderDetailData)
     {
 
-        if($orderDetailData['product_quantity'] < 0)
-        {
+        if ($orderDetailData['product_quantity'] < 0) {
             $productStock = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-                ->findOneBy(['id_product' => $orderDetailData['product_id'],
+                ->findOneBy([
+                'id_product' => $orderDetailData['product_id'],
                 'id_product_attribute' => $orderDetailData['product_attribute_id'],
-                'id_shop' => $orderDetailData['id_shop']]);
-                $this->logger->log("Devolucion de producto: " . json_encode($orderDetailData));
+                'id_shop' => $orderDetailData['id_shop']
+            ]);
+            $this->logger->log("Devolucion de producto: " . json_encode($orderDetailData));
 
-        }else{
+        } else {
             // Buscar el registro de stock para el producto
             $productStock = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
                 ->findOneBy(['id_stock_available' => $orderDetailData['stock_available_id']]);
-                $this->logger->log("Actualizacion de producto: " . json_encode($orderDetailData));
+            $this->logger->log("Actualizacion de producto: " . json_encode($orderDetailData));
+        }
+
+        if (!$productStock) {
+            $this->logger->log("No se ha encontrado el stock disponible para el producto:".$orderDetailData['product_id'] . " - " . $orderDetailData['product_attribute_id']);
+            $productStockOnline = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+                ->findOneBy([
+                    'id_product' => $orderDetailData['product_id'],
+                    'id_product_attribute' => $orderDetailData['product_attribute_id'],
+                    'id_shop' => 1
+                ]);
+
+            if ($productStockOnline) {
+                $this->logger->log("Se ha encontrado el stock padre");
+                $productStock = new PsStockAvailable();
+                $productEntity = $this->entityManagerInterface->getRepository(PsProduct::class)->findOneById($orderDetailData['product_id']);
+                $productStock->setIdProduct($productEntity);
+                $productAttribute = $this->entityManagerInterface->getRepository(PsProductAttribute::class)->findOneBy(['idProduct' => $orderDetailData['product_id'], 'id_product_attribute' => $orderDetailData['product_attribute_id']]);
+                $productStock->setIdProductAttribute($productAttribute);
+                $productStock->setIdShop($orderDetailData['id_shop']);
+                $productStock->setQuantity(0); // Set initial quantity to 0 or any default value
+                $productStock->setPhysicalQuantity(0);
+                $productStock->setReservedQuantity(0);
+                $productStock->setDependsOnStock(false);
+                $productStock->setOutOfStock(false);
+                $productStock->setLocation(''); // Set location or any default value
+                $this->entityManagerInterface->persist($productStock);
+                $this->entityManagerInterface->flush();
+                $this->logger->log("Se ha creado un nuevo stock disponible para el producto: " . $productStock->getIdStockAvailable());
+            }
 
         }
 
         // Si existe, reducir el stock disponible en función de la cantidad de pedido
         if ($productStock) {
-            $this->logger->log("Cantidad antes venta: ".$productStock->getQuantity());
-            $this->logger->log("Cantidad de la venta: ".$orderDetailData['product_quantity']);
+            $this->logger->log("Cantidad antes venta: " . $productStock->getQuantity());
+            $this->logger->log("Cantidad de la venta: " . $orderDetailData['product_quantity']);
             $newQuantity = $productStock->getQuantity() - $orderDetailData['product_quantity'];
-            $this->logger->log("Cantidad despues de venta: ".$newQuantity);
+            $this->logger->log("Cantidad despues de venta: " . $newQuantity);
             $productStock->setQuantity($newQuantity);
             $this->entityManagerInterface->persist($productStock); // Persistir los cambios
         }
