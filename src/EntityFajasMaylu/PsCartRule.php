@@ -5,9 +5,9 @@ namespace App\EntityFajasMaylu;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
 
-use App\RepositoryFajasMaylu\PsCartRuleRepository;
+use App\RepositoryFajasMaylu\PsCartRuleFajasMayluRepository;
 
-#[ORM\Entity(repositoryClass: PsCartRuleRepository::class)]
+#[ORM\Entity(repositoryClass: PsCartRuleFajasMayluRepository::class)]
 class PsCartRule
 {
     #[ORM\Id]
