@@ -269,6 +269,8 @@ class OrdersLogic
             PsOrderFields::VALID => $order->getValid(),
             PsOrderFields::DATE_ADD => $order->getDateAdd()->format('Y-m-d H:i:s'),
             'origin' => $order->getOrigin(),
+            'num_pedido' => $posOrder?->getNumPedido(),
+            'identificador_rts' => $posOrder?->getIdentificadorRts(),
             'order_details' => []
         ];
 
