@@ -46,6 +46,34 @@ class LpPosOrders{
     #[ORM\Column(type: "string", length: 36)]
     private ?string $origin = null;
 
+    #[ORM\Column(type: "string", length: 50, nullable: true)]
+    private ?string $num_pedido = null;
+
+    #[ORM\Column(type: "string", length: 50, nullable: true)]
+    private ?string $identificador_rts = null;
+
+    public function getIdentificadorRts(): ?string
+    {
+        return $this->identificador_rts;
+    }
+
+    public function setIdentificadorRts(?string $identificador_rts): self
+    {
+        $this->identificador_rts = $identificador_rts;
+        return $this;
+    }
+
+    public function getNumPedido(): ?string
+    {
+        return $this->num_pedido;
+    }
+
+    public function setNumPedido(?string $num_pedido): self
+    {
+        $this->num_pedido = $num_pedido;
+        return $this;
+    }
+
     public function getOrigin(): ?string
     {
         return $this->origin;

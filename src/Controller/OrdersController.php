@@ -87,7 +87,7 @@ class OrdersController
 
         $newPosOrder = $this->ordersLogic->generatePosOrder(
             $data['id_shop'],$data['license'],$data['id_employee'], $data['total_paid'],$data['total_cash'],
-            $data['total_card'],$data['total_bizum'], $newPsOrder->getIdOrder());
+            $data['total_card'],$data['total_bizum'], $newPsOrder->getIdOrder(), $data['num_pedido'],$data['identificador_rts']);
 
         $this->ordersLogic->updatePosSessionsTotalPayments($data);
 
@@ -301,7 +301,7 @@ class OrdersController
 
         $newPosOrder = $this->ordersLogic->generatePosOrder(
             $data['id_shop'],$data['license'],$data['id_employee'], $data['total_paid'],$data['total_cash'],
-            $data['total_card'],$data['total_bizum'], $data['id_order'], $data['origin']);
+            $data['total_card'],$data['total_bizum'], $data['id_order'], $data['origin'], $data['num_pedido'], $data['identificador_rts']);
 
         foreach ($data['shops'] as $shop) {
             $dataMovement = [
