@@ -49,7 +49,7 @@ class PsOrdersFajasMayluRepository extends ServiceEntityRepository
         return $this->em->createQueryBuilder()
             ->select('o')
             ->from(PsOrders::class, 'o')
-            ->where('o.' . PsOrderFields::ID_CUSTOMER . ' = :id_customer')
+            ->where('IDENTITY(o.customer) = :id_customer')
             ->setParameter('id_customer', $idCustomer)
             ->orderBy('o.date_add', 'DESC')
             ->setMaxResults($limit)
