@@ -483,6 +483,26 @@ class OrdersLogic
         return $orders;
     }
 
+    public function getLastOrdersByCustomer(int $idCustomer, string $origin, int $limit = 10): array
+    {
+        switch ($origin) {
+            case 'fajasmaylu':
+                return $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findLastOrdersByCustomer($idCustomer, $limit);
+            case 'mayret':
+                return $this->entityManagerInterface->getRepository(PsOrders::class)->findLastOrdersByCustomer($idCustomer, $limit);
+            case 'all':
+                $ordersMaylu = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findLastOrdersByCustomer($idCustomer, $limit);
+                $ordersMayret = $this->entityManagerInterface->getRepository(PsOrders::class)->findLastOrdersByCustomer($idCustomer, $limit);
+                $orders = array_merge($ordersMayret, $ordersMaylu);
+                usort($orders, function ($a, $b) {
+                    return $b->getDateAdd() <=> $a->getDateAdd();
+                });
+                return array_slice($orders, 0, $limit);
+            default:
+                return $this->entityManagerInterface->getRepository(PsOrders::class)->findLastOrdersByCustomer($idCustomer, $limit);
+        }
+    }
+
     public function updatePosSessionsTotalPayments($data)
     {
         $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)

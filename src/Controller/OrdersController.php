@@ -248,6 +248,40 @@ class OrdersController
         return new JsonResponse($responseData, Response::HTTP_OK);
     }
 
+    #[Route('/get_last_orders_by_customer', name: 'get_last_orders_by_customer', methods: ['POST'])]
+    public function getLastOrdersByCustomer(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        if (!isset($data['id_customer'], $data['origin'])) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $orders = $this->ordersLogic->getLastOrdersByCustomer($data['id_customer'], $data['origin']);
+
+        if (!$orders) {
+            return new JsonResponse(['status' => 'error', 'message' => 'No orders found'], Response::HTTP_OK);
+        }
+
+        $responseData = [];
+        foreach ($orders as $order) {
+            $orderData = $this->ordersLogic->generateOrderJSON($order);
+            $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($order->getOrigin(), $order->getIdOrder());
+
+            foreach ($orderDetails as $detail) {
+                $orderData['order_details'][] = $this->ordersLogic->generateOrderDetailJSON($detail, $order->getOrigin());
+            }
+
+            $orderCartRules = $this->cartRuleLogic->getCartRulesByOrderIdAndOrigin($order->getIdOrder(), $order->getOrigin());
+            if ($orderCartRules != null) {
+                $orderData = $this->cartRuleLogic->generateCartRulesJSON($orderData, $orderCartRules, $order->getOrigin());
+            }
+
+            $responseData[] = $orderData;
+        }
+
+        return new JsonResponse($responseData, Response::HTTP_OK);
+    }
+
     #[Route('/get_sale_report_orders', name: 'get_sale_report_orders', methods: ['POST'])]
     public function getSaleReportOrders(Request $request): Response
     {
