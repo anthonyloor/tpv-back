@@ -43,4 +43,17 @@ class PsOrdersFajasMayluRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function findLastOrdersByCustomer(int $idCustomer, int $limit = 10): array
+    {
+        return $this->em->createQueryBuilder()
+            ->select('o')
+            ->from(PsOrders::class, 'o')
+            ->where('IDENTITY(o.customer) = :id_customer')
+            ->setParameter('id_customer', $idCustomer)
+            ->orderBy('o.date_add', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }
