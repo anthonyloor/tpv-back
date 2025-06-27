@@ -217,7 +217,7 @@ class OrdersLogic
         }
     }
 
-    public function generatePosOrder($id_shop, $license, $id_employee, $total_paid, $total_cash, $total_card, $total_bizum, $id_order, $num_pedido, $identificador_rts, string $origin = "mayret"): LpPosOrders
+    public function generatePosOrder($id_shop, $license, $id_employee, $total_paid, $total_cash, $total_card, $total_bizum, $id_order, $num_pedido, $identificador_rts, $cash_recived, $cash_returned,string $origin = "mayret"): LpPosOrders
     {
         $license_param = $license;
         $pos_session = $this->entityManagerInterface->getRepository(LpPosSessions::class)
@@ -237,6 +237,8 @@ class OrdersLogic
         $newPosOrder->setNumPedido($num_pedido ?? null);
         $newPosOrder->setIdentificadorRts($identificador_rts ?? null);
         $newPosOrder->setOrigin($origin);
+        $newPosOrder->setCashRecived($cash_recived ?? 0);
+        $newPosOrder->setCashReturned($cash_returned ?? 0);
 
         $newPosOrder->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
         $this->entityManagerInterface->persist($newPosOrder); 
@@ -373,7 +375,9 @@ class OrdersLogic
             $payments = [
                 'total_cash' => $posOrder->getTotalCash(),
                 'total_card' => $posOrder->getTotalCard(),
-                'total_bizum' => $posOrder->getTotalBizum()
+                'total_bizum' => $posOrder->getTotalBizum(),
+                'cash_recived' => $posOrder->getCashRecived(),
+                'cash_returned' => $posOrder->getCashReturned()
             ];
         }
 
