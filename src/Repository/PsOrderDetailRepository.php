@@ -33,26 +33,32 @@ class PsOrderDetailRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function getSalesReturnsByReference(string $reference): array
-    {
-        $qb = $this->em->createQueryBuilder();
+public function getSalesReturnsByReference(string $reference): array
+{
+    $conn = $this->em->getConnection();
 
-        $qb->select('
+    $sql = '
+        SELECT 
             p.reference AS referencia,
-            GROUP_CONCAT(DISTINCT al.name ORDER BY al.idAttribute SEPARATOR " - ") AS combinacion,
+            (
+                SELECT GROUP_CONCAT(DISTINCT al.name ORDER BY al.id_attribute SEPARATOR " - ")
+                FROM ps_product_attribute_combination pac
+                INNER JOIN ps_attribute_lang al ON pac.id_attribute = al.id_attribute AND al.id_lang = 1
+                WHERE pac.id_product_attribute = pa.id_product_attribute
+            ) AS combinacion,
             SUM(CASE WHEN od.product_quantity > 0 THEN od.product_quantity ELSE 0 END) AS num_ventas,
             SUM(CASE WHEN od.product_quantity < 0 THEN -od.product_quantity ELSE 0 END) AS num_devoluciones,
             SUM(od.product_quantity) AS total
-        ')
-            ->from(PsOrderDetail::class, 'od')
-            ->leftJoin(PsProduct::class, 'p', 'WITH', 'p.id_product = od.product_id')
-            ->leftJoin(PsProductAttribute::class, 'pa', 'WITH', 'pa.id_product_attribute = od.product_attribute_id')
-            ->leftJoin(PsProductAttributeCombination::class, 'pac', 'WITH', 'pac.id_product_attribute = pa.id_product_attribute')
-            ->leftJoin(PsAttributeLang::class, 'al', 'WITH', 'pac.idAttribute = al.idAttribute AND al.id_lang = 1')
-            ->where('p.reference = :ref OR pa.ean13 = :ref OR p.ean13 = :ref')
-            ->groupBy('p.reference, pa.id_product_attribute')
-            ->setParameter('ref', $reference);
+        FROM ps_order_detail od
+        LEFT JOIN ps_product p ON p.id_product = od.product_id
+        LEFT JOIN ps_product_attribute pa ON pa.id_product_attribute = od.product_attribute_id
+        WHERE p.reference = :ref OR pa.ean13 = :ref OR p.ean13 = :ref
+        GROUP BY p.reference, pa.id_product_attribute
+    ';
 
-        return $qb->getQuery()->getResult();
-    }
+    $stmt = $conn->prepare($sql);
+    $stmt->bindValue('ref', $reference);
+    return $stmt->executeQuery()->fetchAllAssociative();
+}
+
 }
