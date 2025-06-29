@@ -430,5 +430,22 @@ class OrdersController
         return new JsonResponse($responseData, Response::HTTP_OK);
     }
 
+    #[Route('/sales_returns', name: 'sales_returns')]
+    public function getSalesReturns(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['search_term'])) {
+            return new JsonResponse(['error' => 'Faltan parametros'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $reference = $data['search_term'];
+
+        $results = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+            ->getSalesReturnsByReference($reference);
+
+        return new JsonResponse($results);
+    }
+
 
 }
