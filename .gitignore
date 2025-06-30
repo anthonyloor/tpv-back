@@ -14,3 +14,4 @@
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
 public/tpv-back/logs/*
+.env

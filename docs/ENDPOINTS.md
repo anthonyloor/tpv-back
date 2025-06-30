@@ -15,7 +15,6 @@
 
 ## Productos
 
-
 ## `/product_search`
 
 **Método:** `POST`
@@ -58,7 +57,6 @@ Busca un producto por referencia o código EAN13. Se debe enviar el término de 
 
 ---
 ## Control de stock
-
 
 ## `/get_controll_stock_filtered`
 
@@ -261,7 +259,6 @@ Genera códigos EAN13 para los productos indicados.
 ---
 ## Autenticación
 
-
 ## `/login`
 
 **Método:** `POST`
@@ -287,8 +284,6 @@ Autentica a un empleado y devuelve un token JWT.
 
 ---
 ## Configuración TPV
-
-
 
 ## `/get_config_tpv`
 
@@ -426,7 +421,6 @@ Verifica un pin previamente generado.
 ---
 ## Empleados
 
-
 ## `/employees`
 
 **Método:** `GET`
@@ -448,7 +442,6 @@ Obtiene la lista de empleados activos.
 ---
 ## Tiendas
 
-
 ## `/shops`
 
 **Método:** `GET`
@@ -469,7 +462,6 @@ Devuelve las tiendas disponibles.
 
 ---
 ## Sesiones TPV
-
 
 ## `/open_pos_session`
 
