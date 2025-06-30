@@ -1,4 +1,20 @@
 # Documentación de Endpoints
+## Índice
+- [Productos](#productos)
+- [Control de stock](#control-de-stock)
+- [Autenticación](#autenticación)
+- [Configuración TPV](#configuración-tpv)
+- [Clientes](#clientes)
+- [Pedidos](#pedidos)
+- [Sesiones TPV](#sesiones-tpv)
+- [Empleados](#empleados)
+- [Tiendas](#tiendas)
+- [Reglas de carrito](#reglas-de-carrito)
+- [Licencias](#licencias)
+- [Movimientos de almacén](#movimientos-de-almacén)
+
+## Productos
+
 
 ## `/product_search`
 
@@ -41,6 +57,8 @@ Busca un producto por referencia o código EAN13. Se debe enviar el término de 
 ```
 
 ---
+## Control de stock
+
 
 ## `/get_controll_stock_filtered`
 
@@ -241,6 +259,8 @@ Genera códigos EAN13 para los productos indicados.
 ```
 
 ---
+## Autenticación
+
 
 ## `/login`
 
@@ -266,6 +286,9 @@ Autentica a un empleado y devuelve un token JWT.
 ```
 
 ---
+## Configuración TPV
+
+
 
 ## `/get_config_tpv`
 
@@ -401,6 +424,8 @@ Verifica un pin previamente generado.
 ```
 
 ---
+## Empleados
+
 
 ## `/employees`
 
@@ -421,6 +446,8 @@ Obtiene la lista de empleados activos.
 ```
 
 ---
+## Tiendas
+
 
 ## `/shops`
 
@@ -441,6 +468,8 @@ Devuelve las tiendas disponibles.
 ```
 
 ---
+## Sesiones TPV
+
 
 ## `/open_pos_session`
 
@@ -573,4 +602,616 @@ Lista todas las sesiones de punto de venta registradas.
     "license": "ABC123"
   }
 ]
+```
+
+## Reglas de carrito
+
+### `/get_cart_rule`
+
+**Método:** `GET`
+
+Devuelve la información de un vale descuento a partir de su código.
+
+### Solicitud de ejemplo
+```http
+GET /get_cart_rule?code=SUMMER24
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "code": "SUMMER24",
+  "reduction_amount": 5.0,
+  "reduction_percent": 0,
+  "active": true
+}
+```
+
+### `/get_cart_rules`
+
+**Método:** `GET`
+
+Obtiene una lista de los últimos vales generados. Opcionalmente se puede filtrar por rango de fechas.
+
+### Solicitud de ejemplo
+```json
+{
+  "date1": "2024-05-01",
+  "date2": "2024-05-31"
+}
+```
+
+### Respuesta de ejemplo
+```json
+[
+  {
+    "code": "SPRING24",
+    "reduction_amount": 10.0,
+    "active": true
+  }
+]
+```
+
+### `/create_cart_rule`
+
+**Método:** `POST`
+
+Crea un nuevo vale descuento.
+
+### Solicitud de ejemplo
+```json
+{
+  "date_from": "2024-05-01",
+  "date_to": "2024-06-01",
+  "description": "Promoción de mayo",
+  "name": "MAYO",
+  "quantity": 1,
+  "reduction_amount": 5.0,
+  "reduction_percent": 0,
+  "id_customer": 1
+}
+```
+
+### Respuesta de ejemplo
+```json
+[
+  {
+    "code": "MAYO24",
+    "reduction_amount": 5.0,
+    "active": true
+  }
+]
+```
+
+## Licencias
+
+### `/license_check`
+
+**Método:** `POST`
+
+Activa o comprueba el estado de una licencia para una tienda determinada.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_shop": 1,
+  "license": "ABC123"
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "status": "OK",
+  "message": "License actived"
+}
+```
+
+## Clientes
+
+### `/get_customers_filtered`
+
+**Método:** `POST`
+
+Filtra clientes por identificador o por nombre/teléfono.
+
+### Solicitud de ejemplo
+```json
+{
+  "origin": "all",
+  "filter": "Pérez"
+}
+```
+
+### Respuesta de ejemplo
+```json
+[
+  {
+    "id_customer": 5,
+    "firstname": "Luis",
+    "lastname": "Pérez",
+    "email": "luis@example.com",
+    "phone": "600123123",
+    "origin": "mayret"
+  }
+]
+```
+
+### `/get_all_customers`
+
+**Método:** `GET`
+
+Devuelve los últimos clientes registrados de todas las tiendas.
+
+### Respuesta de ejemplo
+```json
+[
+  { "id_customer": 5, "firstname": "Luis", "lastname": "Pérez" }
+]
+```
+
+### `/get_addresses`
+
+**Método:** `POST`
+
+Obtiene las direcciones asociadas a un cliente.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_customer": 5,
+  "origin": "mayret"
+}
+```
+
+### Respuesta de ejemplo
+```json
+[
+  {
+    "id_address": 20,
+    "city": "Madrid",
+    "address1": "Calle Falsa 123"
+  }
+]
+```
+
+### `/get_groups`
+
+**Método:** `GET`
+
+Lista los grupos de clientes disponibles.
+
+### Respuesta de ejemplo
+```json
+[
+  { "id_group": 1, "name": "Default" }
+]
+```
+
+### `/create_customer`
+
+**Método:** `POST`
+
+Crea un nuevo cliente.
+
+### Solicitud de ejemplo
+```json
+{
+  "firstname": "Ana",
+  "lastname": "López"
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "message": "Customer created successfully",
+  "id_customer": 10
+}
+```
+
+### `/create_address`
+
+**Método:** `POST`
+
+Añade una dirección a un cliente existente.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_customer": 10,
+  "id_country": 1,
+  "id_state": 1,
+  "alias": "Principal",
+  "lastname": "López",
+  "firstname": "Ana",
+  "address1": "Avenida 1",
+  "postcode": "28001",
+  "city": "Madrid"
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "message": "Address created successfully",
+  "id_address": 30
+}
+```
+
+### `/edit_customer`
+
+**Método:** `POST`
+
+Modifica los datos de un cliente existente.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_customer": 10,
+  "firstname": "Ana",
+  "lastname": "López García"
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "message": "Customer updated successfully"
+}
+```
+
+### `/edit_address`
+
+**Método:** `POST`
+
+Actualiza una dirección existente.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_address": 30,
+  "id_customer": 10,
+  "id_country": 1,
+  "id_state": 1,
+  "alias": "Principal",
+  "lastname": "López",
+  "firstname": "Ana",
+  "address1": "Avenida 1",
+  "postcode": "28001",
+  "city": "Madrid"
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "message": "Address updated successfully"
+}
+```
+
+## Pedidos
+
+### `/create_order`
+
+**Método:** `POST`
+
+Genera un nuevo pedido y actualiza la sesión TPV correspondiente.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_shop": 1,
+  "id_customer": 5,
+  "id_address_delivery": 20,
+  "payment": "cash",
+  "total_cash": 50,
+  "total_card": 0,
+  "total_bizum": 0,
+  "total_paid": 50,
+  "total_paid_tax_excl": 41.32,
+  "total_products": 2,
+  "total_discounts": 0,
+  "total_discounts_tax_excl": 0,
+  "order_details": [
+    {"id_product": 1, "product_quantity": 2}
+  ],
+  "license": "ABC123",
+  "id_employee": 1
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "status": "OK",
+  "message": "Order created with id 100"
+}
+```
+
+### `/get_order`
+
+**Método:** `POST`
+
+Devuelve la información completa de un pedido existente.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_order": 100,
+  "origin": "mayret"
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "id_order": 100,
+  "id_shop": 1,
+  "payment": "cash",
+  "total_paid": 50,
+  "order_details": []
+}
+```
+
+### `/get_shop_orders`
+
+**Método:** `POST`
+
+Lista los pedidos asociados a una tienda.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_shop": 1
+}
+```
+
+### Respuesta de ejemplo
+```json
+[
+  { "id_order": 100, "total_paid": 50 }
+]
+```
+
+### `/get_last_orders_by_customer`
+
+**Método:** `POST`
+
+Obtiene las últimas órdenes de un cliente.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_customer": 5,
+  "origin": "mayret"
+}
+```
+
+### Respuesta de ejemplo
+```json
+[
+  { "id_order": 100, "total_paid": 50 }
+]
+```
+
+### `/get_sale_report_orders`
+
+**Método:** `POST`
+
+Genera un informe de ventas entre fechas para las licencias indicadas.
+
+### Solicitud de ejemplo
+```json
+{
+  "licenses": ["ABC123"],
+  "date1": "2024-05-01",
+  "date2": "2024-05-31"
+}
+```
+
+### Respuesta de ejemplo
+```json
+[
+  { "id_order": 100, "total_paid": 50 }
+]
+```
+
+### `/update_online_orders`
+
+**Método:** `POST`
+
+Registra las ventas realizadas a través de la tienda online y actualiza el estado del pedido.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_order": 200,
+  "status": 3,
+  "origin": "mayret",
+  "shops": []
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "status": "OK",
+  "message": "ORDER_UPDATED200"
+}
+```
+
+### `/get_pos_session_sale_report_orders`
+
+**Método:** `POST`
+
+Devuelve las ventas asociadas a una sesión concreta de TPV.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_pos_session": 1
+}
+```
+
+### Respuesta de ejemplo
+```json
+[
+  { "id_order": 100, "total_paid": 50 }
+]
+```
+
+## Movimientos de almacén
+
+### `/get_warehouse_movements`
+
+**Método:** `POST`
+
+Lista los movimientos de almacén registrados, pudiendo filtrar por fechas.
+
+### Solicitud de ejemplo
+```json
+{
+  "data1": "2024-05-01",
+  "data2": "2024-05-31"
+}
+```
+
+### Respuesta de ejemplo
+```json
+[
+  {
+    "id_warehouse_movement": 3,
+    "description": "Envío entre tiendas",
+    "status": "Ejecutado"
+  }
+]
+```
+
+### `/get_warehouse_movement`
+
+**Método:** `GET`
+
+Obtiene la información detallada de un movimiento de almacén.
+
+### Solicitud de ejemplo
+```http
+GET /get_warehouse_movement?id_warehouse_movement=3
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "id_warehouse_movement": 3,
+  "description": "Envío entre tiendas",
+  "movement_details": []
+}
+```
+
+### `/create_warehouse_movement`
+
+**Método:** `POST`
+
+Crea un movimiento de almacén con sus detalles.
+
+### Solicitud de ejemplo
+```json
+{
+  "description": "Traslado de stock",
+  "type": "salida",
+  "id_employee": 1,
+  "movements_details": []
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "id_warehouse_movement": 4,
+  "description": "Traslado de stock",
+  "total_quantity": 0
+}
+```
+
+### `/update_warehouse_movement`
+
+**Método:** `POST`
+
+Modifica los datos de un movimiento de almacén existente.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_warehouse_movement": 4,
+  "status": "En camino"
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "id_warehouse_movement": 4,
+  "status": "En camino"
+}
+```
+
+### `/execute_warehouse_movement`
+
+**Método:** `POST`
+
+Ejecuta un movimiento pendiente y genera los controles de stock asociados.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_warehouse_movement": 4
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "movement": { "id_warehouse_movement": 4 },
+  "control_stocks": []
+}
+```
+
+### `/delete_warehouse_movement`
+
+**Método:** `POST`
+
+Elimina un movimiento de almacén y sus detalles.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_warehouse_movement": 4
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "message": "Movement deleted"
+}
+```
+
+### `/delete_warehouse_movement_detail`
+
+**Método:** `POST`
+
+Elimina una línea concreta del movimiento.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_warehouse_movement_detail": 10
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "message": "Detail deleted"
+}
 ```
