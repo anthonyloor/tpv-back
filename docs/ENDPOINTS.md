@@ -1217,3 +1217,24 @@ Elimina una línea concreta del movimiento.
   "message": "Detail deleted"
 }
 ```
+
+### `/get_transaction_origin`
+
+**Método:** `POST`
+
+Devuelve el identificador de la transacción asociada a un detalle.
+
+### Solicitud de ejemplo
+```json
+{
+  "type": "order",
+  "id_transaction_detail": 10
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "id_order": 5
+}
+```
