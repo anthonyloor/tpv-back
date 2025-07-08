@@ -87,7 +87,9 @@ class OrdersController
 
         $newPosOrder = $this->ordersLogic->generatePosOrder(
             $data['id_shop'],$data['license'],$data['id_employee'], $data['total_paid'],$data['total_cash'],
-            $data['total_card'],$data['total_bizum'], $newPsOrder->getIdOrder(), $data['num_pedido'],$data['identificador_rts']);
+            $data['total_card'],$data['total_bizum'], $newPsOrder->getIdOrder(), $data['num_pedido'],$data['identificador_rts'],
+            $data['cash_recived'], $data['cash_returned']
+        );
 
         $this->ordersLogic->updatePosSessionsTotalPayments($data);
 
@@ -335,7 +337,9 @@ class OrdersController
 
         $newPosOrder = $this->ordersLogic->generatePosOrder(
             $data['id_shop'],$data['license'],$data['id_employee'], $data['total_paid'],$data['total_cash'],
-            $data['total_card'],$data['total_bizum'], $data['id_order'], $data['origin'], $data['num_pedido'], $data['identificador_rts']);
+            $data['total_card'],$data['total_bizum'], $data['id_order'], $data['num_pedido'], 
+            $data['identificador_rts'], $data['cash_recived'], $data['cash_returned']
+        );
 
         foreach ($data['shops'] as $shop) {
             $dataMovement = [
@@ -424,6 +428,23 @@ class OrdersController
             $responseData[] = $orderData;
         }
         return new JsonResponse($responseData, Response::HTTP_OK);
+    }
+
+    #[Route('/sales_returns', name: 'sales_returns')]
+    public function getSalesReturns(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['search_term'])) {
+            return new JsonResponse(['error' => 'Faltan parametros'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $reference = $data['search_term'];
+
+        $results = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+            ->getSalesReturnsByReference($reference);
+
+        return new JsonResponse($results);
     }
 
 

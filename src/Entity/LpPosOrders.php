@@ -52,6 +52,34 @@ class LpPosOrders{
     #[ORM\Column(type: "string", length: 50, nullable: true)]
     private ?string $identificador_rts = null;
 
+    #[ORM\Column(type: "decimal", precision: 17, scale: 2)]
+    private ?float $cash_recived = null;
+
+    #[ORM\Column(type: "decimal", precision: 17, scale: 2)]
+    private ?float $cash_returned= null;
+
+    public function getCashRecived(): ?float
+    {
+        return $this->cash_recived;
+    }
+
+    public function setCashRecived(?float $cash_recived): self
+    {
+        $this->cash_recived = $cash_recived;
+        return $this;
+    }
+
+    public function getCashReturned(): ?float
+    {
+        return $this->cash_returned;
+    }
+
+    public function setCashReturned(?float $cash_returned): self
+    {
+        $this->cash_returned = $cash_returned;
+        return $this;
+    }
+
     public function getIdentificadorRts(): ?string
     {
         return $this->identificador_rts;
