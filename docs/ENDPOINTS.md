@@ -143,7 +143,17 @@ GET /get_controll_stock?id=12
   "active": true,
   "printed": false,
   "product_name": "Zapatilla deportiva",
-  "history": []
+  "history": [
+    {
+      "id_control_stock_history": 5,
+      "id_control_stock": 12,
+      "id_shop": 1,
+      "reason": "Creacion",
+      "type": "IN",
+      "date": "2024-05-01 10:23:00",
+      "id_transaction_detail": null
+    }
+  ]
 }
 ```
 
