@@ -211,6 +211,7 @@ class StockControllLogic
             $historyJSON[] = [
                 'id_control_stock_history' => $h->getIdControlStockHistory(),
                 'id_control_stock' => $h->getIdControlStock(),
+                'id_shop' => $h->getIdShop(),
                 'reason' => $h->getReason(),
                 'type' => $h->getType(),
                 'date' => $h->getDate()->format('Y-m-d H:i:s'),
