@@ -3,8 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\PsCustomer;
-use App\EntityFajasMaylu\PsCustomer as PsCustomerMaylu;
-use App\EntityFajasMaylu\PsAddress as PsAddressMaylu;
 use App\Entity\PsAddress;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -23,12 +21,10 @@ use App\Utils\Constants\DatabaseManagers;
 class CustomerController
 {
     private $entityManagerInterface;
-    private $emFajasMaylu;
     private $customerLogic;
     public function __construct(ManagerRegistry $doctrine, CustomerLogic $customerLogic)
     {
         $this->entityManagerInterface = $doctrine->getManager(DatabaseManagers::MAYRET_MANAGER);
-        $this->emFajasMaylu = $doctrine->getManager(DatabaseManagers::FAJASMAYLU_MANAGER);
         $this->customerLogic = $customerLogic;
     }
 
@@ -37,59 +33,16 @@ class CustomerController
     {
         $data = json_decode($request->getContent(), true);
     
-        if (!isset($data['origin'])) {
-            return new Response(HttpMessages::INVALID_INPUT, Response::HTTP_BAD_REQUEST);
-        }
-    
         $customers = [];
-    
-        $emMayret = $this->entityManagerInterface;
-        $emFajasMaylu = $this->emFajasMaylu;
-    
+
         if (isset($data['id_customer'])) {
-            switch ($data['origin']) {
-                case 'fajasmaylu':
-                    $customers = $emFajasMaylu
-                        ->getRepository(PsCustomerMaylu::class)
-                        ->findByCustomerById($data['id_customer']);
-                    break;
-                case 'mayret':
-                    $customers = $emMayret
-                        ->getRepository(PsCustomer::class)
-                        ->findByCustomerById($data['id_customer']);
-                    break;
-                case 'all':
-                    $customersMayret = $emMayret
-                        ->getRepository(PsCustomer::class)
-                        ->findByCustomerById($data['id_customer']);
-                    $customersMaylu = $emFajasMaylu
-                        ->getRepository(PsCustomerMaylu::class)
-                        ->findByCustomerById($data['id_customer']);
-                    $customers = array_merge($customersMayret, $customersMaylu);
-                    break;
-            }
+            $customers = $this->entityManagerInterface
+                ->getRepository(PsCustomer::class)
+                ->findByCustomerById($data['id_customer']);
         } elseif (isset($data['filter'])) {
-            switch ($data['origin']) {
-                case 'fajasmaylu':
-                    $customers = $emFajasMaylu
-                        ->getRepository(PsCustomerMaylu::class)
-                        ->findAllByFullNameOrPhone($data['filter']);
-                    break;
-                case 'mayret':
-                    $customers = $emMayret
-                        ->getRepository(PsCustomer::class)
-                        ->findAllByFullNameOrPhone($data['filter']);
-                    break;
-                case 'all':
-                    $customersMayret = $emMayret
-                        ->getRepository(PsCustomer::class)
-                        ->findAllByFullNameOrPhone($data['filter']);
-                    $customersMaylu = $emFajasMaylu
-                        ->getRepository(PsCustomerMaylu::class)
-                        ->findAllByFullNameOrPhone($data['filter']);
-                    $customers = array_merge($customersMayret, $customersMaylu);
-                    break;
-            }
+            $customers = $this->entityManagerInterface
+                ->getRepository(PsCustomer::class)
+                ->findAllByFullNameOrPhone($data['filter']);
         } else {
             return new Response(HttpMessages::INVALID_INPUT, Response::HTTP_BAD_REQUEST);
         }
@@ -107,16 +60,12 @@ class CustomerController
     public function getAllCustomers(): Response
     {
         $customers = $this->entityManagerInterface->getRepository(PsCustomer::class)->findRecentCustomers();
-        $customersMaylu = $this->emFajasMaylu->getRepository(PsCustomerMaylu::class)->findRecentCustomers();
-
 
         if (empty($customers)) {
             return new Response('No customers found', Response::HTTP_NOT_FOUND);
         }
-        // Merge both customer arrays
-        $allCustomers = array_merge($customers, $customersMaylu);
 
-        $customersArray = $this->customerLogic->generateJSONCustomer($allCustomers);
+        $customersArray = $this->customerLogic->generateJSONCustomer($customers);
 
         $responseContent = json_encode($customersArray);
         return new Response($responseContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
@@ -128,26 +77,11 @@ class CustomerController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['id_customer'], $data['origin'])) {
+        if (!isset($data['id_customer'])) {
             return new Response(HttpMessages::INVALID_INPUT, Response::HTTP_BAD_REQUEST);
         }
 
-        switch ($data['origin']) {
-            case 'fajasmaylu':
-                $addresses = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findAllByCustomerId1($data['id_customer']);
-                break;
-            case 'mayret':
-                $addresses = $this->entityManagerInterface->getRepository(PsAddress::class)->findAllByCustomerId($data['id_customer']);
-                break;
-            case 'all':
-                $addressesMayret = $this->entityManagerInterface->getRepository(PsAddress::class)->findAllByCustomerId($data['id_customer']);
-                $addressesMaylu = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findAllByCustomerId1($data['id_customer']);
-                $addresses = array_merge($addressesMayret, $addressesMaylu);
-                break;
-            default:
-                $addresses = $this->entityManagerInterface->getRepository(PsAddress::class)->findAllByCustomerId($data['id_customer']);
-                break;
-        }
+        $addresses = $this->entityManagerInterface->getRepository(PsAddress::class)->findAllByCustomerId($data['id_customer']);
         if (empty($addresses)) {
             return new Response('No addresses found for this customer.', Response::HTTP_NOT_FOUND);
         }

@@ -4,22 +4,17 @@ namespace App\Logic;
 
 use App\Entity\PsAddress;
 use App\Entity\PsCustomer;
-use App\EntityFajasMaylu\PsCustomer as PsCustomerMaylu;
-
 use Doctrine\Persistence\ManagerRegistry;
-use App\EntityFajasMaylu\PsAddress as PsAddressMaylu;
 
 
 class CustomerLogic
 {
     private $entityManagerInterface;
-    private $emFajasMaylu;
 
 
     public function __construct(ManagerRegistry $doctrine)
     {
         $this->entityManagerInterface = $doctrine->getManager('default');
-        $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
     }
 
     public function createCustomer($data): PsCustomer
@@ -85,13 +80,8 @@ class CustomerLogic
         foreach ($allCustomers as $customer) {
 
 
-            if ($customer->getOrigin() == 'mayret') {
-                $address = $this->entityManagerInterface->getRepository(PsAddress::class)->findOneByCustomerId($customer->getIdCustomer()
-                );
-            } else {
-                $address = $this->emFajasMaylu->getRepository(PsAddressMaylu::class)->findOneByCustomerId($customer->getIdCustomer()
-                );
-            }
+            $address = $this->entityManagerInterface->getRepository(PsAddress::class)
+                ->findOneByCustomerId($customer->getIdCustomer());
 
 
             $phone = $address ? ($address->getPhone() ?: $address->getPhoneMobile()) : null;

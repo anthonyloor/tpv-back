@@ -3,8 +3,6 @@ doctrine:
         connections:
             default:
                 url: '%env(resolve:DATABASE_MAYRET_URL)%'
-            fajas_maylu:
-                url: '%env(resolve:DATABASE_FAJASMAYLU_URL)%'
 
     orm:
         auto_generate_proxy_classes: true
@@ -28,18 +26,3 @@ doctrine:
                         GROUP_CONCAT: App\Doctrine\Functions\GroupConcat
                         ROUND: App\Doctrine\Functions\Round
 
-            fajas_maylu:
-                connection: fajas_maylu
-                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
-                mappings:
-                    AppFajasMaylu:
-                        type: attribute
-                        is_bundle: false
-                        dir: '%kernel.project_dir%/src/EntityFajasMaylu'
-                        prefix: 'App\EntityFajasMaylu'
-                        alias: FajasMaylu
-                dql:
-                    string_functions:
-                        IFNULL: App\Doctrine\Functions\IfNull
-                        GROUP_CONCAT: App\Doctrine\Functions\GroupConcat
-                        ROUND: App\Doctrine\Functions\Round
