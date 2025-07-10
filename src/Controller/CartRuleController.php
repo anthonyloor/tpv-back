@@ -38,7 +38,7 @@ class CartRuleController
         return new JsonResponse($cartRuleData, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/get_cart_rules', name: 'get_cart_rules', methods: ['GET'])]
+    #[Route('/get_cart_rules', name: 'get_cart_rules', methods: ['POST'])]
     public function getCartRules(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
@@ -47,9 +47,7 @@ class CartRuleController
             $date1 = new \DateTime($data['date1']);
             $date2 = new \DateTime($data['date2']);
             $cartRules = $this->entityManagerInterface->getRepository(PsCartRule::class)->createQueryBuilder('c')
-                ->where('c.active = :active')
-                ->andWhere('c.date_add BETWEEN :date1 AND :date2')
-                ->setParameter('active', true)
+                ->where('c.date_add BETWEEN :date1 AND :date2')
                 ->setParameter('date1', $date1->format('Y-m-d H:i:s'))
                 ->setParameter('date2', $date2->format('Y-m-d H:i:s'))
                 ->orderBy('c.id_cart_rule', 'DESC')
