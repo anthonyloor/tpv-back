@@ -3,12 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\LpPosOrders;
-use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
-use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
-use App\EntityFajasMaylu\PsOrderState as PsOrderStateFajasMaylu;
-use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
-use App\EntityFajasMaylu\PsCartRule as PsCartRuleFajasMaylu;
-use App\EntityFajasMaylu\PsCartRuleLang as PsCartRuleLangFajasMaylu;
 
 use App\Logic\CartRuleLogic;
 use App\Logic\StockControllLogic;
