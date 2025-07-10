@@ -3,12 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\LpPosOrders;
-use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
-use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
-use App\EntityFajasMaylu\PsOrderState as PsOrderStateFajasMaylu;
-use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
-use App\EntityFajasMaylu\PsCartRule as PsCartRuleFajasMaylu;
-use App\EntityFajasMaylu\PsCartRuleLang as PsCartRuleLangFajasMaylu;
 
 use App\Logic\CartRuleLogic;
 use App\Logic\StockControllLogic;
@@ -35,7 +29,6 @@ use App\Entity\PsOrderState;
 class OrdersController
 {
     private $entityManagerInterface;
-    private $emFajasMaylu;
     private OrdersLogic $ordersLogic;
     private CartRuleLogic $cartRuleLogic;
     private StockControllLogic $stockControllLogic;
@@ -45,7 +38,6 @@ class OrdersController
     public function __construct(ManagerRegistry $doctrine, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic, StockControllLogic $stockControllLogic, WareHouseMovementLogic $wareHouseMovementLogic, Logger $logger)
     {
         $this->entityManagerInterface = $doctrine->getManager(DatabaseManagers::MAYRET_MANAGER);
-        $this->emFajasMaylu = $doctrine->getManager(DatabaseManagers::FAJASMAYLU_MANAGER);
         $this->ordersLogic = $ordersLogic;
         $this->cartRuleLogic = $cartRuleLogic;
         $this->stockControllLogic = $stockControllLogic;
@@ -376,27 +368,11 @@ class OrdersController
 
         $this->ordersLogic->updatePosSessionsTotalPayments($data);
 
-        switch ($data['origin']) {
-            case 'fajasmaylu':
-                $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($data['id_order']);
-                $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->emFajasMaylu->persist($order);
-                break;
-            case 'mayret':
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
-                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->entityManagerInterface->persist($order);
-                break;
-            default:
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
-                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->entityManagerInterface->persist($order);
-        }
+        $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
+        $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
+        $order->setCurrentState($orderState);
+        $this->entityManagerInterface->persist($order);
         $this->entityManagerInterface->flush();
-        $this->emFajasMaylu->flush();
 
         return new JsonResponse(['status' => 'OK', 'message' => HttpMessages::ORDER_UPDATED . $data['id_order']]);
     }

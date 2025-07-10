@@ -7,19 +7,14 @@ use Doctrine\Persistence\ManagerRegistry;
 use App\Entity\PsCartRuleLang;
 use App\Entity\PsCartRule;
 use App\Entity\PsOrderCartRule;
-use App\EntityFajasMaylu\PsCartRule as PsCartRuleFajasMaylu;
-use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
-use App\EntityFajasMaylu\PsCartRuleLang as PsCartRuleLangFajasMaylu;
 
 class CartRuleLogic
 {
     private $entityManagerInterface;
-    private $emFajasMaylu;
 
     public function __construct(ManagerRegistry $doctrine)
     {
         $this->entityManagerInterface = $doctrine->getManager('default');
-        $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
     }
 
     public function generateCartRuleJSON($cartRule)
@@ -161,52 +156,20 @@ class CartRuleLogic
 
     public function getCartRulesByOrderIdAndOrigin($id_order, $origin)
     {
-        $orderCartRules = null;
-        switch ($origin) {
-            case 'fajasmaylu':
-                // Obtener los cart rules de la orden
-                $orderCartRules = $this->emFajasMaylu->getRepository(PsOrderCartRuleFajasMaylu::class)
-                ->findByIdOrder($id_order);
-                break;
-            case 'mayret':
-                // Obtener los cart rules de la orden
-                $orderCartRules = $this->entityManagerInterface->getRepository(PsOrderCartRule::class)
-                ->findByIdOrder($id_order);
-                break;
-        }
-        return $orderCartRules;
+        return $this->entityManagerInterface->getRepository(PsOrderCartRule::class)
+            ->findByIdOrder($id_order);
     }
 
     public function getCartRuleByIdAndOrigin($orderCartRule,$origin)
     {
-        $cartRule = null;
-        switch ($origin) {
-            case 'fajasmaylu':
-                $cartRule = $this->emFajasMaylu->getRepository(PsCartRuleFajasMaylu::class)
-                    ->findByIdCartRule($orderCartRule->getIdCartRule());
-                break;
-            case 'mayret':
-                $cartRule = $this->entityManagerInterface->getRepository(PsCartRule::class)
-                    ->findByIdCartRule($orderCartRule->getIdCartRule());
-                break;
-        }
-        return $cartRule;
+        return $this->entityManagerInterface->getRepository(PsCartRule::class)
+            ->findByIdCartRule($orderCartRule->getIdCartRule());
     }
 
     public function getCartRuleLangByCartRuleIdAndOrigin($cartRule, $origin)
     {
-        $cartRuleLang = null;
-        switch ($origin) {
-            case 'fajasmaylu':
-                $cartRuleLang = $this->emFajasMaylu->getRepository(PsCartRuleLang::class)
-                    ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
-                break;
-            case 'mayret':
-                $cartRuleLang = $this->entityManagerInterface->getRepository(PsCartRuleLangFajasMaylu::class)
-                    ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
-                break;
-        }
-        return $cartRuleLang;
+        return $this->entityManagerInterface->getRepository(PsCartRuleLang::class)
+            ->findOneBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
     }
 
     public function generateCartRulesJSON($orderData, $orderCartRules, $origin): array
