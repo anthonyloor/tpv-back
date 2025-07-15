@@ -12,6 +12,7 @@
 - [Reglas de carrito](#reglas-de-carrito)
 - [Licencias](#licencias)
 - [Movimientos de almacén](#movimientos-de-almacén)
+- [Stock fijo](#stock-fijo)
 
 ## Productos
 
@@ -1236,5 +1237,91 @@ Devuelve el identificador de la transacción asociada a un detalle.
 ```json
 {
   "id_order": 5
+}
+```
+
+## Stock fijo
+
+### `/stock_fixed_list`
+
+**Método:** `GET`
+
+Devuelve la tabla completa de stock fijo.
+
+### Respuesta de ejemplo
+```json
+[
+  {
+    "id_stock": 1,
+    "ean13": "3158415376771",
+    "quantity_shop_1": 0,
+    "quantity_shop_2": 1,
+    "quantity_shop_3": 1
+  }
+]
+```
+
+### `/stock_fixed_add`
+
+**Método:** `POST`
+
+Añade un nuevo registro de stock fijo.
+
+### Solicitud de ejemplo
+```json
+{
+  "ean13": "1234567890123",
+  "quantity_shop_1": 1,
+  "quantity_shop_2": 1,
+  "quantity_shop_3": 1
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "message": "Record created",
+  "id_stock": 11
+}
+```
+
+### `/stock_fixed_update_quantity`
+
+**Método:** `POST`
+
+Modifica las cantidades de un registro existente.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_stock": 1,
+  "quantity_shop_2": 3
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "message": "Record updated"
+}
+```
+
+### `/stock_fixed_delete`
+
+**Método:** `POST`
+
+Elimina un registro de stock fijo.
+
+### Solicitud de ejemplo
+```json
+{
+  "id_stock": 1
+}
+```
+
+### Respuesta de ejemplo
+```json
+{
+  "message": "Record deleted"
 }
 ```
