@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\PsCartRule;
 use App\Logic\CartRuleLogic;
+use App\Entity\PsCartRuleShop;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
@@ -35,6 +36,19 @@ class CartRuleController
         }
 
         $cartRuleData = $this->cartRuleLogic->generateCartRuleJSON($cartRule);
+
+        $shopRestrictions = $this->entityManagerInterface
+            ->getRepository(PsCartRuleShop::class)
+            ->findBy(['id_cart_rule' => $cartRule->getIdCartRule()]);
+
+        $idShops = array_map(static function (PsCartRuleShop $crShop) {
+            return $crShop->getIdShop();
+        }, $shopRestrictions);
+
+        $cartRuleData['restrictions'] = [
+            'id_shop' => implode(',', $idShops)
+        ];
+
         return new JsonResponse($cartRuleData, JsonResponse::HTTP_OK);
     }
 

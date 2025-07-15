@@ -612,7 +612,7 @@ Lista todas las sesiones de punto de venta registradas.
 
 **Método:** `GET`
 
-Devuelve la información de un vale descuento a partir de su código.
+Devuelve la información de un vale descuento a partir de su código. Ahora también incluye las restricciones de tiendas asociadas.
 
 ### Solicitud de ejemplo
 ```http
@@ -625,7 +625,10 @@ GET /get_cart_rule?code=SUMMER24
   "code": "SUMMER24",
   "reduction_amount": 5.0,
   "reduction_percent": 0,
-  "active": true
+  "active": true,
+  "restrictions": {
+    "id_shop": "1,2"
+  }
 }
 ```
 
