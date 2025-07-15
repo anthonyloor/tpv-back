@@ -40,57 +40,102 @@ class StockFixedController extends AbstractController
     #[Route('/stock_fixed_add', name: 'stock_fixed_add', methods: ['POST'])]
     public function add(Request $request): Response
     {
-        $data = json_decode($request->getContent(), true);
-        if (!isset($data['ean13'], $data['quantity_shop_1'], $data['quantity_shop_2'], $data['quantity_shop_3'])) {
-            return new JsonResponse(['error' => 'Missing parameters'], Response::HTTP_BAD_REQUEST);
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return new JsonResponse(['error' => 'Invalid payload'], Response::HTTP_BAD_REQUEST);
         }
-        $record = new LpStockFixed();
-        $record->setEan13($data['ean13']);
-        $record->setQuantityShop1($data['quantity_shop_1']);
-        $record->setQuantityShop2($data['quantity_shop_2']);
-        $record->setQuantityShop3($data['quantity_shop_3']);
-        $this->entityManager->persist($record);
+
+        $items = array_is_list($payload) ? $payload : [$payload];
+        $createdIds = [];
+
+        foreach ($items as $data) {
+            if (!isset($data['ean13'], $data['quantity_shop_1'], $data['quantity_shop_2'], $data['quantity_shop_3'])) {
+                return new JsonResponse(['error' => 'Missing parameters'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $record = new LpStockFixed();
+            $record->setEan13($data['ean13']);
+            $record->setQuantityShop1($data['quantity_shop_1']);
+            $record->setQuantityShop2($data['quantity_shop_2']);
+            $record->setQuantityShop3($data['quantity_shop_3']);
+
+            $this->entityManager->persist($record);
+            $createdIds[] = $record;
+        }
+
         $this->entityManager->flush();
-        return new JsonResponse(['message' => 'Record created', 'id_stock' => $record->getIdStock()]);
+
+        $ids = array_map(fn (LpStockFixed $r) => $r->getIdStock(), $createdIds);
+
+        return new JsonResponse(['message' => 'Records created', 'id_stocks' => $ids]);
     }
 
     #[Route('/stock_fixed_update_quantity', name: 'stock_fixed_update_quantity', methods: ['POST'])]
     public function updateQuantity(Request $request): Response
     {
-        $data = json_decode($request->getContent(), true);
-        if (!isset($data['id_stock'])) {
-            return new JsonResponse(['error' => 'Missing id_stock'], Response::HTTP_BAD_REQUEST);
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return new JsonResponse(['error' => 'Invalid payload'], Response::HTTP_BAD_REQUEST);
         }
-        $record = $this->entityManager->getRepository(LpStockFixed::class)->find($data['id_stock']);
-        if (!$record) {
-            return new JsonResponse(['error' => 'Record not found'], Response::HTTP_NOT_FOUND);
+
+        $items = array_is_list($payload) ? $payload : [$payload];
+        $updatedIds = [];
+
+        foreach ($items as $data) {
+            if (!isset($data['id_stock'])) {
+                return new JsonResponse(['error' => 'Missing id_stock'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $record = $this->entityManager->getRepository(LpStockFixed::class)->find($data['id_stock']);
+            if (!$record) {
+                return new JsonResponse(['error' => 'Record not found'], Response::HTTP_NOT_FOUND);
+            }
+
+            if (isset($data['quantity_shop_1'])) {
+                $record->setQuantityShop1($data['quantity_shop_1']);
+            }
+            if (isset($data['quantity_shop_2'])) {
+                $record->setQuantityShop2($data['quantity_shop_2']);
+            }
+            if (isset($data['quantity_shop_3'])) {
+                $record->setQuantityShop3($data['quantity_shop_3']);
+            }
+
+            $updatedIds[] = $record->getIdStock();
         }
-        if (isset($data['quantity_shop_1'])) {
-            $record->setQuantityShop1($data['quantity_shop_1']);
-        }
-        if (isset($data['quantity_shop_2'])) {
-            $record->setQuantityShop2($data['quantity_shop_2']);
-        }
-        if (isset($data['quantity_shop_3'])) {
-            $record->setQuantityShop3($data['quantity_shop_3']);
-        }
+
         $this->entityManager->flush();
-        return new JsonResponse(['message' => 'Record updated']);
+
+        return new JsonResponse(['message' => 'Records updated', 'id_stocks' => $updatedIds]);
     }
 
     #[Route('/stock_fixed_delete', name: 'stock_fixed_delete', methods: ['POST'])]
     public function delete(Request $request): Response
     {
-        $data = json_decode($request->getContent(), true);
-        if (!isset($data['id_stock'])) {
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return new JsonResponse(['error' => 'Invalid payload'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $ids = [];
+        if (array_is_list($payload)) {
+            $ids = $payload;
+        } elseif (isset($payload['id_stock'])) {
+            $ids[] = $payload['id_stock'];
+        } else {
             return new JsonResponse(['error' => 'Missing id_stock'], Response::HTTP_BAD_REQUEST);
         }
-        $record = $this->entityManager->getRepository(LpStockFixed::class)->find($data['id_stock']);
-        if (!$record) {
-            return new JsonResponse(['error' => 'Record not found'], Response::HTTP_NOT_FOUND);
+
+        foreach ($ids as $id) {
+            $record = $this->entityManager->getRepository(LpStockFixed::class)->find($id);
+            if (!$record) {
+                return new JsonResponse(['error' => 'Record not found'], Response::HTTP_NOT_FOUND);
+            }
+            $this->entityManager->remove($record);
         }
-        $this->entityManager->remove($record);
+
         $this->entityManager->flush();
-        return new JsonResponse(['message' => 'Record deleted']);
+
+        return new JsonResponse(['message' => 'Records deleted']);
     }
 }

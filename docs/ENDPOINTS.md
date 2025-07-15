@@ -1265,23 +1265,31 @@ Devuelve la tabla completa de stock fijo.
 
 **Método:** `POST`
 
-Añade un nuevo registro de stock fijo.
+Añade uno o varios registros de stock fijo.
 
 ### Solicitud de ejemplo
 ```json
-{
-  "ean13": "1234567890123",
-  "quantity_shop_1": 1,
-  "quantity_shop_2": 1,
-  "quantity_shop_3": 1
-}
+[
+  {
+    "ean13": "1234567890123",
+    "quantity_shop_1": 1,
+    "quantity_shop_2": 1,
+    "quantity_shop_3": 1
+  },
+  {
+    "ean13": "9876543210987",
+    "quantity_shop_1": 2,
+    "quantity_shop_2": 0,
+    "quantity_shop_3": 1
+  }
+]
 ```
 
 ### Respuesta de ejemplo
 ```json
 {
-  "message": "Record created",
-  "id_stock": 11
+  "message": "Records created",
+  "id_stocks": [11, 12]
 }
 ```
 
@@ -1289,20 +1297,21 @@ Añade un nuevo registro de stock fijo.
 
 **Método:** `POST`
 
-Modifica las cantidades de un registro existente.
+Modifica las cantidades de uno o varios registros existentes.
 
 ### Solicitud de ejemplo
 ```json
-{
-  "id_stock": 1,
-  "quantity_shop_2": 3
-}
+[
+  { "id_stock": 1, "quantity_shop_2": 3 },
+  { "id_stock": 2, "quantity_shop_1": 0 }
+]
 ```
 
 ### Respuesta de ejemplo
 ```json
 {
-  "message": "Record updated"
+  "message": "Records updated",
+  "id_stocks": [1, 2]
 }
 ```
 
@@ -1310,18 +1319,16 @@ Modifica las cantidades de un registro existente.
 
 **Método:** `POST`
 
-Elimina un registro de stock fijo.
+Elimina uno o varios registros de stock fijo.
 
 ### Solicitud de ejemplo
 ```json
-{
-  "id_stock": 1
-}
+[1, 2]
 ```
 
 ### Respuesta de ejemplo
 ```json
 {
-  "message": "Record deleted"
+  "message": "Records deleted"
 }
 ```
