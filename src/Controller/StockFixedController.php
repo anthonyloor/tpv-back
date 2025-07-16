@@ -3,6 +3,10 @@
 namespace App\Controller;
 
 use App\Entity\LpStockFixed;
+use App\Entity\PsProduct;
+use App\Entity\PsProductAttribute;
+use App\Entity\PsProductAttributeCombination;
+use App\Entity\PsAttributeLang;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,19 +26,28 @@ class StockFixedController extends AbstractController
     #[Route('/stock_fixed_list', name: 'stock_fixed_list')]
     public function list(): Response
     {
-        $records = $this->entityManager->getRepository(LpStockFixed::class)
-            ->findBy([], ['id_stock' => 'ASC']);
-        $data = [];
-        foreach ($records as $record) {
-            $data[] = [
-                'id_stock' => $record->getIdStock(),
-                'ean13' => $record->getEan13(),
-                'quantity_shop_1' => $record->getQuantityShop1(),
-                'quantity_shop_2' => $record->getQuantityShop2(),
-                'quantity_shop_3' => $record->getQuantityShop3(),
-            ];
-        }
-        return new JsonResponse($data);
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select(
+            'sf.id_stock AS id_stock',
+            'sf.ean13 AS ean13',
+            'sf.quantity_shop_1 AS quantity_shop_1',
+            'sf.quantity_shop_2 AS quantity_shop_2',
+            'sf.quantity_shop_3 AS quantity_shop_3',
+            'COALESCE(p.reference, p2.reference) AS reference_combination',
+            "GROUP_CONCAT(DISTINCT al.name ORDER BY al.idAttribute SEPARATOR ' - ') AS combination_name"
+        )
+            ->from(LpStockFixed::class, 'sf')
+            ->leftJoin(PsProductAttribute::class, 'pa', 'WITH', 'pa.ean13 = sf.ean13')
+            ->leftJoin('pa.idProduct', 'p')
+            ->leftJoin(PsProduct::class, 'p2', 'WITH', 'p2.ean13 = sf.ean13')
+            ->leftJoin(PsProductAttributeCombination::class, 'pac', 'WITH', 'pa.id_product_attribute = pac.id_product_attribute')
+            ->leftJoin(PsAttributeLang::class, 'al', 'WITH', 'pac.idAttribute = al.idAttribute AND al.id_lang = 1')
+            ->groupBy('sf.id_stock')
+            ->orderBy('sf.id_stock', 'ASC');
+
+        $records = $qb->getQuery()->getResult();
+
+        return new JsonResponse($records);
     }
 
     #[Route('/stock_fixed_add', name: 'stock_fixed_add', methods: ['POST'])]

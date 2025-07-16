@@ -1246,7 +1246,7 @@ Devuelve el identificador de la transacción asociada a un detalle.
 
 **Método:** `GET`
 
-Devuelve la tabla completa de stock fijo.
+Devuelve la tabla completa de stock fijo, incluyendo el `reference_combination` y `combination_name` de cada producto.
 
 ### Respuesta de ejemplo
 ```json
@@ -1254,6 +1254,8 @@ Devuelve la tabla completa de stock fijo.
   {
     "id_stock": 1,
     "ean13": "3158415376771",
+    "reference_combination": "ABC123",
+    "combination_name": "Talla M - Rojo",
     "quantity_shop_1": 0,
     "quantity_shop_2": 1,
     "quantity_shop_3": 1
