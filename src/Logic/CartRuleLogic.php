@@ -24,7 +24,14 @@ class CartRuleLogic
 
     public function generateCartRuleJSON($cartRule)
     {
+        $cartRuleLang = $this->entityManagerInterface->getRepository(PsCartRuleLang::class)
+            ->findOneBy([
+                'id_cart_rule' => $cartRule->getIdCartRule(),
+                'id_lang' => 1,
+            ]);
+
         $cartRuleData = [
+            'name' => $cartRuleLang?->getName(),
             'date_from' => $cartRule->getDateFrom()?->format('Y-m-d H:i:s'),
             'date_to' => $cartRule->getDateTo()?->format('Y-m-d H:i:s'),
             'id_customer' => $cartRule->getIdCustomer(),

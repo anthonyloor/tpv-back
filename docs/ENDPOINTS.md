@@ -613,7 +613,7 @@ Lista todas las sesiones de punto de venta registradas.
 
 **Método:** `GET`
 
-Devuelve la información de un vale descuento a partir de su código. Ahora también incluye las restricciones de tiendas asociadas.
+Devuelve la información de un vale descuento a partir de su código. Ahora también incluye el nombre obtenido de `ps_cart_rule_lang` y las restricciones de tiendas asociadas.
 
 ### Solicitud de ejemplo
 ```http
@@ -624,6 +624,7 @@ GET /get_cart_rule?code=SUMMER24
 ```json
 {
   "code": "SUMMER24",
+  "name": "VERANO",
   "reduction_amount": 5.0,
   "reduction_percent": 0,
   "active": true,
@@ -637,7 +638,7 @@ GET /get_cart_rule?code=SUMMER24
 
 **Método:** `GET`
 
-Obtiene una lista de los últimos vales generados. Opcionalmente se puede filtrar por rango de fechas.
+Obtiene una lista de los últimos vales generados. Incluye el nombre desde `ps_cart_rule_lang`. Opcionalmente se puede filtrar por rango de fechas.
 
 ### Solicitud de ejemplo
 ```json
@@ -652,6 +653,7 @@ Obtiene una lista de los últimos vales generados. Opcionalmente se puede filtra
 [
   {
     "code": "SPRING24",
+    "name": "PRIMAVERA",
     "reduction_amount": 10.0,
     "active": true
   }
