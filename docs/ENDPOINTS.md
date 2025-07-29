@@ -14,6 +14,7 @@
 - [Movimientos de almacén](#movimientos-de-almacén)
 - [Stock fijo](#stock-fijo)
 
+
 ## Productos
 
 ## `/product_search`
