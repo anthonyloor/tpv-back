@@ -22,27 +22,21 @@ use App\Entity\PsProductAttribute;
 use App\Entity\PsShop;
 
 
-use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
-use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
-use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
-use App\EntityFajasMaylu\PsOrderState as PsOrderStateFajasMaylu;
+
 use App\Utils\Logger\Logger;
 
-use App\EntityFajasMaylu\PsStockAvailable as PsStockAvailableFajasMaylu;
 use Doctrine\Persistence\ManagerRegistry;
 
 class OrdersLogic
 {
 
     private $entityManagerInterface;
-    private $emFajasMaylu;
     private $logger;
 
 
     public function __construct(ManagerRegistry $doctrine, Logger $logger)
     {
         $this->entityManagerInterface = $doctrine->getManager('default');
-        $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
         $this->logger = $logger;
     }
 
@@ -292,31 +286,12 @@ class OrdersLogic
 
     public function generateOrderDetailJSON($detail, string $origin)
     {
-        switch ($origin) {
-            case "fajas_maylu":
-                $stockAvailable = $this->emFajasMaylu->getRepository(PsStockAvailableFajasMaylu::class)
-                    ->findOneByProductAttributeShop(
-                        $detail->getProductId(),
-                        $detail->getProductAttributeId(),
-                        $detail->getIdShop()
-                    );
-                break;
-            case "mayret":
-                $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-                    ->findOneByProductAttributeShop(
-                        $detail->getProductId(),
-                        $detail->getProductAttributeId(),
-                        $detail->getIdShop()
-                    );
-                break;
-            default:
-                $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
-                    ->findOneByProductAttributeShop(
-                        $detail->getProductId(),
-                        $detail->getProductAttributeId(),
-                        $detail->getIdShop()
-                    );
-        }
+        $stockAvailable = $this->entityManagerInterface->getRepository(PsStockAvailable::class)
+            ->findOneByProductAttributeShop(
+                $detail->getProductId(),
+                $detail->getProductAttributeId(),
+                $detail->getIdShop()
+            );
 
         $stock_available_id = $stockAvailable ? $stockAvailable->getIdStockAvailable() : null;
         $controlStockHistory = $this->entityManagerInterface->getRepository(LpControlStockHistory::class)
@@ -430,81 +405,24 @@ class OrdersLogic
 
     public function getOrderbyIdAndOrigin($origin, $id_order)
     {
-        $order = null;
-        switch ($origin) {
-            case 'fajasmaylu':
-                $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($id_order);
-                break;
-            case 'mayret':
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
-                break;
-            default:
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
-                break;
-        }
-        return $order;
+        return $this->entityManagerInterface->getRepository(PsOrders::class)->findById($id_order);
     }
     public function getOrderDetailsByOrderIdAndOrigin($origin, $id_order)
     {
-        $orderDetails = null;
-        switch ($origin) {
-            case 'fajasmaylu':
-                // Obtener los detalles de la orden
-                $orderDetails = $this->emFajasMaylu->getRepository(PsOrderDetailFajasMaylu::class)
-                ->findByOrderId($id_order);
-                break;
-            case 'mayret':
-                // Obtener los detalles de la orden
-                $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-                ->findByOrderId($id_order);
-            default:
-                // Obtener los detalles de la orden
-                $orderDetails = $this->entityManagerInterface->getRepository(PsOrderDetail::class)
-                ->findByOrderId($id_order);
-                break;
-        }
-        return $orderDetails;
+        return $this->entityManagerInterface->getRepository(PsOrderDetail::class)
+            ->findByOrderId($id_order);
     }
 
     public function getOrdersByShopAndOrigin($data):array
     {
-        $orders = null;
-        switch ($data['origin']) {
-            case 'fajasmaylu':
-                $orders = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findOrdersByShop($data['id_shop']);
-                break;
-            case 'mayret':
-                $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
-                break;
-            case 'all':
-                $ordersMaylu = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findOrdersByShop($data['id_shop']);
-                $ordersMayret = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
-                $orders = array_merge($ordersMayret, $ordersMaylu);
-                break;
-            default:
-                $orders = $this->entityManagerInterface->getRepository(PsOrders::class)->findOrdersByShop($data['id_shop']);
-        }
-        return $orders;
+        return $this->entityManagerInterface->getRepository(PsOrders::class)
+            ->findOrdersByShop($data['id_shop']);
     }
 
     public function getLastOrdersByCustomer(int $idCustomer, string $origin, int $limit = 10): array
     {
-        switch ($origin) {
-            case 'fajasmaylu':
-                return $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findLastOrdersByCustomer($idCustomer, $limit);
-            case 'mayret':
-                return $this->entityManagerInterface->getRepository(PsOrders::class)->findLastOrdersByCustomer($idCustomer, $limit);
-            case 'all':
-                $ordersMaylu = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findLastOrdersByCustomer($idCustomer, $limit);
-                $ordersMayret = $this->entityManagerInterface->getRepository(PsOrders::class)->findLastOrdersByCustomer($idCustomer, $limit);
-                $orders = array_merge($ordersMayret, $ordersMaylu);
-                usort($orders, function ($a, $b) {
-                    return $b->getDateAdd() <=> $a->getDateAdd();
-                });
-                return array_slice($orders, 0, $limit);
-            default:
-                return $this->entityManagerInterface->getRepository(PsOrders::class)->findLastOrdersByCustomer($idCustomer, $limit);
-        }
+        return $this->entityManagerInterface->getRepository(PsOrders::class)
+            ->findLastOrdersByCustomer($idCustomer, $limit);
     }
 
     public function updatePosSessionsTotalPayments($data)
@@ -525,17 +443,7 @@ class OrdersLogic
 
     public function getOrderStateByIdAndOrigin ($id_order_state,$origin)
     {
-        $orderState = null;
-        switch ($origin) {
-            case 'fajasmaylu':
-                $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($id_order_state);
-                break;
-            case 'mayret':
-                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($id_order_state);
-                break;
-            default:
-                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($id_order_state);
-        }
-        return $orderState;
+        return $this->entityManagerInterface->getRepository(PsOrderState::class)
+            ->findById($id_order_state);
     }
 }
