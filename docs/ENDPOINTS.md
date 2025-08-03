@@ -206,7 +206,9 @@ Genera etiquetas de precio para un producto o devuelve una etiqueta existente.
 
 **Método:** `POST`
 
-Obtiene un informe de stock filtrado por término de búsqueda.
+Obtiene un informe de stock filtrado por término de búsqueda. Cuando un producto tiene
+seguimientos en `lp_control_stock`, se devuelve un registro por cada uno
+concatenando el identificador del seguimiento al EAN correspondiente.
 
 ### Solicitud de ejemplo
 
@@ -232,7 +234,21 @@ Obtiene un informe de stock filtrado por término de búsqueda.
     "combination_name": null,
     "reference_combination": "ZAP-001",
     "name_category": "Deporte",
-    "ean13_combination": "1234567890123",
+    "ean13_combination": "123456789012315",
+    "ean13_combination_0": null,
+    "price": 29.28,
+    "quantity": 16
+  },
+  {
+    "id_product": 10,
+    "id_product_attribute": 0,
+    "id_stock_available": 55,
+    "id_shop": 1,
+    "product_name": "Zapatilla deportiva",
+    "combination_name": null,
+    "reference_combination": "ZAP-001",
+    "name_category": "Deporte",
+    "ean13_combination": "123456789012327",
     "ean13_combination_0": null,
     "price": 29.28,
     "quantity": 16
