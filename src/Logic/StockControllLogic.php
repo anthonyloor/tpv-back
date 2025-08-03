@@ -16,12 +16,10 @@ use App\Utils\Logger\Logger;
 class StockControllLogic
 {
     private $entityManagerInterface;
-    private $emFajasMaylu;
     private $logger;
     public function __construct(ManagerRegistry $doctrine, Logger $logger)
     {
         $this->entityManagerInterface = $doctrine->getManager('default');
-        $this->emFajasMaylu = $doctrine->getManager('fajas_maylu');
         $this->logger = $logger;
     }
 
