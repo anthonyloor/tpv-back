@@ -208,6 +208,8 @@ Genera etiquetas de precio para un producto o devuelve una etiqueta existente.
 
 Obtiene un informe de stock filtrado por término de búsqueda.
 
+La respuesta incluye un campo `control_stock` con todos los identificadores de seguimiento (`id_control_stock`) del producto y combinación para la tienda solicitada, concatenados y separados por `;`.
+
 ### Solicitud de ejemplo
 
 ```json
@@ -235,7 +237,8 @@ Obtiene un informe de stock filtrado por término de búsqueda.
     "ean13_combination": "1234567890123",
     "ean13_combination_0": null,
     "price": 29.28,
-    "quantity": 16
+    "quantity": 16,
+    "control_stock": "1;50;90;100"
   }
 ]
 ```

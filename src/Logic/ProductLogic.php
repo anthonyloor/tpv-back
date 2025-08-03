@@ -31,9 +31,34 @@ class ProductLogic
                 'ean13_combination_0' => $product['ean13_combination_0'],
                 'price' => (float) number_format((float) $product['price'] * 1.21, 2, '.', ''),
                 'quantity' => $product['quantity'],
-                //'control_stock' => $this->controlStock($product['id_product'], $product['id_product_attribute'], $product['id_shop'])
+                'control_stock' => $this->controlStock(
+                    $product['id_product'],
+                    $product['id_product_attribute'],
+                    $product['id_shop']
+                )
             ];
         }
         return $productArray;
+    }
+
+    public function controlStock($idProduct, $idProductAttribute, $idShop): string
+    {
+        $controlStocks = $this->entityManagerInterface->getRepository(LpControlStock::class)->findBy([
+            'id_product' => $idProduct,
+            'id_product_attribute' => $idProductAttribute,
+            'id_shop' => $idShop,
+            'active' => true,
+            'printed' => true,
+        ]);
+
+        if (empty($controlStocks)) {
+            return '';
+        }
+
+        $ids = array_map(static function (LpControlStock $controlStock) {
+            return $controlStock->getIdControlStock();
+        }, $controlStocks);
+
+        return implode(';', $ids);
     }
 }
