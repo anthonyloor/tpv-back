@@ -3,12 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\LpPosOrders;
-use App\EntityFajasMaylu\PsOrders as PsOrdersFajasMaylu;
-use App\EntityFajasMaylu\PsOrderDetail as PsOrderDetailFajasMaylu;
-use App\EntityFajasMaylu\PsOrderState as PsOrderStateFajasMaylu;
-use App\EntityFajasMaylu\PsOrderCartRule as PsOrderCartRuleFajasMaylu;
-use App\EntityFajasMaylu\PsCartRule as PsCartRuleFajasMaylu;
-use App\EntityFajasMaylu\PsCartRuleLang as PsCartRuleLangFajasMaylu;
 
 use App\Logic\CartRuleLogic;
 use App\Logic\StockControllLogic;
@@ -35,7 +29,6 @@ use App\Entity\PsOrderState;
 class OrdersController
 {
     private $entityManagerInterface;
-    private $emFajasMaylu;
     private OrdersLogic $ordersLogic;
     private CartRuleLogic $cartRuleLogic;
     private StockControllLogic $stockControllLogic;
@@ -45,7 +38,6 @@ class OrdersController
     public function __construct(ManagerRegistry $doctrine, OrdersLogic $ordersLogic, CartRuleLogic $cartRuleLogic, StockControllLogic $stockControllLogic, WareHouseMovementLogic $wareHouseMovementLogic, Logger $logger)
     {
         $this->entityManagerInterface = $doctrine->getManager(DatabaseManagers::MAYRET_MANAGER);
-        $this->emFajasMaylu = $doctrine->getManager(DatabaseManagers::FAJASMAYLU_MANAGER);
         $this->ordersLogic = $ordersLogic;
         $this->cartRuleLogic = $cartRuleLogic;
         $this->stockControllLogic = $stockControllLogic;
@@ -167,15 +159,14 @@ class OrdersController
     public function getOrderByIdAndOrigin(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
-        if (!isset($data['id_order'], $data['origin'])) {
+        if (!isset($data['id_order'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], Response::HTTP_BAD_REQUEST);
         }
         $id_order = $data['id_order'];
-        $origin = $data['origin'];
 
-        $order = $this->ordersLogic->getOrderByIdAndOrigin($origin, $id_order);
-        $orderCartRules = $this->cartRuleLogic->getCartRulesByOrderIdAndOrigin($id_order, $origin);
-        $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin($origin, $id_order);
+        $order = $this->ordersLogic->getOrderByIdAndOrigin('mayret', $id_order);
+        $orderCartRules = $this->cartRuleLogic->getCartRulesByOrderIdAndOrigin($id_order, 'mayret');
+        $orderDetails = $this->ordersLogic->getOrderDetailsByOrderIdAndOrigin('mayret', $id_order);
         if (!$order) {
             return new JsonResponse(['status' => 'error', 'message' => 'Order not found'], Response::HTTP_OK);
         }
@@ -183,7 +174,7 @@ class OrdersController
         $orderData = $this->ordersLogic->generateOrderJSON($order);
         if($orderCartRules != null)
         {
-            $orderData  = $this->cartRuleLogic->generateCartRulesJSON($orderData, $orderCartRules, $origin);
+            $orderData  = $this->cartRuleLogic->generateCartRulesJSON($orderData, $orderCartRules, 'mayret');
         }
 
         // Procesar los detalles de la orden
@@ -193,7 +184,7 @@ class OrdersController
         }
 
         // Obtener el detalle de la orden que contiene el id de la orden original en el nombre
-        $orderDetailsWithOriginalId = $this->ordersLogic->getOrderDetailsWithOriginalId($id_order, $origin);
+        $orderDetailsWithOriginalId = $this->ordersLogic->getOrderDetailsWithOriginalId($id_order, 'mayret');
 
         if ($orderDetailsWithOriginalId != null) {
             foreach ($orderDetailsWithOriginalId as $detail) {
@@ -254,11 +245,11 @@ class OrdersController
     public function getLastOrdersByCustomer(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
-        if (!isset($data['id_customer'], $data['origin'])) {
+        if (!isset($data['id_customer'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid data provided'], Response::HTTP_BAD_REQUEST);
         }
 
-        $orders = $this->ordersLogic->getLastOrdersByCustomer($data['id_customer'], $data['origin']);
+        $orders = $this->ordersLogic->getLastOrdersByCustomer($data['id_customer'], 'mayret');
 
         if (!$orders) {
             return new JsonResponse(['status' => 'error', 'message' => 'No orders found'], Response::HTTP_OK);
@@ -331,7 +322,7 @@ class OrdersController
     public function updateOnlineOrders(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
-        if (!isset($data['id_order'], $data['status'], $data['origin'])) {
+        if (!isset($data['id_order'], $data['status'])) {
             return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], Response::HTTP_BAD_REQUEST);
         }
 
@@ -376,27 +367,11 @@ class OrdersController
 
         $this->ordersLogic->updatePosSessionsTotalPayments($data);
 
-        switch ($data['origin']) {
-            case 'fajasmaylu':
-                $order = $this->emFajasMaylu->getRepository(PsOrdersFajasMaylu::class)->findById($data['id_order']);
-                $orderState = $this->emFajasMaylu->getRepository(PsOrderStateFajasMaylu::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->emFajasMaylu->persist($order);
-                break;
-            case 'mayret':
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
-                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->entityManagerInterface->persist($order);
-                break;
-            default:
-                $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
-                $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
-                $order->setCurrentState($orderState);
-                $this->entityManagerInterface->persist($order);
-        }
+        $order = $this->entityManagerInterface->getRepository(PsOrders::class)->findById($data['id_order']);
+        $orderState = $this->entityManagerInterface->getRepository(PsOrderState::class)->findById($data['status']);
+        $order->setCurrentState($orderState);
+        $this->entityManagerInterface->persist($order);
         $this->entityManagerInterface->flush();
-        $this->emFajasMaylu->flush();
 
         return new JsonResponse(['status' => 'OK', 'message' => HttpMessages::ORDER_UPDATED . $data['id_order']]);
     }
