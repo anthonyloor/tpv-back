@@ -24,8 +24,6 @@ class PsProductAttribute
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $supplierReference = null;
 
-    #[ORM\Column(length: 64, nullable: true)]
-    private ?string $location = null;
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $ean13 = null;
@@ -99,18 +97,6 @@ class PsProductAttribute
     public function setSupplierReference(?string $supplier_reference): static
     {
         $this->supplier_reference = $supplier_reference;
-
-        return $this;
-    }
-
-    public function getLocation(): ?string
-    {
-        return $this->location;
-    }
-
-    public function setLocation(?string $location): static
-    {
-        $this->location = $location;
 
         return $this;
     }
