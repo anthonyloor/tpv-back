@@ -44,10 +44,6 @@ class PsProductAttribute
 
     #[ORM\Column(type: Types::DECIMAL, precision: 17, scale: 6)]
     private ?string $ecotax = null;
-
-    #[ORM\Column]
-    private ?int $quantity = null;
-
     #[ORM\Column(type: Types::DECIMAL, precision: 20, scale: 6)]
     private ?string $weight = null;
 
@@ -187,18 +183,6 @@ class PsProductAttribute
     public function setEcotax(string $ecotax): static
     {
         $this->ecotax = $ecotax;
-
-        return $this;
-    }
-
-    public function getQuantity(): ?int
-    {
-        return $this->quantity;
-    }
-
-    public function setQuantity(int $quantity): static
-    {
-        $this->quantity = $quantity;
 
         return $this;
     }
