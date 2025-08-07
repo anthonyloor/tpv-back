@@ -23,8 +23,13 @@ class StockControllLogic
         $this->logger = $logger;
     }
 
-    public function createControlStock($idProduct, $idProductAttribute, $idShop, $ean13,$printed = false, $productName): LpControlStock
+    public function createControlStock($idProduct, $idProductAttribute, $idShop, $ean13, $printed = false, $productName): ?LpControlStock
     {
+        if (in_array($idProduct, [402, 6152], true)) {
+            $this->logger->log('Control stock not generated for id_product ' . $idProduct);
+            return null;
+        }
+
         $controlStock = new LpControlStock();
         $controlStock->setIdProduct($idProduct);
         $controlStock->setIdProductAtributte($idProductAttribute);
