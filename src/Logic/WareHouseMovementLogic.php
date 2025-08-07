@@ -262,27 +262,42 @@ class WareHouseMovementLogic
                         $this->logger->log('After updating stock for product: '.$idProduct.' product_attribute: '.$idProductAttribute.' shop: '.$movement->getIdShopDestiny().' stock in destiny: '.$stockDestiny->getQuantity());
                         
                         for ($i = 1; $i <= $recivedQuantity; $i++) {
-                            $controllStock = $this->stockControllLogic->createControlStock($idProduct,$idProductAttribute,$movement->getIdShopDestiny(),$detail->getEan13(),false,$detail->getProductName());
-                            $this->stockControllLogic->createControlStockHistory($controllStock->getIdControlStock(),'Entrada de producto','Entrada',$movement->getIdShopDestiny(),$detail->getIdWarehouseMovementDetail());
-                            $this->entityManagerInterface->persist($detail);
-                            $this->logger->log('-------------------------------INICIO---------------------------------------');
-                            $this->logger->log(
-                            ' id_control_stock ' . $controllStock->getIdControlStock()
-                            . ' id_product ' . $controllStock->getIdProduct()
-                            . ' id_product_attribute ' . $controllStock->getIdProductAtributte()
-                            . ' id_shop ' . $controllStock->getIdShop()
-                            . ' ean13 ' . $controllStock->getEan13()
-                            . ' reason ' . 'Entrada de producto'
-                            . ' type ' . 'Entrada'
-                            . ' date ' . (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s')
+                            $controllStock = $this->stockControllLogic->createControlStock(
+                                $idProduct,
+                                $idProductAttribute,
+                                $movement->getIdShopDestiny(),
+                                $detail->getEan13(),
+                                false,
+                                $detail->getProductName()
                             );
-                            $this->logger->log('-------------------------------------FIN---------------------------------');
-                            $ean13ControlStockArray[] = [
-                                'ean13' => $controllStock->getEan13(),
-                                'control_stock' => $controllStock->getIdControlStock()
-                        ];
+                            if ($controllStock) {
+                                $this->stockControllLogic->createControlStockHistory(
+                                    $controllStock->getIdControlStock(),
+                                    'Entrada de producto',
+                                    'Entrada',
+                                    $movement->getIdShopDestiny(),
+                                    $detail->getIdWarehouseMovementDetail()
+                                );
+                                $this->entityManagerInterface->persist($detail);
+                                $this->logger->log('-------------------------------INICIO---------------------------------------');
+                                $this->logger->log(
+                                    ' id_control_stock ' . $controllStock->getIdControlStock()
+                                    . ' id_product ' . $controllStock->getIdProduct()
+                                    . ' id_product_attribute ' . $controllStock->getIdProductAtributte()
+                                    . ' id_shop ' . $controllStock->getIdShop()
+                                    . ' ean13 ' . $controllStock->getEan13()
+                                    . ' reason ' . 'Entrada de producto'
+                                    . ' type ' . 'Entrada'
+                                    . ' date ' . (new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('Y-m-d H:i:s')
+                                );
+                                $this->logger->log('-------------------------------------FIN---------------------------------');
+                                $ean13ControlStockArray[] = [
+                                    'ean13' => $controllStock->getEan13(),
+                                    'control_stock' => $controllStock->getIdControlStock()
+                                ];
+                            }
 
-                    }
+                        }
                 }
                 } elseif ($movementType === 'salida') {
                     // Update stock for origin shop only
