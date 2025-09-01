@@ -68,12 +68,12 @@ class CartRuleLogic
     {
         // Crear una nueva instancia de CartRule
         $cartRule = new PsCartRule();
-
+        $description = $data['is_campaign'] == true ? "CP-".$data['description'] : $data['description'];
 
         // Mapear los datos del JSON a las propiedades del CartRule
         $cartRule->setDateFrom(new \DateTime($data['date_from']));
         $cartRule->setDateTo(new \DateTime($data['date_to']));
-        $cartRule->setDescription($data['description']);
+        $cartRule->setDescription($description);
         $cartRule->setQuantity(1);
         $cartRule->setQuantityPerUser(1);
         $cartRule->setPriority(1);

@@ -103,4 +103,32 @@ class CartRuleController
 
         return new JsonResponse($cartRules, JsonResponse::HTTP_CREATED);
     }
+
+        #[Route('/get_campaing_cart_rules', name: 'get_campaing_cart_rules', methods: ['POST'])]
+    public function getCampaingCartRules(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (isset($data['description'])) {
+            $cartRules = $this->entityManagerInterface->getRepository(PsCartRule::class)->createQueryBuilder('c')
+                ->where('c.description LIKE :descriptionCP')
+                ->setParameter('descriptionCP', "CP-%".$data['description']."%")
+                ->orderBy('c.id_cart_rule', 'DESC')
+                ->getQuery()
+                ->getResult();
+        } else {
+            $cartRules = $this->entityManagerInterface->getRepository(PsCartRule::class)->createQueryBuilder('c')
+                ->where('c.description LIKE :descriptionCP')
+                ->setParameter('descriptionCP', "CP-%")
+                ->orderBy('c.id_cart_rule', 'DESC')
+                ->getQuery()
+                ->getResult();
+        }
+
+        $cartRulesData = array_map(function ($cartRule) {
+            return $this->cartRuleLogic->generateCartRuleJSON($cartRule);
+        }, $cartRules);
+
+        return new JsonResponse($cartRulesData, JsonResponse::HTTP_OK);
+    }
 }
