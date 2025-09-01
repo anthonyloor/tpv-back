@@ -23,7 +23,7 @@ class StockControllLogic
         $this->logger = $logger;
     }
 
-    public function createControlStock($idProduct, $idProductAttribute, $idShop, $ean13,$printed = false, $productName): LpControlStock
+    public function createControlStock($idProduct, $idProductAttribute, $idShop, $ean13, $printed, $productName): LpControlStock
     {
         $controlStock = new LpControlStock();
         $controlStock->setIdProduct($idProduct);

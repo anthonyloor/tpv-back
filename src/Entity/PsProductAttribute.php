@@ -24,8 +24,6 @@ class PsProductAttribute
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $supplierReference = null;
 
-    #[ORM\Column(length: 64, nullable: true)]
-    private ?string $location = null;
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $ean13 = null;
@@ -44,10 +42,6 @@ class PsProductAttribute
 
     #[ORM\Column(type: Types::DECIMAL, precision: 17, scale: 6)]
     private ?string $ecotax = null;
-
-    #[ORM\Column]
-    private ?int $quantity = null;
-
     #[ORM\Column(type: Types::DECIMAL, precision: 20, scale: 6)]
     private ?string $weight = null;
 
@@ -103,18 +97,6 @@ class PsProductAttribute
     public function setSupplierReference(?string $supplier_reference): static
     {
         $this->supplier_reference = $supplier_reference;
-
-        return $this;
-    }
-
-    public function getLocation(): ?string
-    {
-        return $this->location;
-    }
-
-    public function setLocation(?string $location): static
-    {
-        $this->location = $location;
 
         return $this;
     }
@@ -187,18 +169,6 @@ class PsProductAttribute
     public function setEcotax(string $ecotax): static
     {
         $this->ecotax = $ecotax;
-
-        return $this;
-    }
-
-    public function getQuantity(): ?int
-    {
-        return $this->quantity;
-    }
-
-    public function setQuantity(int $quantity): static
-    {
-        $this->quantity = $quantity;
 
         return $this;
     }
