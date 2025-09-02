@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\PsCartRule;
 use App\Logic\CartRuleLogic;
 use App\Entity\PsCartRuleShop;
+use App\Entity\PsOrderCartRule;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
@@ -130,5 +131,28 @@ class CartRuleController
         }, $cartRules);
 
         return new JsonResponse($cartRulesData, JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/get_order_by_cart_rule', name: 'get_order_by_cart_rule', methods: ['POST'])]
+    public function getOrderByCartRule(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['id_cart_rule'])) {
+            return new JsonResponse(['status' => 'error', 'message' => HttpMessages::INVALID_DATA], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $orderCartRule = $this->entityManagerInterface->getRepository(PsOrderCartRule::class)->findOneBy([
+            'id_cart_rule' => $data['id_cart_rule'],
+        ]);
+
+        if (!$orderCartRule) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Order not found'], JsonResponse::HTTP_OK);
+        }
+
+        return new JsonResponse([
+            'status' => 'OK',
+            'id_order' => $orderCartRule->getIdOrder(),
+        ], JsonResponse::HTTP_OK);
     }
 }
