@@ -665,7 +665,7 @@ Obtiene una lista de los últimos vales generados. Incluye el nombre desde `ps_c
 
 **Método:** `POST`
 
-Crea un nuevo vale descuento.
+Crea un nuevo vale descuento. Si `is_campaign` es `true`, los vales creados se registran en la tabla `ps_lpcrm_coupon`.
 
 ### Solicitud de ejemplo
 ```json
@@ -677,7 +677,10 @@ Crea un nuevo vale descuento.
   "quantity": 1,
   "reduction_amount": 5.0,
   "reduction_percent": 0,
-  "id_customer": 1
+  "id_customer": 1,
+  "is_campaign": true,
+  "not_combinable": 1,
+  "online_only": 1
 }
 ```
 

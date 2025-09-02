@@ -6,6 +6,7 @@ use App\Entity\PsCartRule;
 use App\Logic\CartRuleLogic;
 use App\Entity\PsCartRuleShop;
 use App\Entity\PsOrderCartRule;
+use App\Entity\PsLpcrmCoupon;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
@@ -100,6 +101,17 @@ class CartRuleController
         for ($i = 0; $i < $quantity; $i++) {
             $newCartRule = $this->cartRuleLogic->createCartRuleFromJSON($data);
             $cartRules[] = $this->cartRuleLogic->generateCartRuleJSON($newCartRule);
+
+            if (($data['is_campaign'] ?? false) === true) {
+                $coupon = new PsLpcrmCoupon();
+                $coupon->setIdCartRule($newCartRule->getIdCartRule());
+                $coupon->setNotCombinable($data['not_combinable'] ?? true);
+                $coupon->setOnlineOnly($data['online_only'] ?? true);
+                $coupon->setDateAdd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+                $coupon->setDateUpd(new \DateTime('now', new \DateTimeZone('Europe/Berlin')));
+                $this->entityManagerInterface->persist($coupon);
+                $this->entityManagerInterface->flush();
+            }
         }
 
         return new JsonResponse($cartRules, JsonResponse::HTTP_CREATED);
