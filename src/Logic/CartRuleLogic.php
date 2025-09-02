@@ -26,6 +26,7 @@ class CartRuleLogic
             ]);
 
         $cartRuleData = [
+            'id_cart_rule' => $cartRule->getIdCartRule(),
             'name' => $cartRuleLang?->getName(),
             'date_from' => $cartRule->getDateFrom()?->format('Y-m-d H:i:s'),
             'date_to' => $cartRule->getDateTo()?->format('Y-m-d H:i:s'),
