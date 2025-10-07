@@ -725,13 +725,20 @@ Activa o comprueba el estado de una licencia para una tienda determinada.
 
 **Método:** `POST`
 
-Filtra clientes por identificador o por nombre/teléfono.
+Filtra clientes por identificador (`filter_id_customer`) o por nombre/teléfono (`filter`).
 
 ### Solicitud de ejemplo
 ```json
 {
   "origin": "all",
   "filter": "Pérez"
+}
+```
+
+```json
+{
+  "origin": "all",
+  "filter_id_customer": 42
 }
 ```
 

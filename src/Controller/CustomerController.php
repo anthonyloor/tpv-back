@@ -37,7 +37,11 @@ class CustomerController
     
         $emMayret = $this->entityManagerInterface;
     
-        if (isset($data['id_customer'])) {
+        if (isset($data['filter_id_customer'])) {
+            $customers = $emMayret
+                ->getRepository(PsCustomer::class)
+                ->findByCustomerById($data['filter_id_customer']);
+        } elseif (isset($data['id_customer'])) {
             $customers = $emMayret
                 ->getRepository(PsCustomer::class)
                 ->findByCustomerById($data['id_customer']);
